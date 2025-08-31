@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Supplement Tracker</title>
+<link href="style.css?v=9" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+<style>
+    body:not(.logged-in) #appContent { display: none; }
+    body.logged-in #authContainer { display: none; }
+    #authContainer { margin-bottom: 20px; }
+    .modal.hidden { display: none; }
+  
+    /* Modal base */
+    .modal { 
+      position: fixed; inset: 0; 
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal.hidden { display: none; }
+    .modal-content {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    .modal-actions {
+      display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;
+    }
+    .btn-secondary { background: #e0e0e0; color:#333; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; }
+    .btn-danger { background: #e53935; color:#fff; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; }
+    .btn-secondary:hover { background:#d5d5d5; }
+    .btn-danger:hover { background:#c62828; }
+    #confirmPasswordInput { width:90%; padding:10px; border:1px solid #ccc; border-radius:8px; margin-top:8px; }
+</style>
+</head>
+<body>
+<div id="accountActions">
+<button class="logout-button" id="logoutBtn">Logout</button>
+<!-- Profile dropdown -->
+<div class="dropdown">
+<button class="profile-button" id="profileButton">Profile</button>
+<div class="dropdown-content" id="profileDropdown">
+<a href="#" id="resetPassword">Reset Password</a>
+<a href="#" id="deleteAccount">Delete Account</a>
+
+<a href="#" id="openNotifications">Notifications</a>
+</div>
+</div>
+</div>
+<main>
+<h1>Supplement Tracker</h1>
+<!-- 🔐 Auth Section -->
+<section id="authContainer">
+<form id="loginForm">
+<input id="emailInput" placeholder="Email" required="" type="email"/>
+<input id="passwordInput" placeholder="Password" required="" type="password"/>
+<button id="loginBtn" type="submit">Login</button>
+<button id="signupBtn" type="submit">Sign Up</button>
+</form>
+</section>
+<!-- ✅ Main App Content -->
+<section id="appContent">
+<div id="confirmDeleteModal" class="modal hidden" role="dialog" aria-labelledby="confirmDeleteTitle" aria-modal="true">
+  <div class="modal-content">
+    <h2 id="confirmDeleteTitle">Delete account?</h2>
+    <p>This action permanently removes your data. Are you sure?</p>
+    <div class="modal-actions">
+      <button id="confirmDeleteNo" class="btn-secondary" type="button">No, cancel</button>
+      <button id="confirmDeleteYes" class="btn-danger" type="button">Yes, delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Fixed: Password Confirmation Modal matches modal styles/IDs -->
+<div id="passwordConfirmModal" class="modal hidden" role="dialog" aria-labelledby="passwordConfirmTitle" aria-modal="true">
+  <div class="modal-content">
+    <h3 id="passwordConfirmTitle">Confirm Account Deletion</h3>
+    <p>Please enter your password to confirm:</p>
+    <input type="password" id="confirmPasswordInput" placeholder="Password"/>
+    <div class="modal-actions">
+      <button id="passwordCancelBtn" class="btn-secondary" type="button">Cancel</button>
+      <button id="passwordConfirmBtn" class="btn-danger" type="button">Delete</button>
+    </div>
+  </div>
+</div>
+
+<form id="supplementForm">
+<input id="nameInput" placeholder="Supplement name" required=""/>
+<input id="dosageInput" placeholder="Dosage (e.g., 500mg)" required=""/>
+<!-- Unified checkbox group: desktop = 4 tiles across, mobile = stacked -->
+<div class="checkbox-tiles">
+<label class="check-item"><input name="time" type="checkbox" value="Morning"/> <span>Morning</span></label>
+<label class="check-item"><input name="time" type="checkbox" value="Afternoon"/> <span>Afternoon</span></label>
+<label class="check-item"><input name="time" type="checkbox" value="Evening"/> <span>Evening</span></label>
+<label class="check-item"><input id="cycleCheckbox" name="cycle" type="checkbox" value="1"/> <span>On a cycle</span></label>
+</div>
+<div class="hidden" id="cycleDetails">
+<input id="onDaysInput" placeholder="Days on" type="number"/>
+<input id="offDaysInput" placeholder="Days off" type="number"/>
+
+<div class="cycle-start-row">
+  <label for="cycleStartInput" class="cycle-start-label">Start Date</label>
+  <input type="date" id="cycleStartInput" />
+</div>
+        </div>
+<button type="submit">Add Supplement</button>
+</form>
+<div class="summary-container" id="supplementSummaryContainer"></div>
+<div id="calendarContainer">
+<h2>Cycle Calendar</h2>
+<div class="calendar-nav">
+<button id="prevMonth">◀ Previous</button>
+<span id="currentMonthLabel"></span>
+<button id="nextMonth">Next ▶</button>
+</div>
+<div id="calendar"></div>
+</div>
+</section>
+<!-- Notifications Modal -->
+<div id="notificationsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="notifTitle">
+  <div class="modal-content" style="max-width:520px">
+    <h2 id="notifTitle">Notifications</h2>
+    <label style="display:flex; gap:8px; align-items:center; margin:12px 0;">
+      <input type="checkbox" id="notifyEmailChk"/>
+      <span>Email me the day before a cycle begins/ends</span>
+    </label>
+    <div style="display:flex; gap:12px; align-items:center; margin:10px 0;">
+      <label for="timezoneSelect" style="min-width:90px;">Timezone</label>
+      <select id="timezoneSelect" style="flex:1;">
+        <option value="America/Halifax">America/Halifax</option>
+        <option value="America/Toronto">America/Toronto</option>
+        <option value="America/New_York">America/New_York</option>
+        <option value="America/Winnipeg">America/Winnipeg</option>
+        <option value="America/Edmonton">America/Edmonton</option>
+        <option value="America/Vancouver">America/Vancouver</option>
+        <option value="UTC">UTC</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:12px; align-items:center; margin:10px 0;">
+      <label for="notifyEmailInput" style="min-width:90px;">Email</label>
+      <input id="notifyEmailInput" type="email" placeholder="you@example.com" style="flex:1;"/>
+    </div>
+    <small>Leave email blank if you only want the calendar export.</small>
+    <hr style="margin:16px 0;"/>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button id="saveNotificationsBtn" type="button">Save</button>
+      <button id="downloadIcsBtn" type="button">Download Google Calendar (.ics)</button>
+      <button id="closeNotificationsBtn" type="button" style="margin-left:auto;">Close</button>
+    </div>
+    <div id="notifStatus" style="margin-top:8px; font-size:12px; color:#0a7;"></div>
+  </div>
+</div>
+</main>
+<!-- Use non-module scripts so shared globals (supplements, renderers) work together -->
+<script src="./js/main.js" type="module"></script>
+<script src="./js/supplementsUI.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "supplement-tracker",
+  "version": "1.0.0",
+  "description": "A simple supplement tracker application.",
+  "main": "js/main.js",
+  "scripts": {
+    "start": "http-server -c-1 ."
+  },
+  "dependencies": {
+    "http-server": "^14.1.1",
+    "nodemailer": "^7.0.6"
+  }
+}

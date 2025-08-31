@@ -1,0 +1,17 @@
+name: Queue Only
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Do nothing
+        run: echo "Just queuing — no tasks yet."
