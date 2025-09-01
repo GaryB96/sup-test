@@ -4,16 +4,12 @@
   "description": "A simple supplement tracker application.",
   "main": "js/main.js",
   "scripts": {
-    "start": "http-server -c-1 ."
+    "start": "http-server -c-1 .",
+    "notify:test": "node scripts/notify-test.js"
   },
   "dependencies": {
     "firebase-admin": "^13.5.0",
     "http-server": "^14.1.1",
     "nodemailer": "^7.0.6"
-  }
-}
-{
-  "scripts": {
-    "notify:test": "node scripts/notify-test.js"
   }
 }
