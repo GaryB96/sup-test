@@ -44,8 +44,6 @@
       const p = document.createElement('p');
       p.id = TIP_ID;
       p.className = 'muted';
-      p.innerHTML = `Tip: create a <em>separate</em> calendar (e.g., “Supplements / Cycles”) before importing this file. ` +
-                    `You can toggle it on/off or delete it later without affecting your main calendar.`;
       // Insert just before the buttons at the bottom if present, else append
       const bottomBtn = body.querySelector('#notificationsCloseBtnBottom');
       if (bottomBtn?.parentElement) {
