@@ -36,4 +36,4 @@ jobs:
           TEST_EMAIL: ${{ github.event.inputs.test_email }}
           FORCE_SEND: ${{ github.event.inputs.force_send }}
           PRETEND_TODAY: ${{ github.event.inputs.pretend_today }}
-        run: node notify.cjs
+        run: node notify.js
