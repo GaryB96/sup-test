@@ -204,7 +204,7 @@ body:not(.logged-in) #accountActions { display: none; }
 }
 .logout-button { background: rgb(247,102,102); color:#fff; }
 .logout-button:hover { background:#b43636; }
-.profile-button { background: rgb(89,89,250); color:#fff; }
+.profile-button { background:#2196F3; color:#fff; }
 .profile-button:hover { background:#2c3aa0; }
 
 .dropdown { position: relative; display: inline-block; }
