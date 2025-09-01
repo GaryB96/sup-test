@@ -113,10 +113,66 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("downloadIcsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); downloadIcs(); });
 });
 
-
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let currentUser = null;
+
+// Make cycle boundaries available to notifications.js
+window.getCycleBoundaries = async function(startISO, endISO) {
+  if (!currentUser) return [];
+
+  const startUTC = new Date(`${startISO}T00:00:00Z`);
+  const endUTC   = new Date(`${endISO}T00:00:00Z`);
+
+  const supps = await fetchSupplements(currentUser.uid);
+  const out = [];
+
+  for (const s of supps) {
+    const name = s.name || "Supplement";
+    const on   = (s.cycle && s.cycle.on)  || 0;
+    const off  = (s.cycle && s.cycle.off) || 0;
+    if (!s.startDate || on <= 0 || off < 0) continue;
+
+    const start = new Date(s.startDate);
+    const start0 = new Date(Date.UTC(start.getUTCFullYear(), start.getMonth(), start.getDate()));
+    const period = on + off;
+    if (period <= 0) continue;
+
+    // Walk forward/back to cover [startISO, endISO]
+    let k = -2;
+    // On-ends happen at start0 + on + k*period
+    // Next on-begins happen at start0 + period + k*period
+    while (true) {
+      const onEndsUTC   = addDaysUTC(start0, on + k * period);
+      const onBeginsUTC = addDaysUTC(start0, period + k * period);
+
+      // stop once both are past range (with a small buffer)
+      if (onEndsUTC > addDaysUTC(endUTC, 2) && onBeginsUTC > addDaysUTC(endUTC, 2)) break;
+
+      // include if within range (with a tiny look-behind buffer)
+      if (onEndsUTC >= addDaysUTC(startUTC, -2) && onEndsUTC <= addDaysUTC(endUTC, 2)) {
+        out.push({
+          date: ymdUTC(onEndsUTC),      // YYYY-MM-DD
+          type: "end",
+          title: `${name}: ON ends tomorrow`
+        });
+      }
+      if (onBeginsUTC >= addDaysUTC(startUTC, -2) && onBeginsUTC <= addDaysUTC(endUTC, 2)) {
+        out.push({
+          date: ymdUTC(onBeginsUTC),    // YYYY-MM-DD
+          type: "begin",
+          title: `${name}: ON begins tomorrow`
+        });
+      }
+      k++;
+      if (k > 2000) break; // safety
+    }
+  }
+
+  // sort by date
+  out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  return out;
+};
 
 // --- Delete Account: modal helpers ---
 function openConfirmDeleteModal() {
