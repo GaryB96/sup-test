@@ -271,7 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
           await login(email, password);
         } else if (clickedButton === "signupBtn") {
           await signup(email, password);
-          alert("Account created && logged in!");
+          alert("Account created & logged in!");
         } else {
           alert("Unknown action.");
           return;
@@ -341,11 +341,10 @@ async function refreshCalendar() {
   try {
     const rawSupplements = await fetchSupplements(currentUser.uid);
     const expandedSupplements = [];
-
     const monthStart = new Date(currentYear, currentMonth, 1);
     const monthEnd = new Date(currentYear, currentMonth, 1);
     monthEnd.setDate(monthEnd.getDate() + 60); // show 60 days ahead
-
+    window.refreshCalendar = refreshCalendar;
     for (const supp of rawSupplements) {
       if (supp.cycle && supp.startDate) {
         const cycleDates = generateCycleDates(supp.startDate, supp.cycle, monthEnd);
