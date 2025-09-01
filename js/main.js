@@ -4,27 +4,40 @@ import { fetchSupplements } from "./supplements.js";
 import { EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 import { auth } from "./firebaseConfig.js";
 
+// ==== Notifications UI & ICS Export ====
 import { db } from "./firebaseConfig.js";
 import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
 function el(id){ return document.getElementById(id); }
 function guessTZ(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax"; } catch { return "America/Halifax"; } }
 
+async function openNotificationsModal() {
   if (!currentUser) return;
+  el("notificationsModal")?.classList.remove("hidden");
   const statusEl = el("notifStatus"); if (statusEl) statusEl.textContent = "";
+  const chk = el("notifyEmailChk"); if (chk) chk.checked = false;
+  const emailEl = el("notifyEmailInput"); if (emailEl) emailEl.value = (auth.currentUser?.email || "");
   const tzEl = el("timezoneSelect"); if (tzEl) tzEl.value = guessTZ();
   try {
+    const ref = doc(db, `users/${currentUser.uid}/settings/notifications`);
     const snap = await getDoc(ref);
     if (snap.exists()) {
       const s = snap.data();
+      if (chk) chk.checked = !!s.notifyEmail;
       if (emailEl && s.email) emailEl.value = s.email;
       if (tzEl && s.timezone) tzEl.value = s.timezone;
     }
   } catch (e) { console.error("Failed to load notif settings", e); }
 }
+function closeNotificationsModal(){ el("notificationsModal")?.classList.add("hidden"); }
 
+async function saveNotifications() {
   if (!currentUser) return;
+  const chk = el("notifyEmailChk");
+  const emailEl = el("notifyEmailInput");
   const tzEl = el("timezoneSelect");
+  const ref = doc(db, `users/${currentUser.uid}/settings/notifications`);
+  await setDoc(ref, { notifyEmail: !!(chk && chk.checked), email: (emailEl && emailEl.value ? emailEl.value.trim() : "") || null, timezone: (tzEl && tzEl.value) || guessTZ() }, { merge:true });
   const statusEl = el("notifStatus"); if (statusEl) statusEl.textContent = "Saved.";
 }
 
@@ -68,6 +81,10 @@ async function downloadIcs(){
     const startUTC = new Date(Date.UTC(start.getUTCFullYear(), start.getMonth(), start.getDate()));
     const period = on + off; if (period <= 0) continue;
     const pushIfInRange = (boundaryUTC, title) => {
+      const notifyDay = addDaysUTC(boundaryUTC, -1);
+      if (notifyDay >= nowUTC && notifyDay <= endUTC){
+        const uid = `${s.id}-${title}-${ymdUTC(notifyDay)}`;
+        boundaries.push({ dateUTC: notifyDay, title: `${name}: ${title} tomorrow`, uid });
       }
     };
     let k = -2;
@@ -90,6 +107,9 @@ async function downloadIcs(){
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("openNotifications")?.addEventListener("click", (e)=>{ e.preventDefault(); openNotificationsModal(); });
+  document.getElementById("closeNotificationsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); closeNotificationsModal(); });
+  document.getElementById("saveNotificationsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); saveNotifications(); });
   document.getElementById("downloadIcsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); downloadIcs(); });
 });
 
