@@ -71,6 +71,9 @@ async function run() {
           tz = s.timezone || tz;
           emailOn = !!s.notifyEmail;
           emailAddr = s.email || null;
+          if (!emailAddr) {
+            try { const urec = await admin.auth().getUser(uid); emailAddr = urec.email || null; } catch {}
+          }
         }
       } catch {}
       if (!emailOn || !emailAddr) continue;
