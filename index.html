@@ -5,6 +5,7 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Supplement Tracker</title>
 <link href="style.css?v=9" rel="stylesheet"/>
+<link rel="stylesheet" href="notifications.css" />
 <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
@@ -125,25 +126,25 @@
 </div>
 </section>
 <!-- Notifications Modal -->
-<div id="notificationsModal" aria-hidden="true">
-  <div class="noty-modal">
-    <div class="noty-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h2 style="margin:0;">Notifications</h2>
-        <button id="notificationsCloseBtn" aria-label="Close">✕</button>
-      </div>
+<div id="notificationsModal" class="modal hidden" role="dialog" aria-labelledby="notificationsTitle" aria-modal="true">
+  <div class="modal-content"> <!-- if you currently have .noty-card, keep it AND add this class -->
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2 id="notificationsTitle" style="margin:0;">Notifications</h2>
+      <button id="notificationsCloseBtn" aria-label="Close">✕</button>
+    </div>
 
-      <div class="noty-row">
-        <p>Download a calendar with “day-before” reminders for the next year.</p>
-        <button id="notificationsIcsBtn">Download Google Calendar (.ics)</button>
-        <p class="muted">You can import this into Google Calendar, Apple Calendar, Outlook, etc.</p>
-      </div>
+    <div class="noty-row">
+      <p>Download a calendar with “day-before” reminders for the next year.</p>
+      <button id="notificationsIcsBtn">Download Google Calendar (.ics)</button>
+      <p class="muted">Imports into Google Calendar, Apple Calendar, Outlook, etc.</p>
+    </div>
 
-      <div class="noty-actions">
-        <button id="notificationsCloseBtnBottom">Close</button>
-      </div>
+    <div class="noty-actions">
+      <button id="notificationsCloseBtnBottom">Close</button>
     </div>
   </div>
+</div>
+
 </div>
 <script>
   // Duplicate close button support
