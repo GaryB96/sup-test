@@ -51,7 +51,6 @@
 <a href="#" id="resetPassword">Reset Password</a>
 <a href="#" id="deleteAccount">Delete Account</a>
 
-<a href="#" id="openNotifications">Notifications</a>
 </div>
 </div>
 </div>
@@ -124,12 +123,8 @@
 <div id="calendar"></div>
 </div>
 </section>
-<!-- Notifications Modal -->
-<div id="notificationsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="notifTitle">
   <div class="modal-content" style="max-width:520px">
-    <h2 id="notifTitle">Notifications</h2>
     <label style="display:flex; gap:8px; align-items:center; margin:12px 0;">
-      <input type="checkbox" id="notifyEmailChk"/>
       <span>Email me the day before a cycle begins/ends</span>
     </label>
     <div style="display:flex; gap:12px; align-items:center; margin:10px 0;">
@@ -145,15 +140,11 @@
       </select>
     </div>
     <div style="display:flex; gap:12px; align-items:center; margin:10px 0;">
-      <label for="notifyEmailInput" style="min-width:90px;">Email</label>
-      <input id="notifyEmailInput" type="email" placeholder="you@example.com" style="flex:1;"/>
     </div>
     <small>Leave email blank if you only want the calendar export.</small>
     <hr style="margin:16px 0;"/>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <button id="saveNotificationsBtn" type="button">Save</button>
       <button id="downloadIcsBtn" type="button">Download Google Calendar (.ics)</button>
-      <button id="closeNotificationsBtn" type="button" style="margin-left:auto;">Close</button>
     </div>
     <div id="notifStatus" style="margin-top:8px; font-size:12px; color:#0a7;"></div>
   </div>
