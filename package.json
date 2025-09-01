@@ -3,13 +3,16 @@
   "version": "1.0.0",
   "description": "A simple supplement tracker application.",
   "main": "js/main.js",
+  "type": "module",
   "scripts": {
     "start": "http-server -c-1 .",
     "notify:test": "node scripts/notify-test.js"
   },
   "dependencies": {
+    "@sendgrid/mail": "^8.1.0",
     "firebase-admin": "^13.5.0",
     "http-server": "^14.1.1",
+    "luxon": "^3.5.0",
     "nodemailer": "^7.0.6"
   }
 }
