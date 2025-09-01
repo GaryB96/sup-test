@@ -163,39 +163,50 @@
     return lines.join('\r\n');
   }
 
-  function handleICS() {
-    const btn = $('#notificationsIcsBtn');
-    if (!btn) return;
-    btn.addEventListener('click', async () => {
-      btn.disabled = true;
-      const t = btn.textContent;
-      btn.textContent = 'Building .ics…';
-      try {
-        const boundaries = await fetchCycleBoundaries();
-        if (!Array.isArray(boundaries) || boundaries.length === 0) {
-          alert('No cycle data available to build the calendar. Make sure your app provides cycle boundaries.');
-          return;
-        }
-        const ics = buildICS(boundaries, 'Cycle Notifications (Next Year)');
-        const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'cycle-notifications-next-year.ics';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = t;
+function handleICS() {
+  const btn = $('#notificationsIcsBtn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    const t = btn.textContent;
+    btn.textContent = 'Building .ics…';
+    try {
+      const boundaries = await fetchCycleBoundaries();
+      if (!Array.isArray(boundaries) || boundaries.length === 0) {
+        alert('No cycle data available to build the calendar. Make sure your app provides cycle boundaries.');
+        return;
       }
-    });
+      const ics = buildICS(boundaries, 'Cycle Notifications (Next Year)');
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'cycle-notifications-next-year.ics';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
 
-    if (!window.getCycleBoundaries && !window.getCyclesForNextYear && !Array.isArray(window.__CYCLE_BOUNDARIES__)) {
-      btn.title = 'Requires cycle data from the app to generate events.';
+      //auto-close the modal after 2 seconds
+      setTimeout(() => {
+        closeModal();
+      }, 2000);
+
+    } finally {
+      btn.disabled = false;
+      btn.textContent = t;
     }
+  });
+
+  if (
+    !window.getCycleBoundaries &&
+    !window.getCyclesForNextYear &&
+    !Array.isArray(window.__CYCLE_BOUNDARIES__)
+  ) {
+    btn.title = 'Requires cycle data from the app to generate events.';
   }
+}
+
 
   document.addEventListener('DOMContentLoaded', () => {
     wireOpeners();
