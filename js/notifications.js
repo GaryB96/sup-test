@@ -35,10 +35,32 @@
     content?.classList.add('modal-content');
   }
 
+  function injectImportTip(modal) {
+    // Add a one-time hint encouraging a separate calendar for easy toggling/removal
+    if (!modal) return;
+    const body = modal.querySelector('.modal-content') || modal;
+    const TIP_ID = 'ics-separate-calendar-tip';
+    if (!body.querySelector('#' + TIP_ID)) {
+      const p = document.createElement('p');
+      p.id = TIP_ID;
+      p.className = 'muted';
+      p.innerHTML = `Tip: create a <em>separate</em> calendar (e.g., “Supplements / Cycles”) before importing this file. ` +
+                    `You can toggle it on/off or delete it later without affecting your main calendar.`;
+      // Insert just before the buttons at the bottom if present, else append
+      const bottomBtn = body.querySelector('#notificationsCloseBtnBottom');
+      if (bottomBtn?.parentElement) {
+        bottomBtn.parentElement.insertBefore(p, bottomBtn);
+      } else {
+        body.appendChild(p);
+      }
+    }
+  }
+
   function openModal() {
     const modal = $('#notificationsModal');
     if (!modal) return console.warn('Notifications modal not found');
     ensureModalStyles(modal);
+    injectImportTip(modal);
     modal.classList.remove('hidden');
     modal.setAttribute('aria-hidden', 'false');
   }
@@ -78,9 +100,19 @@
     t.setUTCFullYear(t.getUTCFullYear() + 1);
     return t;
   }
-  function fmtICSDate(yyyy_mm_dd) {
-    return yyyy_mm_dd.replace(/-/g, '') + 'T000000Z';
+
+  // All-day formatting helpers (avoid times entirely)
+  function fmtYMD(yyyy_mm_dd) { return String(yyyy_mm_dd).replace(/-/g, ''); }
+  function plusDaysISO(yyyy_mm_dd, days) {
+    const d = new Date(yyyy_mm_dd + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
   }
+  const esc = (s) => String(s)
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\n/g, '\\n');
 
   async function fetchCycleBoundaries() {
     const start = startOfTomorrowUTC();
@@ -98,24 +130,37 @@
     const lines = [];
     const now = new Date();
     const dtstamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    lines.push('BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//YourApp//Notifications//EN', `X-WR-CALNAME:${calendarName}`);
+
+    lines.push(
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//YourApp//Notifications//EN',
+      `X-WR-CALNAME:${esc(calendarName)}`
+    );
+
     boundaries.forEach((b, idx) => {
-      const d = new Date(b.date + 'T00:00:00Z');
-      d.setUTCDate(d.getUTCDate() - 1); // day-before reminder
-      const dayBefore = d.toISOString().slice(0, 10);
-      const uid = `noty-${idx}-${dayBefore}@yourapp`;
+      // We create an all-day reminder on the day BEFORE the boundary
+      const boundary = new Date(b.date + 'T00:00:00Z');
+      boundary.setUTCDate(boundary.getUTCDate() - 1);
+      const dayBeforeISO = boundary.toISOString().slice(0, 10);
+      const dayAfterISO  = plusDaysISO(dayBeforeISO, 1); // DTEND is end-exclusive
+
+      const uid = `noty-${idx}-${dayBeforeISO}@yourapp`;
       const summary = b.title || (b.type === 'begin' ? 'Cycle begins tomorrow' : 'Cycle ends tomorrow');
+
       lines.push(
         'BEGIN:VEVENT',
         `UID:${uid}`,
         `DTSTAMP:${dtstamp}`,
-        `DTSTART:${fmtICSDate(dayBefore)}`,
-        `DTEND:${fmtICSDate(dayBefore)}`,
-        `SUMMARY:${summary}`,
+        // True all-day: VALUE=DATE and end-exclusive DTEND to prevent time display
+        `DTSTART;VALUE=DATE:${fmtYMD(dayBeforeISO)}`,
+        `DTEND;VALUE=DATE:${fmtYMD(dayAfterISO)}`,
+        `SUMMARY:${esc(summary)}`,
         'TRANSP:TRANSPARENT',
         'END:VEVENT'
       );
     });
+
     lines.push('END:VCALENDAR');
     return lines.join('\r\n');
   }
