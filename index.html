@@ -125,35 +125,32 @@
 </div>
 </section>
 <!-- Notifications Modal -->
-<div id="notificationsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="notifTitle">
-  <div class="modal-content" style="max-width:520px">
-    <h2 id="notifTitle">Notifications</h2>
-    <label style="display:flex; gap:8px; align-items:center; margin:12px 0;">
-      <input type="checkbox" id="notifyEmailChk"/>
-      <span>Email me the day before a cycle begins/ends</span>
-    </label>
-    <div style="display:flex; gap:12px; align-items:center; margin:10px 0;">
-      <label for="timezoneSelect" style="min-width:90px;">Timezone</label>
-      <select id="timezoneSelect" style="flex:1;">
-        <option value="America/Halifax">America/Halifax</option>
-        <option value="America/Toronto">America/Toronto</option>
-        <option value="America/New_York">America/New_York</option>
-        <option value="America/Winnipeg">America/Winnipeg</option>
-        <option value="America/Edmonton">America/Edmonton</option>
-        <option value="America/Vancouver">America/Vancouver</option>
-        <option value="UTC">UTC</option>
-      </select>
+<div id="notificationsModal" aria-hidden="true">
+  <div class="noty-modal">
+    <div class="noty-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h2 style="margin:0;">Notifications</h2>
+        <button id="notificationsCloseBtn" aria-label="Close">✕</button>
+      </div>
+
+      <div class="noty-row">
+        <p>Download a calendar with “day-before” reminders for the next year.</p>
+        <button id="notificationsIcsBtn">Download Google Calendar (.ics)</button>
+        <p class="muted">You can import this into Google Calendar, Apple Calendar, Outlook, etc.</p>
+      </div>
+
+      <div class="noty-actions">
+        <button id="notificationsCloseBtnBottom">Close</button>
+      </div>
     </div>
-    <div style="display:flex; gap:12px; align-items:center; margin:10px 0;"><label for="notifyEmailInput" style="min-width:90px;">Email</label><input id="notifyEmailInput" type="email" placeholder="you@example.com" style="flex:1;" disabled/></div><small>We’ll use your sign‑in email for reminders.</small>
-    <hr style="margin:16px 0;"/>
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <button id="saveNotificationsBtn" type="button">Save</button>
-      <button id="downloadIcsBtn" type="button">Download Google Calendar (.ics)</button>
-      <button id="closeNotificationsBtn" type="button" style="margin-left:auto;">Close</button>
-    </div>
-    <div id="notifStatus" style="margin-top:8px; font-size:12px; color:#0a7;"></div>
   </div>
 </div>
+<script>
+  // Duplicate close button support
+  document.getElementById('notificationsCloseBtnBottom')?.addEventListener('click', () => {
+    document.getElementById('notificationsCloseBtn')?.click();
+  });
+</script>
 </main>
 <script src="./js/main.js" type="module"></script>
 <script src="./js/supplementsUI.js" type="module"></script>

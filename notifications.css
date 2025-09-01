@@ -1,5 +1,3 @@
-
-/* notifications.css */
 #notificationsModal[aria-hidden="true"] { display: none; }
 #notificationsModal.open { display: block; }
 #notificationsModal .noty-modal {
@@ -12,5 +10,4 @@
 }
 #notificationsModal .noty-actions { display:flex; gap:12px; justify-content:flex-end; margin-top:18px; }
 #notificationsModal .noty-row { display:grid; grid-template-columns:1fr; gap:10px; margin:12px 0; }
-#notificationsModal input[type="email"] { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ddd; }
 #notificationsModal .muted { color:#666; font-size:0.9rem; }
