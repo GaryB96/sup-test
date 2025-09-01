@@ -144,19 +144,39 @@
       const dayAfterISO  = plusDaysISO(dayBeforeISO, 1); // DTEND is end-exclusive
 
       const uid = `noty-${idx}-${dayBeforeISO}@yourapp`;
-      const summary = b.title || (b.type === 'begin' ? 'Cycle begins tomorrow' : 'Cycle ends tomorrow');
+     // Try to extract supplement name from boundary title if present
+let suppName = '';
+if (b.title) {
+  // Often titles look like "Creatine: ON begins tomorrow"
+  suppName = b.title.split(':')[0].trim();
+}
 
-      lines.push(
-        'BEGIN:VEVENT',
-        `UID:${uid}`,
-        `DTSTAMP:${dtstamp}`,
-        // True all-day: VALUE=DATE and end-exclusive DTEND to prevent time display
-        `DTSTART;VALUE=DATE:${fmtYMD(dayBeforeISO)}`,
-        `DTEND;VALUE=DATE:${fmtYMD(dayAfterISO)}`,
-        `SUMMARY:${esc(summary)}`,
-        'TRANSP:TRANSPARENT',
-        'END:VEVENT'
-      );
+// Build a nicer message
+let summary;
+if (b.type === 'begin') {
+  summary = suppName
+    ? `Your ${suppName} cycle begins tomorrow`
+    : 'Your cycle begins tomorrow';
+} else if (b.type === 'end') {
+  summary = suppName
+    ? `${suppName} cycle ends tomorrow`
+    : 'Cycle ends tomorrow';
+} else {
+  // Fallback to whatever title exists
+  summary = b.title || 'Cycle reminder';
+}
+
+lines.push(
+  'BEGIN:VEVENT',
+  `UID:${uid}`,
+  `DTSTAMP:${dtstamp}`,
+  `DTSTART;VALUE=DATE:${fmtYMD(dayBeforeISO)}`,
+  `DTEND;VALUE=DATE:${fmtYMD(dayAfterISO)}`,
+  `SUMMARY:${esc(summary)}`,
+  'TRANSP:TRANSPARENT',
+  'END:VEVENT'
+);
+
     });
 
     lines.push('END:VCALENDAR');
@@ -187,10 +207,10 @@ function handleICS() {
       a.remove();
       URL.revokeObjectURL(url);
 
-      //auto-close the modal after 2 seconds
+      //auto-close the modal
       setTimeout(() => {
         closeModal();
-      }, 2000);
+      }, 1000);
 
     } finally {
       btn.disabled = false;
