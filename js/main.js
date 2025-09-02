@@ -3,8 +3,7 @@ import { renderCalendar } from "./calendar.js";
 import { fetchSupplements } from "./supplements.js";
 import { EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 import { auth } from "./firebaseConfig.js";
-    import { onAuthStateChanged } from "firebase/auth";
-    import { auth } from "./firebaseConfig.js";
+import { onAuthStateChanged } from "firebase/auth";
 
 // ==== Notifications UI & ICS Export ====
 import { db } from "./firebaseConfig.js";
