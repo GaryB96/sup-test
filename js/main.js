@@ -8,10 +8,7 @@ import { auth } from "./firebaseConfig.js";
 import { db } from "./firebaseConfig.js";
 import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
-function el(id) {
-  return document.getElementById(id);
-}
-
+function el(id){ return document.getElementById(id); }
 function guessTZ() {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax";
@@ -20,11 +17,6 @@ function guessTZ() {
   }
 }
 
-function setNotesButtonVisibility(isLoggedIn) {
-  const btn = document.getElementById("notesBtn");
-  if (!btn) return;
-  btn.style.display = isLoggedIn ? "inline-block" : "none";
-}
 
 async function openNotificationsModal() {
   if (!currentUser) return;
@@ -45,59 +37,6 @@ async function openNotificationsModal() {
   } catch (e) { console.error("Failed to load notif settings", e); }
 }
 function closeNotificationsModal(){ el("notificationsModal")?.classList.add("hidden"); }
-
-function openNotesModal() {
-  if (!currentUser) return;
-  const modal = document.getElementById("notesModal");
-  const ta = document.getElementById("notesTextarea");
-  const status = document.getElementById("notesStatus");
-  if (!modal || !ta) return;
-
-  status && (status.textContent = "Loading…");
-  modal.classList.remove("hidden");
-
-  // focus for accessibility
-  setTimeout(() => ta.focus(), 30);
-
-  // Load existing notes
-  import("https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js").then(({ doc, getDoc }) => {
-    const ref = doc(db, `users/${currentUser.uid}/notes`);
-    getDoc(ref).then(snap => {
-      ta.value = (snap.exists() && snap.data().text) ? snap.data().text : "";
-      status && (status.textContent = ta.value ? "Loaded." : "Start typing and click Save.");
-    }).catch(err => {
-      console.error(err);
-      status && (status.textContent = "Could not load notes.");
-    });
-  });
-}
-
-function closeNotesModal() {
-  const modal = document.getElementById("notesModal");
-  modal && modal.classList.add("hidden");
-}
-
-async function saveNotes() {
-  if (!currentUser) return;
-  const ta = document.getElementById("notesTextarea");
-  const status = document.getElementById("notesStatus");
-  if (!ta) return;
-
-  try {
-    const { doc, setDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js");
-    const ref = doc(db, `users/${currentUser.uid}/notes`);
-    await setDoc(ref, {
-      text: ta.value || "",
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-
-    status && (status.textContent = "Saved.");
-  } catch (e) {
-    console.error(e);
-    status && (status.textContent = "Save failed.");
-    alert("Could not save notes: " + (e?.message || e));
-  }
-}
 
 async function saveNotifications() {
   if (!currentUser) return;
@@ -175,37 +114,6 @@ async function downloadIcs(){
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Notes button click handler
-  const notesBtn = document.getElementById("notesBtn");
-  if (notesBtn) {
-    notesBtn.addEventListener("click", () => {
-      alert("Notes feature coming soon!");
-    });
-  }
-// Notes button + modal wiring
-const notesBtn = document.getElementById("notesBtn");
-const closeNotesBtn = document.getElementById("closeNotesBtn");
-const saveNotesBtn = document.getElementById("saveNotesBtn");
-
-notesBtn && notesBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  openNotesModal();
-});
-closeNotesBtn && closeNotesBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  closeNotesModal();
-});
-saveNotesBtn && saveNotesBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  saveNotes();
-});
-
-// Optional: close on ESC
-document.addEventListener("keydown", (ev) => {
-  if (ev.key === "Escape") closeNotesModal();
-});
-
-
   document.getElementById("openNotifications")?.addEventListener("click", (e)=>{ e.preventDefault(); openNotificationsModal(); });
   document.getElementById("closeNotificationsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); closeNotificationsModal(); });
   document.getElementById("saveNotificationsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); saveNotifications(); });
@@ -299,13 +207,20 @@ function closePasswordConfirmModal() {
 
 document.addEventListener("DOMContentLoaded", () => {
   const logoutBtn = document.getElementById("logoutBtn");
+
   const calendarEl = document.getElementById("calendar");
+
   const labelEl = document.getElementById("currentMonthLabel");
+
   const loginForm = document.getElementById("loginForm");
+
   const prevBtn = document.getElementById("prevMonth");
+
   const nextBtn = document.getElementById("nextMonth");
 
-  // --- Profile dropdown ---
+
+
+// --- Profile dropdown ---
   const profileButton = document.getElementById("profileButton");
   const dropdownContainer = profileButton ? profileButton.closest(".dropdown") : null;
 
@@ -325,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (resetPasswordLink) {
+if (resetPasswordLink) {
     resetPasswordLink.addEventListener("click", async (e) => {
       e.preventDefault();
       try {
@@ -346,7 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Confirm Delete Modal wiring ---
+// --- Confirm Delete Modal wiring ---
   const confirmYes = document.getElementById("confirmDeleteYes");
   const confirmNo = document.getElementById("confirmDeleteNo");
 
@@ -365,29 +280,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Auth state → show/hide app && render calendar ---
-monitorAuthState(async user => {
-  if (user) {
-    document.body.classList.add("logged-in");
-    currentUser = user;
+  monitorAuthState(async user => {
+    if (user) {
+      document.body.classList.add("logged-in");
+      currentUser = user;
 
-    const event = new CustomEvent("user-authenticated", { detail: user });
-    window.dispatchEvent(event);
+      const event = new CustomEvent("user-authenticated", { detail: user });
+      window.dispatchEvent(event);
 
-    await refreshCalendar();
+      await refreshCalendar();
+      setNotesButtonVisibility(true);
+    } else {
+      document.body.classList.remove("logged-in");
+      calendarEl.innerHTML = "";
+      labelEl.textContent = "";
+      setNotesButtonVisibility(false);
+    }
+  });
 
-    // Show Notes button
-    setNotesButtonVisibility(true);
-  } else {
-    document.body.classList.remove("logged-in");
-    calendarEl.innerHTML = "";
-    labelEl.textContent = "";
 
-    // Hide Notes button
-    setNotesButtonVisibility(false);
-  }
-});
-
-}
   // --- Month navigation ---
   if (prevBtn && nextBtn) {
     prevBtn.addEventListener("click", async () => {
@@ -396,7 +307,47 @@ monitorAuthState(async user => {
         currentMonth = 11;
         currentYear--;
       }
-);      await refreshCalendar();
+      await refreshCalendar();
+    });
+
+    nextBtn.addEventListener("click", async () => {
+      currentMonth++;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      await refreshCalendar();
+    });
+  }
+
+      await refreshCalendar();
+    });
+
+    nextBtn.addEventListener("click", async () => {
+      currentMonth++;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      await refreshCalendar();
+    });
+  }
+
+});
+  // --- Month navigation ---
+  if (prevBtn && nextBtn) {
+    prevBtn.addEventListener("click", async () => {
+      currentMonth--;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      }
+ else {
+      document.body.classList.remove("logged-in");
+      calendarEl.innerHTML = "";
+      labelEl.textContent = "";
+    }
+});
     });
 
     nextBtn.addEventListener("click", async () => {
@@ -458,6 +409,7 @@ monitorAuthState(async user => {
       window.location.href = "index.html";
     });
   }
+});
 
 // Helpers to keep everything in LOCAL time (no UTC parsing)
 function parseLocalDate(ymd) {
