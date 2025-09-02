@@ -43,6 +43,59 @@ async function openNotificationsModal() {
 }
 function closeNotificationsModal(){ el("notificationsModal")?.classList.add("hidden"); }
 
+function openNotesModal() {
+  if (!currentUser) return;
+  const modal = document.getElementById("notesModal");
+  const ta = document.getElementById("notesTextarea");
+  const status = document.getElementById("notesStatus");
+  if (!modal || !ta) return;
+
+  status && (status.textContent = "Loading…");
+  modal.classList.remove("hidden");
+
+  // focus for accessibility
+  setTimeout(() => ta.focus(), 30);
+
+  // Load existing notes
+  import("https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js").then(({ doc, getDoc }) => {
+    const ref = doc(db, `users/${currentUser.uid}/notes`);
+    getDoc(ref).then(snap => {
+      ta.value = (snap.exists() && snap.data().text) ? snap.data().text : "";
+      status && (status.textContent = ta.value ? "Loaded." : "Start typing and click Save.");
+    }).catch(err => {
+      console.error(err);
+      status && (status.textContent = "Could not load notes.");
+    });
+  });
+}
+
+function closeNotesModal() {
+  const modal = document.getElementById("notesModal");
+  modal && modal.classList.add("hidden");
+}
+
+async function saveNotes() {
+  if (!currentUser) return;
+  const ta = document.getElementById("notesTextarea");
+  const status = document.getElementById("notesStatus");
+  if (!ta) return;
+
+  try {
+    const { doc, setDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js");
+    const ref = doc(db, `users/${currentUser.uid}/notes`);
+    await setDoc(ref, {
+      text: ta.value || "",
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    status && (status.textContent = "Saved.");
+  } catch (e) {
+    console.error(e);
+    status && (status.textContent = "Save failed.");
+    alert("Could not save notes: " + (e?.message || e));
+  }
+}
+
 async function saveNotifications() {
   if (!currentUser) return;
   const chk = el("notifyEmailChk");
@@ -128,7 +181,31 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-document.getElementById("openNotifications")?.addEventListener("click", (e)=>{ e.preventDefault(); openNotificationsModal(); });
+  // Notes button + modal wiring
+const notesBtn = document.getElementById("notesBtn");
+const closeNotesBtn = document.getElementById("closeNotesBtn");
+const saveNotesBtn = document.getElementById("saveNotesBtn");
+
+notesBtn && notesBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  openNotesModal();
+});
+closeNotesBtn && closeNotesBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  closeNotesModal();
+});
+saveNotesBtn && saveNotesBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  saveNotes();
+});
+
+// Optional: close on ESC
+document.addEventListener("keydown", (ev) => {
+  if (ev.key === "Escape") closeNotesModal();
+});
+
+
+  document.getElementById("openNotifications")?.addEventListener("click", (e)=>{ e.preventDefault(); openNotificationsModal(); });
   document.getElementById("closeNotificationsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); closeNotificationsModal(); });
   document.getElementById("saveNotificationsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); saveNotifications(); });
   document.getElementById("downloadIcsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); downloadIcs(); });
