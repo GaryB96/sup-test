@@ -206,6 +206,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const prevBtn = document.getElementById("prevMonth");
   const nextBtn = document.getElementById("nextMonth");
 
+  if (notesBtn && notesModal) {
+  notesBtn.addEventListener("click", openNotes);
+  notesClose.addEventListener("click", closeNotes);
+  notesModal.addEventListener("click", (e) => {
+    if (e.target?.dataset?.close) closeNotes(); // clicking the backdrop
+  });
+  document.addEventListener("keydown", (e) => {
+    if (!notesModal.classList.contains("hidden") && e.key === "Escape") closeNotes();
+  });
+  notesSave.addEventListener("click", async () => {
+    try {
+      await saveNotes();
+      closeNotes();
+    } catch (err) {
+      console.error("Failed to save notes:", err);
+      // Optional: show a toast
+    }
+  });
+}
   // --- Profile dropdown ---
   const profileButton = document.getElementById("profileButton");
   const dropdownContainer = profileButton ? profileButton.closest(".dropdown") : null;

@@ -308,6 +308,85 @@ body:not(.logged-in) #accountActions { display: none; }
   display: inline-block;
   width: auto;
 }
+/* Top-left Notes button */
+.notes-btn {
+  position: fixed;
+  top: .75rem;
+  left: .75rem;
+  z-index: 1100;
+  padding: .4rem .65rem;
+  border-radius: .5rem;
+  border: 1px solid #ddd;
+  background: #f7f7f7;
+  cursor: pointer;
+}
+
+/* Modal shell */
+.modal.hidden { display: none; }
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+}
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+}
+.modal__dialog {
+  position: relative;
+  width: min(680px, 92vw);
+  max-height: 85vh;
+  background: #fff;
+  border-radius: .75rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+  display: flex;
+  flex-direction: column;
+}
+.modal__header, .modal__footer {
+  padding: .75rem 1rem;
+  border-bottom: 1px solid #eee;
+}
+.modal__footer { border-bottom: none; border-top: 1px solid #eee; }
+.modal__body {
+  padding: .75rem 1rem;
+  overflow: auto;
+}
+.modal__close {
+  position: absolute;
+  top: .5rem;
+  right: .6rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+/* Scrollable input */
+#notesInput {
+  width: 100%;
+  min-height: 40vh;
+  resize: vertical;
+  padding: .6rem .7rem;
+  border: 1px solid #ddd;
+  border-radius: .5rem;
+  font: inherit;
+  overflow: auto; /* scrollable */
+}
+
+/* Optional: primary button look */
+button.primary {
+  background: #2563eb;
+  color: #fff;
+  border: 1px solid #1e40af;
+  padding: .45rem .8rem;
+  border-radius: .5rem;
+  cursor: pointer;
+}
+button.primary:hover { filter: brightness(1.05); }
 
 .modal.hidden{display:none;}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;padding-top:10vh;}
