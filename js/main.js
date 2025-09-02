@@ -8,76 +8,6 @@ import { auth } from "./firebaseConfig.js";
 import { db } from "./firebaseConfig.js";
 import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
-// --- Notes modal (top-left button) ---
-// Imports (place with your other imports)
-import { db } from "./js/firebaseConfig.js";
-import {
-  doc, getDoc, setDoc
-} from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
-
-const authForNotes = getAuth();
-
-// Grab modal elements (must exist in index.html)
-const notesBtn   = document.getElementById("notesBtn");
-const notesModal = document.getElementById("notesModal");
-const notesClose = document.getElementById("notesClose");
-const notesSave  = document.getElementById("notesSave");
-const notesInput = document.getElementById("notesInput");
-
-// Helpers
-async function currentUid() {
-  if (authForNotes.currentUser) return authForNotes.currentUser.uid;
-  await new Promise(res => onAuthStateChanged(authForNotes, () => res()));
-  return authForNotes.currentUser ? authForNotes.currentUser.uid : null;
-}
-
-async function loadNotes() {
-  const uid = await currentUid();
-  if (!uid) return;
-  const ref = doc(db, "users", uid);
-  const snap = await getDoc(ref);
-  const data = snap.exists() ? snap.data() : {};
-  if (notesInput) notesInput.value = data?.notes || "";
-}
-
-async function saveNotes() {
-  const uid = await currentUid();
-  if (!uid) return;
-  const ref = doc(db, "users", uid);
-  await setDoc(ref, { notes: notesInput.value || "" }, { merge: true });
-}
-
-function openNotes() {
-  if (!notesModal) return;
-  notesModal.classList.remove("hidden");
-  document.body.style.overflow = "hidden";
-  loadNotes().catch(console.error);
-}
-
-function closeNotes() {
-  if (!notesModal) return;
-  notesModal.classList.add("hidden");
-  document.body.style.overflow = "";
-}
-
-// Make available if HTML or other code calls them
-window.openNotes = openNotes;
-window.closeNotes = closeNotes;
-
-// Wire UI
-if (notesBtn)   notesBtn.addEventListener("click", openNotes);
-if (notesClose) notesClose.addEventListener("click", closeNotes);
-if (notesModal) notesModal.addEventListener("click", (e) => {
-  if (e.target && e.target.dataset && e.target.dataset.close) closeNotes(); // clicking backdrop
-});
-if (notesSave)  notesSave.addEventListener("click", async () => {
-  try { await saveNotes(); closeNotes(); } catch (e) { console.error("Save notes failed:", e); }
-});
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && notesModal && !notesModal.classList.contains("hidden")) closeNotes();
-});
-
 function el(id){ return document.getElementById(id); }
 function guessTZ(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax"; } catch { return "America/Halifax"; } }
 
@@ -276,25 +206,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const prevBtn = document.getElementById("prevMonth");
   const nextBtn = document.getElementById("nextMonth");
 
-  if (notesBtn && notesModal) {
-  notesBtn.addEventListener("click", openNotes);
-  notesClose.addEventListener("click", closeNotes);
-  notesModal.addEventListener("click", (e) => {
-    if (e.target?.dataset?.close) closeNotes(); // clicking the backdrop
-  });
-  document.addEventListener("keydown", (e) => {
-    if (!notesModal.classList.contains("hidden") && e.key === "Escape") closeNotes();
-  });
-  notesSave.addEventListener("click", async () => {
-    try {
-      await saveNotes();
-      closeNotes();
-    } catch (err) {
-      console.error("Failed to save notes:", err);
-      // Optional: show a toast
-    }
-  });
-}
   // --- Profile dropdown ---
   const profileButton = document.getElementById("profileButton");
   const dropdownContainer = profileButton ? profileButton.closest(".dropdown") : null;
