@@ -8,24 +8,22 @@ import { auth } from "./firebaseConfig.js";
 import { db } from "./firebaseConfig.js";
 import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
-function el(id){ return document.getElementById(id); }
+function el(id) {
+  return document.getElementById(id);
+}
+
 function guessTZ() {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax";
+  } catch (e) {
+    return "America/Halifax";
   }
+}
 
 function setNotesButtonVisibility(isLoggedIn) {
   const btn = document.getElementById("notesBtn");
   if (!btn) return;
   btn.style.display = isLoggedIn ? "inline-block" : "none";
-}
- catch {
-    return "America/Halifax";
-  }
-}
-catch {
-    return "America/Halifax";
-  }
 }
 
 async function openNotificationsModal() {
