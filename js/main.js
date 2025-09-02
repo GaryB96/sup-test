@@ -199,28 +199,20 @@ function closePasswordConfirmModal() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Cache important elements
   const logoutBtn = document.getElementById("logoutBtn");
   const calendarEl = document.getElementById("calendar");
   const labelEl = document.getElementById("currentMonthLabel");
   const loginForm = document.getElementById("loginForm");
   const prevBtn = document.getElementById("prevMonth");
   const nextBtn = document.getElementById("nextMonth");
+
+  // --- Profile dropdown ---
   const profileButton = document.getElementById("profileButton");
   const dropdownContainer = profileButton ? profileButton.closest(".dropdown") : null;
+
   const resetPasswordLink = document.getElementById("resetPassword");
   const deleteAccountLink = document.getElementById("deleteAccount");
 
-  // Notes button
-  const notesBtn = document.getElementById("notesBtn");
-  if (notesBtn) {
-    notesBtn.addEventListener("click", () => {
-      // Replace with modal open when ready
-      alert("Notes feature coming soon!");
-    });
-  }
-
-  // --- Profile dropdown ---
   if (dropdownContainer && profileButton) {
     profileButton.addEventListener("click", (e) => {
       e.preventDefault();
@@ -228,13 +220,12 @@ document.addEventListener("DOMContentLoaded", () => {
       dropdownContainer.classList.toggle("show");
     });
     document.addEventListener("click", (e) => {
-      if (!dropdownContainer.contains(e.target)) {
+      if (!e.target.closest(".dropdown")) {
         dropdownContainer.classList.remove("show");
       }
     });
   }
 
-  // Reset password
   if (resetPasswordLink) {
     resetPasswordLink.addEventListener("click", async (e) => {
       e.preventDefault();
@@ -284,13 +275,25 @@ document.addEventListener("DOMContentLoaded", () => {
       window.dispatchEvent(event);
 
       await refreshCalendar();
-      setNotesButtonVisibility(true);
     } else {
       document.body.classList.remove("logged-in");
       calendarEl.innerHTML = "";
       labelEl.textContent = "";
-      setNotesButtonVisibility(false);
     }
+    import { onAuthStateChanged } from "firebase/auth";
+    import { auth } from "./firebaseConfig.js";
+
+onAuthStateChanged(auth, (user) => {
+  const notesBtn = document.getElementById("notesBtn");
+  if (user) {
+    // User logged in
+    notesBtn.style.display = "inline-block";
+  } else {
+    // User logged out
+    notesBtn.style.display = "none";
+  }
+});
+
   });
 
   // --- Month navigation ---
@@ -328,6 +331,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      if (password.length < 6) {
+        alert("Password must be at least 6 characters long.");
+        return;
+      }
+
       try {
         if (clickedButton === "loginBtn") {
           await login(email, password);
@@ -358,7 +366,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "index.html";
     });
   }
-}););
+});
 
 // Helpers to keep everything in LOCAL time (no UTC parsing)
 function parseLocalDate(ymd) {
