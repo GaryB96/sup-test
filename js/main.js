@@ -3,7 +3,6 @@ import { renderCalendar } from "./calendar.js";
 import { fetchSupplements } from "./supplements.js";
 import { EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 import { auth } from "./firebaseConfig.js";
-import { onAuthStateChanged } from "firebase/auth";
 
 // ==== Notifications UI & ICS Export ====
 import { db } from "./firebaseConfig.js";
@@ -31,6 +30,12 @@ async function openNotificationsModal() {
   } catch (e) { console.error("Failed to load notif settings", e); }
 }
 function closeNotificationsModal(){ el("notificationsModal")?.classList.add("hidden"); }
+
+function setNotesButtonVisibility(isLoggedIn) {
+  const btn = document.getElementById("notesBtn");
+  if (!btn) return;
+  btn.style.display = isLoggedIn ? "inline-block" : "none";
+}
 
 async function saveNotifications() {
   if (!currentUser) return;
@@ -206,11 +211,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
   const prevBtn = document.getElementById("prevMonth");
   const nextBtn = document.getElementById("nextMonth");
+  const notesBtn = document.getElementById("notesBtn");
+
+  if (notesBtn) {
+  notesBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    alert("Notes feature coming soon!"); // replace with openNotesModal()
+  });
+}
 
   // --- Profile dropdown ---
   const profileButton = document.getElementById("profileButton");
   const dropdownContainer = profileButton ? profileButton.closest(".dropdown") : null;
-
   const resetPasswordLink = document.getElementById("resetPassword");
   const deleteAccountLink = document.getElementById("deleteAccount");
 
@@ -271,7 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (user) {
       document.body.classList.add("logged-in");
       currentUser = user;
-
+      setNotesButtonVisibility(true);
       const event = new CustomEvent("user-authenticated", { detail: user });
       window.dispatchEvent(event);
 
@@ -280,19 +292,8 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.classList.remove("logged-in");
       calendarEl.innerHTML = "";
       labelEl.textContent = "";
+      setNotesButtonVisibility(false);
     }
-
-onAuthStateChanged(auth, (user) => {
-  const notesBtn = document.getElementById("notesBtn");
-  if (user) {
-    // User logged in
-    notesBtn.style.display = "inline-block";
-  } else {
-    // User logged out
-    notesBtn.style.display = "none";
-  }
-});
-
   });
 
   // --- Month navigation ---
