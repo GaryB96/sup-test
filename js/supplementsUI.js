@@ -3,7 +3,10 @@ import {
   addSupplement,
   deleteSupplement
 } from "./supplements.js";
-
+import { db } from "./firebaseConfig.js";
+import {
+  doc, getDoc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 import { renderCalendar } from "./calendar.js";
 
 // ----------------------------------------------------------------------------
@@ -20,6 +23,11 @@ const cycleDetails = document.getElementById("cycleDetails");
 const supplementSummaryContainer = document.getElementById("supplementSummaryContainer");
 const cancelEditBtn = document.getElementById("cancelEditBtn");
 let calendarEl, labelEl;
+const notesBtn   = document.getElementById("notesBtn");
+const notesModal = document.getElementById("notesModal");
+const notesClose = document.getElementById("notesClose");
+const notesSave  = document.getElementById("notesSave");
+const notesInput = document.getElementById("notesInput");
 
 document.addEventListener("DOMContentLoaded", () => {
   calendarEl = document.getElementById("calendar");
@@ -176,6 +184,30 @@ async function refreshData() {
   } catch (error) {
     console.error("❌ Failed to fetch supplements:", error);
   }
+}
+function openNotes() {
+  if (!currentUser?.uid) return;
+  notesModal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  // Load latest notes from /users/{uid}
+  loadNotes().catch(console.error);
+}
+function closeNotes() {
+  notesModal.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+async function loadNotes() {
+  const ref = doc(db, "users", currentUser.uid);
+  const snap = await getDoc(ref);
+  const data = snap.exists() ? snap.data() : {};
+  notesInput.value = data?.notes || "";
+}
+
+async function saveNotes() {
+  if (!currentUser?.uid) return;
+  const ref = doc(db, "users", currentUser.uid);
+  await setDoc(ref, { notes: notesInput.value || "" }, { merge: true });
 }
 
 // ----------------------------------------------------------------------------

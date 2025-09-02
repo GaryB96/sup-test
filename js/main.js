@@ -9,7 +9,14 @@ import { db } from "./firebaseConfig.js";
 import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
 function el(id){ return document.getElementById(id); }
-function guessTZ(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax"; } catch { return "America/Halifax"; } }
+function guessTZ(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax"; }
+
+function setNotesButtonVisibility(isLoggedIn) {
+  const btn = document.getElementById("notesBtn");
+  if (!btn) return;
+  btn.style.display = isLoggedIn ? "inline-block" : "none";
+}
+ catch { return "America/Halifax"; } }
 
 async function openNotificationsModal() {
   if (!currentUser) return;
@@ -107,7 +114,24 @@ async function downloadIcs(){
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("openNotifications")?.addEventListener("click", (e)=>{ e.preventDefault(); openNotificationsModal(); });
+  // Notes button click handler (opens notes or navigation)
+  const notesBtnEarly2 = document.getElementById("notesBtn");
+  if (notesBtnEarly2 && !notesBtnEarly2.dataset.bound) {
+    notesBtnEarly2.dataset.bound = "1";
+    notesBtnEarly2.addEventListener("click", () => {
+      alert("Notes feature coming soon!");
+    });
+  }
+// Notes button click handler (opens notes or placeholder)
+  const notesBtnEarly = document.getElementById("notesBtn");
+  if (notesBtnEarly && !notesBtnEarly.dataset.bound) {
+    notesBtnEarly.dataset.bound = "1";
+    notesBtnEarly.addEventListener("click", () => {
+      // TODO: replace with your notes modal or navigation
+      alert("Notes feature coming soon!");
+    });
+  }
+document.getElementById("openNotifications")?.addEventListener("click", (e)=>{ e.preventDefault(); openNotificationsModal(); });
   document.getElementById("closeNotificationsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); closeNotificationsModal(); });
   document.getElementById("saveNotificationsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); saveNotifications(); });
   document.getElementById("downloadIcsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); downloadIcs(); });
@@ -267,7 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Auth state → show/hide app && render calendar ---
   monitorAuthState(async user => {
-    if (user) {
+if (user) {
       document.body.classList.add("logged-in");
       currentUser = user;
 
@@ -279,6 +303,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.classList.remove("logged-in");
       calendarEl.innerHTML = "";
       labelEl.textContent = "";
+      setNotesButtonVisibility(false);
     }
     import { onAuthStateChanged } from "firebase/auth";
     import { auth } from "./firebaseConfig.js";
