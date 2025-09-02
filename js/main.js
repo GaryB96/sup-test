@@ -37,6 +37,55 @@ function setNotesButtonVisibility(isLoggedIn) {
   btn.style.display = isLoggedIn ? "inline-block" : "none";
 }
 
+function openNotesModal() {
+  if (!currentUser) return;
+  const modal = document.getElementById("notesModal");
+  const ta = document.getElementById("notesTextarea");
+  const status = document.getElementById("notesStatus");
+  if (!modal || !ta) return;
+
+  status && (status.textContent = "Loading…");
+  modal.classList.remove("hidden");
+
+  // Focus textarea for accessibility
+  setTimeout(() => ta.focus(), 30);
+
+  // Load existing note
+  (async () => {
+    try {
+      const ref = doc(db, "users", currentUser.uid, "notes"); // a doc named "notes" under this user
+      const snap = await getDoc(ref);
+      ta.value = snap.exists() && snap.data().text ? snap.data().text : "";
+      status && (status.textContent = ta.value ? "Loaded." : "Start typing and click Save.");
+    } catch (err) {
+      console.error(err);
+      status && (status.textContent = "Could not load notes.");
+    }
+  })();
+}
+
+function closeNotesModal() {
+  const modal = document.getElementById("notesModal");
+  if (modal) modal.classList.add("hidden");
+}
+
+async function saveNotes() {
+  if (!currentUser) return;
+  const ta = document.getElementById("notesTextarea");
+  const status = document.getElementById("notesStatus");
+  if (!ta) return;
+
+  try {
+    const ref = doc(db, "users", currentUser.uid, "notes");
+    await setDoc(ref, { text: ta.value || "", updatedAt: new Date().toISOString() }, { merge: true });
+    status && (status.textContent = "Saved.");
+  } catch (e) {
+    console.error(e);
+    status && (status.textContent = "Save failed.");
+    alert("Could not save notes: " + (e?.message || e));
+  }
+}
+
 async function saveNotifications() {
   if (!currentUser) return;
   const chk = el("notifyEmailChk");
