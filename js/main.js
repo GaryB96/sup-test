@@ -212,12 +212,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const prevBtn = document.getElementById("prevMonth");
   const nextBtn = document.getElementById("nextMonth");
   const notesBtn = document.getElementById("notesBtn");
-
-  if (notesBtn) {
-  notesBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    alert("Notes feature coming soon!"); // replace with openNotesModal()
-  });
 }
 
   // --- Profile dropdown ---
