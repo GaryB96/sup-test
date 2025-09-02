@@ -9,19 +9,21 @@ import { db } from "./firebaseConfig.js";
 import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
 function el(id){ return document.getElementById(id); }
-function guessTZ(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax"; }
-function setNotesButtonVisibility(isLoggedIn) {
-  const btn = document.getElementById("notesBtn");
-  if (!btn) return;
-  btn.style.display = isLoggedIn ? "inline-block" : "none";
-}
+function guessTZ() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax";
+  }
 
 function setNotesButtonVisibility(isLoggedIn) {
   const btn = document.getElementById("notesBtn");
   if (!btn) return;
   btn.style.display = isLoggedIn ? "inline-block" : "none";
 }
- catch { return "America/Halifax"; } }
+ catch {
+    return "America/Halifax";
+  }
+}
+
 
 async function openNotificationsModal() {
   if (!currentUser) return;
@@ -317,18 +319,7 @@ monitorAuthState(async user => {
   }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-
-  const notesBtn = document.getElementById("notesBtn");
-  if (notesBtn) {
-    notesBtn.addEventListener("click", () => {
-      alert("Notes feature coming soon!");
-      // or window.location.href = "notes.html";
-    });
-  }
 });
-
-  });
 
   // --- Month navigation ---
   if (prevBtn && nextBtn) {
