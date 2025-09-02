@@ -143,24 +143,6 @@
   </div>
 </div>
 </div>
-<!-- Top-left Notes button -->
-<button id="notesBtn" class="notes-btn" type="button">Notes</button>
-<!-- Notes Modal -->
-<div id="notesModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="notesTitle">
-  <div class="modal__backdrop" data-close="1"></div>
-  <div class="modal__dialog" role="document">
-    <div class="modal__header">
-      <h2 id="notesTitle">Supplement Notes</h2>
-      <button class="modal__close" id="notesClose" aria-label="Close">×</button>
-    </div>
-    <div class="modal__body">
-      <textarea id="notesInput" rows="12" placeholder="Type anything you want to remember about your supplements…"></textarea>
-    </div>
-    <div class="modal__footer">
-      <button id="notesSave" class="primary" type="button">Save</button>
-    </div>
-  </div>
-</div>
 <script>
   // Duplicate close button support
   document.getElementById('notificationsCloseBtnBottom')?.addEventListener('click', () => {
