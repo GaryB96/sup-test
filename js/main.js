@@ -212,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const prevBtn = document.getElementById("prevMonth");
   const nextBtn = document.getElementById("nextMonth");
   const notesBtn = document.getElementById("notesBtn");
-}
+});
 
   // --- Profile dropdown ---
   const profileButton = document.getElementById("profileButton");
