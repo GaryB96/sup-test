@@ -212,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const prevBtn = document.getElementById("prevMonth");
   const nextBtn = document.getElementById("nextMonth");
   const notesBtn = document.getElementById("notesBtn");
-});
+})
 
   // --- Profile dropdown ---
   const profileButton = document.getElementById("profileButton");
@@ -360,7 +360,6 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "index.html";
     });
   }
-});
 
 // Helpers to keep everything in LOCAL time (no UTC parsing)
 function parseLocalDate(ymd) {
