@@ -6,10 +6,14 @@ import {
 
 import { renderCalendar } from "./calendar.js";
 
+// ----------------------------------------------------------------------------
+// State
+// ----------------------------------------------------------------------------
 let currentUser = null;
 let supplements = [];
 let editingSupplementId = null;
 
+// Form + UI nodes
 const form = document.getElementById("supplementForm");
 const cycleCheckbox = document.getElementById("cycleCheckbox");
 const cycleDetails = document.getElementById("cycleDetails");
@@ -22,14 +26,19 @@ document.addEventListener("DOMContentLoaded", () => {
   labelEl = document.getElementById("currentMonthLabel");
 });
 
-window.addEventListener("user-authenticated", async e => {
+window.addEventListener("user-authenticated", async (e) => {
   currentUser = e.detail;
   await refreshData();
 });
 
+// ----------------------------------------------------------------------------
+// Utilities
+// ----------------------------------------------------------------------------
 function getTimeCheckboxes() {
-  // Support either .checkbox-tiles or .checkbox-group containers; exclude the cycle checkbox
-  return document.querySelectorAll(".checkbox-tiles input[type='checkbox']:not(#cycleCheckbox), .checkbox-group input[type='checkbox']:not(#cycleCheckbox)");
+  // Supports either .checkbox-tiles or .checkbox-group containers; excludes the cycle checkbox
+  return document.querySelectorAll(
+    ".checkbox-tiles input[type='checkbox']:not(#cycleCheckbox), .checkbox-group input[type='checkbox']:not(#cycleCheckbox)"
+  );
 }
 
 if (cycleCheckbox && cycleDetails) {
@@ -39,7 +48,7 @@ if (cycleCheckbox && cycleDetails) {
 }
 
 if (form) {
-  form.addEventListener("submit", async e => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentUser || !currentUser.uid) return;
 
@@ -48,13 +57,17 @@ if (form) {
 
     const timeCheckboxes = getTimeCheckboxes();
     const time = Array.from(timeCheckboxes)
-      .filter(cb => cb.checked)
-      .map(cb => cb.value);
+      .filter((cb) => cb.checked)
+      .map((cb) => cb.value);
 
     const onCycle = cycleCheckbox?.checked || false;
     const onDays = parseInt(document.getElementById("onDaysInput")?.value, 10) || 0;
     const offDays = parseInt(document.getElementById("offDaysInput")?.value, 10) || 0;
-    const picked = (document.getElementById("cycleStartInput") && document.getElementById("cycleStartInput").value) ? document.getElementById("cycleStartInput").value : null;
+    const picked =
+      document.getElementById("cycleStartInput") &&
+      document.getElementById("cycleStartInput").value
+        ? document.getElementById("cycleStartInput").value
+        : null;
 
     // If cycling, allow user to pick the cycle start date; otherwise default to today
     const startDate = onCycle && picked ? picked : new Date().toISOString().split("T")[0];
@@ -65,7 +78,10 @@ if (form) {
       dosage,
       time,
       startDate,
-      cycle: (onCycle && (onDays > 0 || offDays > 0)) ? { on: onDays, off: offDays, startDate: startDate } : null,
+      cycle:
+        onCycle && (onDays > 0 || offDays > 0)
+          ? { on: onDays, off: offDays, startDate: startDate }
+          : null,
       color
     };
 
@@ -81,7 +97,7 @@ if (form) {
       form.reset();
       if (cycleCheckbox) cycleCheckbox.checked = false;
       if (cycleDetails) cycleDetails.classList.add("hidden");
-      timeCheckboxes.forEach(cb => cb.checked = false);
+      timeCheckboxes.forEach((cb) => (cb.checked = false));
       if (cancelEditBtn) cancelEditBtn.classList.add("hidden");
 
       await refreshData();
@@ -100,7 +116,7 @@ function getRandomColor() {
 }
 
 function editSupplement(id) {
-  const supplement = supplements.find(s => s.id === id);
+  const supplement = supplements.find((s) => s.id === id);
   if (!supplement) return;
 
   editingSupplementId = id;
@@ -109,19 +125,26 @@ function editSupplement(id) {
   document.getElementById("dosageInput").value = supplement.dosage || "";
 
   const timeCheckboxes = getTimeCheckboxes();
-  timeCheckboxes.forEach(cb => {
+  timeCheckboxes.forEach((cb) => {
     cb.checked = Array.isArray(supplement.time) && supplement.time.includes(cb.value);
   });
 
-  const hasCycle = !!(supplement.cycle && (Number(supplement.cycle["on"]) > 0 || Number(supplement.cycle["off"]) > 0));
+  const hasCycle = !!(
+    supplement.cycle &&
+    (Number(supplement.cycle["on"]) > 0 || Number(supplement.cycle["off"]) > 0)
+  );
   if (cycleCheckbox) cycleCheckbox.checked = hasCycle;
   if (cycleDetails) cycleDetails.classList.toggle("hidden", !hasCycle);
+
   const onInput = document.getElementById("onDaysInput");
   const offInput = document.getElementById("offDaysInput");
   const startInput = document.getElementById("cycleStartInput");
   if (onInput) onInput.value = hasCycle ? Number(supplement.cycle["on"]) : "";
   if (offInput) offInput.value = hasCycle ? Number(supplement.cycle["off"]) : "";
-  if (startInput) startInput.value = hasCycle ? (supplement.cycle["startDate"] || (supplement.startDate || "")) : "";
+  if (startInput)
+    startInput.value = hasCycle
+      ? supplement.cycle["startDate"] || supplement.startDate || ""
+      : "";
 
   if (cancelEditBtn) cancelEditBtn.classList.remove("hidden");
 }
@@ -132,7 +155,7 @@ if (cancelEditBtn) {
     form.reset();
     if (cycleCheckbox) cycleCheckbox.checked = false;
     if (cycleDetails) cycleDetails.classList.add("hidden");
-    getTimeCheckboxes().forEach(cb => cb.checked = false);
+    getTimeCheckboxes().forEach((cb) => (cb.checked = false));
     cancelEditBtn.classList.add("hidden");
   });
 }
@@ -155,18 +178,26 @@ async function refreshData() {
   }
 }
 
-// ---------------- Collapsible state helpers ----------------
+// ----------------------------------------------------------------------------
+// Collapsible state helpers
+// ----------------------------------------------------------------------------
 const COLLAPSE_KEY = "supplementCollapseV1";
 function getCollapseState() {
-  try { return JSON.parse(localStorage.getItem(COLLAPSE_KEY)) || {}; }
-  catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(COLLAPSE_KEY)) || {};
+  } catch {
+    return {};
+  }
 }
 function setCollapseState(state) {
   localStorage.setItem(COLLAPSE_KEY, JSON.stringify(state));
 }
 
-// ---------------- Rendering ----------------
+// ----------------------------------------------------------------------------
+// Render
+// ----------------------------------------------------------------------------
 function renderSupplements() {
+  if (!supplementSummaryContainer) return;
   // Clear container
   supplementSummaryContainer.innerHTML = "";
 
@@ -179,9 +210,12 @@ function renderSupplements() {
 
   (supplements || []).forEach((supplement) => {
     const times = Array.isArray(supplement && supplement.time) ? supplement.time : [];
+    // Normalize "Morning"/"morning"/"AM" etc. by first letter
     const normalized = times
       .map(norm)
-      .map((t) => t.startsWith("m") ? "morning" : t.startsWith("a") ? "afternoon" : t.startsWith("e") ? "evening" : "")
+      .map((t) =>
+        t.startsWith("m") ? "morning" : t.startsWith("a") ? "afternoon" : t.startsWith("e") ? "evening" : ""
+      )
       .filter(Boolean);
 
     if (normalized.length === 0) {
@@ -196,8 +230,9 @@ function renderSupplements() {
   });
 
   const total = ORDER.reduce((n, k) => n + (groups[k] ? groups[k].length : 0), 0);
+
+  // If no groups have items, fall back to flat list
   if (total === 0) {
-    // Fallback: flat list
     (supplements || []).forEach((supplement) => {
       const box = document.createElement("div");
       box.className = "supplement-box cycle-strip";
@@ -208,23 +243,34 @@ function renderSupplements() {
       const offDays = Number(c["off"] || 0);
       const hasCycle = onDays > 0 || offDays > 0;
 
-      const timesText = (Array.isArray(supplement && supplement.time) && supplement.time.length)
-        ? supplement.time.join(", ")
-        : "None selected";
+      const timesText =
+        Array.isArray(supplement && supplement.time) && supplement.time.length
+          ? supplement.time.join(", ")
+          : "None selected";
 
       const cycleInfo = hasCycle
-        ? '<div>Cycle: ' + onDays + ' days on / ' + offDays + ' days off</div>'
-        : '';
+        ? "<div>Cycle: " + onDays + " days on / " + offDays + " days off</div>"
+        : "";
 
-      const html = ''
-        + '<div><strong>' + (supplement && supplement.name ? supplement.name : '') + '</strong></div>'
-        + '<div>Dosage: ' + (supplement && supplement.dosage ? supplement.dosage : '') + '</div>'
-        + '<div>Time: ' + timesText + '</div>'
-        + cycleInfo
-        + '<div class="actions">'
-        +   '<button class="edit-btn" data-id="' + (supplement && supplement.id ? supplement.id : '') + '">Edit</button>'
-        +   '<button class="delete-btn" data-id="' + (supplement && supplement.id ? supplement.id : '') + '">Delete</button>'
-        + '</div>';
+      const html =
+        "<div><strong>" +
+        (supplement && supplement.name ? supplement.name : "") +
+        "</strong></div>" +
+        "<div>Dosage: " +
+        (supplement && supplement.dosage ? supplement.dosage : "") +
+        "</div>" +
+        "<div>Time: " +
+        timesText +
+        "</div>" +
+        cycleInfo +
+        '<div class="actions">' +
+        '<button class="edit-btn" data-id="' +
+        (supplement && supplement.id ? supplement.id : "") +
+        '">Edit</button>' +
+        '<button class="delete-btn" data-id="' +
+        (supplement && supplement.id ? supplement.id : "") +
+        '">Delete</button>' +
+        "</div>";
 
       box.innerHTML = html;
       supplementSummaryContainer.appendChild(box);
@@ -234,7 +280,7 @@ function renderSupplements() {
     return;
   }
 
-  // ► Expand/Collapse all controls
+  // Expand/Collapse all controls
   const controls = document.createElement("div");
   controls.className = "summary-controls";
   const btnExpand = document.createElement("button");
@@ -252,14 +298,14 @@ function renderSupplements() {
 
   const collapseState = getCollapseState(); // { Morning: true|false, ... } -> true means collapsed
 
-  // Grouped render with <details>/<summary>
+  // Build each group as <details>/<summary> with count
   ORDER.forEach((label) => {
     const arr = groups[label];
     if (!arr) return;
 
     const details = document.createElement("details");
     details.className = "supp-group";
-    // open when NOT collapsed; default open if no state stored
+    // default open if no state stored
     details.open = collapseState[label] === undefined ? true : !collapseState[label];
 
     const summary = document.createElement("summary");
@@ -269,7 +315,7 @@ function renderSupplements() {
     const content = document.createElement("div");
     content.className = "supp-group__content";
 
-    // Render each supplement box into this group's content
+    // Render each item into this group
     arr.forEach((supplement) => {
       const box = document.createElement("div");
       box.className = "supplement-box cycle-strip";
@@ -281,18 +327,28 @@ function renderSupplements() {
       const hasCycle = onDays > 0 || offDays > 0;
 
       const cycleInfo = hasCycle
-        ? '<div>Cycle: ' + onDays + ' days on / ' + offDays + ' days off</div>'
-        : '';
+        ? "<div>Cycle: " + onDays + " days on / " + offDays + " days off</div>"
+        : "";
 
-      const html = ''
-        + '<div><strong>' + (supplement && supplement.name ? supplement.name : '') + '</strong></div>'
-        + '<div>Dosage: ' + (supplement && supplement.dosage ? supplement.dosage : '') + '</div>'
-        + '<div>Time: ' + label + '</div>'
-        + cycleInfo
-        + '<div class="actions">'
-        +   '<button class="edit-btn" data-id="' + (supplement && supplement.id ? supplement.id : '') + '">Edit</button>'
-        +   '<button class="delete-btn" data-id="' + (supplement && supplement.id ? supplement.id : '') + '">Delete</button>'
-        + '</div>';
+      const html =
+        "<div><strong>" +
+        (supplement && supplement.name ? supplement.name : "") +
+        "</strong></div>" +
+        "<div>Dosage: " +
+        (supplement && supplement.dosage ? supplement.dosage : "") +
+        "</div>" +
+        "<div>Time: " +
+        label +
+        "</div>" +
+        cycleInfo +
+        '<div class="actions">' +
+        '<button class="edit-btn" data-id="' +
+        (supplement && supplement.id ? supplement.id : "") +
+        '">Edit</button>' +
+        '<button class="delete-btn" data-id="' +
+        (supplement && supplement.id ? supplement.id : "") +
+        '">Delete</button>' +
+        "</div>";
 
       box.innerHTML = html;
       content.appendChild(box);
@@ -301,9 +357,10 @@ function renderSupplements() {
     details.append(summary, content);
     supplementSummaryContainer.appendChild(details);
 
-    // Persist collapse/expand when the user toggles
+    // Persist user toggles
     details.addEventListener("toggle", () => {
-      collapseState[label] = !details.open; // when closed → collapsed = true
+      // when closed → collapsed = true
+      collapseState[label] = !details.open;
       setCollapseState(collapseState);
     });
   });
@@ -311,12 +368,16 @@ function renderSupplements() {
   // Wire expand/collapse all
   btnExpand.addEventListener("click", () => {
     document.querySelectorAll(".supp-group").forEach((d) => (d.open = true));
-    [\"Morning\",\"Afternoon\",\"Evening\",\"Unscheduled\"].forEach(k => { collapseState[k] = false; });
+    ["Morning", "Afternoon", "Evening", "Unscheduled"].forEach((k) => {
+      collapseState[k] = false;
+    });
     setCollapseState(collapseState);
   });
   btnCollapse.addEventListener("click", () => {
     document.querySelectorAll(".supp-group").forEach((d) => (d.open = false));
-    [\"Morning\",\"Afternoon\",\"Evening\",\"Unscheduled\"].forEach(k => { collapseState[k] = true; });
+    ["Morning", "Afternoon", "Evening", "Unscheduled"].forEach((k) => {
+      collapseState[k] = true;
+    });
     setCollapseState(collapseState);
   });
 
@@ -336,4 +397,4 @@ function wireSummaryActions() {
   });
 }
 
-// Export nothing; this module sets up listeners and functions by side effect.
+// (module has side effects; no explicit exports)
