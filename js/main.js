@@ -389,7 +389,6 @@ monitorAuthState(async user => {
       window.location.href = "index.html";
     });
   }
-});
 
 // Helpers to keep everything in LOCAL time (no UTC parsing)
 function parseLocalDate(ymd) {
