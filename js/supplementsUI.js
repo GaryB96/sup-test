@@ -155,6 +155,17 @@ async function refreshData() {
   }
 }
 
+// ---------------- Collapsible state helpers ----------------
+const COLLAPSE_KEY = "supplementCollapseV1";
+function getCollapseState() {
+  try { return JSON.parse(localStorage.getItem(COLLAPSE_KEY)) || {}; }
+  catch { return {}; }
+}
+function setCollapseState(state) {
+  localStorage.setItem(COLLAPSE_KEY, JSON.stringify(state));
+}
+
+// ---------------- Rendering ----------------
 function renderSupplements() {
   // Clear container
   supplementSummaryContainer.innerHTML = "";
@@ -223,16 +234,42 @@ function renderSupplements() {
     return;
   }
 
-  // Grouped render
+  // ► Expand/Collapse all controls
+  const controls = document.createElement("div");
+  controls.className = "summary-controls";
+  const btnExpand = document.createElement("button");
+  btnExpand.type = "button";
+  btnExpand.className = "btn-expand-all";
+  btnExpand.textContent = "Expand all";
+
+  const btnCollapse = document.createElement("button");
+  btnCollapse.type = "button";
+  btnCollapse.className = "btn-collapse-all";
+  btnCollapse.textContent = "Collapse all";
+
+  controls.append(btnExpand, btnCollapse);
+  supplementSummaryContainer.appendChild(controls);
+
+  const collapseState = getCollapseState(); // { Morning: true|false, ... } -> true means collapsed
+
+  // Grouped render with <details>/<summary>
   ORDER.forEach((label) => {
     const arr = groups[label];
-    if (!arr || arr.length === 0) return;
+    if (!arr) return;
 
-    const header = document.createElement("div");
-    header.className = "summary-group-title";
-    header.textContent = label;
-    supplementSummaryContainer.appendChild(header);
+    const details = document.createElement("details");
+    details.className = "supp-group";
+    // open when NOT collapsed; default open if no state stored
+    details.open = collapseState[label] === undefined ? true : !collapseState[label];
 
+    const summary = document.createElement("summary");
+    summary.className = "supp-group__summary";
+    summary.textContent = `${label} (${arr.length})`;
+
+    const content = document.createElement("div");
+    content.className = "supp-group__content";
+
+    // Render each supplement box into this group's content
     arr.forEach((supplement) => {
       const box = document.createElement("div");
       box.className = "supplement-box cycle-strip";
@@ -258,8 +295,29 @@ function renderSupplements() {
         + '</div>';
 
       box.innerHTML = html;
-      supplementSummaryContainer.appendChild(box);
+      content.appendChild(box);
     });
+
+    details.append(summary, content);
+    supplementSummaryContainer.appendChild(details);
+
+    // Persist collapse/expand when the user toggles
+    details.addEventListener("toggle", () => {
+      collapseState[label] = !details.open; // when closed → collapsed = true
+      setCollapseState(collapseState);
+    });
+  });
+
+  // Wire expand/collapse all
+  btnExpand.addEventListener("click", () => {
+    document.querySelectorAll(".supp-group").forEach((d) => (d.open = true));
+    [\"Morning\",\"Afternoon\",\"Evening\",\"Unscheduled\"].forEach(k => { collapseState[k] = false; });
+    setCollapseState(collapseState);
+  });
+  btnCollapse.addEventListener("click", () => {
+    document.querySelectorAll(".supp-group").forEach((d) => (d.open = false));
+    [\"Morning\",\"Afternoon\",\"Evening\",\"Unscheduled\"].forEach(k => { collapseState[k] = true; });
+    setCollapseState(collapseState);
   });
 
   wireSummaryActions();

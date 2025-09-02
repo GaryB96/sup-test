@@ -236,6 +236,7 @@ body:not(.logged-in) #accountActions { display: none; }
 .supplement-box + .supplement-box {
   margin-top: 8px;
 }
+
 /* Supplement summary group headings */
 .summary-group-title {
   margin: 24px 0 8px;
@@ -245,6 +246,50 @@ body:not(.logged-in) #accountActions { display: none; }
   border-bottom: 1px solid #e5e5e5;
   padding-bottom: 4px;
 }
+.summary-controls {
+  display: flex;
+  gap: .5rem;
+  margin: .5rem 0 1rem;
+}
+
+.summary-controls button {
+  padding: .35rem .65rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: .5rem;
+  background: var(--btn-bg, #f7f7f7);
+  cursor: pointer;
+}
+
+.supp-group {
+  border: 1px solid var(--border-color, #e5e5e5);
+  border-radius: .75rem;
+  margin-bottom: .75rem;
+  overflow: hidden;
+}
+
+.supp-group > summary {
+  padding: .6rem .8rem;
+  font-weight: 600;
+  list-style: none;          /* hide default marker */
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  background: var(--group-header, #fafafa);
+  border-bottom: 1px solid var(--border-color, #eee);
+}
+
+.supp-group > summary::-webkit-details-marker { display: none; } /* Chrome marker */
+.supp-group[open] > summary { border-bottom-color: #eee; }
+
+.supp-group__content {
+  padding: .6rem .8rem;
+}
+
+.supplement-box { 
+  /* your existing card styles */
+  margin-bottom: .5rem;
+}
+
 .cycle-start-row {
   display: flex;
   align-items: center;
