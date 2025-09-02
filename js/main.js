@@ -12,18 +12,16 @@ function el(id){ return document.getElementById(id); }
 function guessTZ() {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax";
+  } catch {
+    return "America/Halifax";
   }
+}
 
 function setNotesButtonVisibility(isLoggedIn) {
   const btn = document.getElementById("notesBtn");
   if (!btn) return;
   btn.style.display = isLoggedIn ? "inline-block" : "none";
 }
- catch {
-    return "America/Halifax";
-  }
-}
-
 
 async function openNotificationsModal() {
   if (!currentUser) return;
