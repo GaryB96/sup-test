@@ -14,7 +14,23 @@
     body.logged-in #authContainer { display: none; }
     #authContainer { margin-bottom: 20px; }
     .modal.hidden { display: none; }
-  
+
+    <!-- Notes Modal -->
+<div id="notesModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="notesModalTitle" aria-describedby="notesModalDesc">
+  <div class="modal-content" role="document">
+    <div class="modal-header">
+      <h2 id="notesModalTitle">Notes</h2>
+      <button id="closeNotesBtn" class="icon-btn" aria-label="Close notes">&times;</button>
+    </div>
+    <p id="notesModalDesc" class="muted">Write anything you want to remember. Notes are saved to your account.</p>
+    <textarea id="notesTextarea" rows="12" placeholder="Write your notes here..."></textarea>
+    <div class="modal-actions">
+      <span id="notesStatus" role="status" aria-live="polite"></span>
+      <button id="saveNotesBtn" class="primary">Save</button>
+    </div>
+  </div>
+</div>
+
     /* Modal base */
     .modal { 
       position: fixed; inset: 0; 

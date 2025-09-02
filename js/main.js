@@ -127,15 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Notes feature coming soon!");
     });
   }
-// Notes button click handler (opens notes or placeholder)
-  const notesBtnEarly = document.getElementById("notesBtn");
-  if (notesBtnEarly && !notesBtnEarly.dataset.bound) {
-    notesBtnEarly.dataset.bound = "1";
-    notesBtnEarly.addEventListener("click", () => {
-      // TODO: replace with your notes modal or navigation
-      alert("Notes feature coming soon!");
-    });
-  }
+
 document.getElementById("openNotifications")?.addEventListener("click", (e)=>{ e.preventDefault(); openNotificationsModal(); });
   document.getElementById("closeNotificationsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); closeNotificationsModal(); });
   document.getElementById("saveNotificationsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); saveNotifications(); });
