@@ -9,14 +9,7 @@ import { db } from "./firebaseConfig.js";
 import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
 function el(id){ return document.getElementById(id); }
-function guessTZ() {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax";
-  } catch (e) {
-    return "America/Halifax";
-  }
-}
-
+function guessTZ(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax"; } catch { return "America/Halifax"; } }
 
 async function openNotificationsModal() {
   if (!currentUser) return;
@@ -206,27 +199,28 @@ function closePasswordConfirmModal() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Cache important elements
   const logoutBtn = document.getElementById("logoutBtn");
-
   const calendarEl = document.getElementById("calendar");
-
   const labelEl = document.getElementById("currentMonthLabel");
-
   const loginForm = document.getElementById("loginForm");
-
   const prevBtn = document.getElementById("prevMonth");
-
   const nextBtn = document.getElementById("nextMonth");
-
-
-
-// --- Profile dropdown ---
   const profileButton = document.getElementById("profileButton");
   const dropdownContainer = profileButton ? profileButton.closest(".dropdown") : null;
-
   const resetPasswordLink = document.getElementById("resetPassword");
   const deleteAccountLink = document.getElementById("deleteAccount");
 
+  // Notes button
+  const notesBtn = document.getElementById("notesBtn");
+  if (notesBtn) {
+    notesBtn.addEventListener("click", () => {
+      // Replace with modal open when ready
+      alert("Notes feature coming soon!");
+    });
+  }
+
+  // --- Profile dropdown ---
   if (dropdownContainer && profileButton) {
     profileButton.addEventListener("click", (e) => {
       e.preventDefault();
@@ -234,13 +228,14 @@ document.addEventListener("DOMContentLoaded", () => {
       dropdownContainer.classList.toggle("show");
     });
     document.addEventListener("click", (e) => {
-      if (!e.target.closest(".dropdown")) {
+      if (!dropdownContainer.contains(e.target)) {
         dropdownContainer.classList.remove("show");
       }
     });
   }
 
-if (resetPasswordLink) {
+  // Reset password
+  if (resetPasswordLink) {
     resetPasswordLink.addEventListener("click", async (e) => {
       e.preventDefault();
       try {
@@ -261,7 +256,7 @@ if (resetPasswordLink) {
     });
   }
 
-// --- Confirm Delete Modal wiring ---
+  // --- Confirm Delete Modal wiring ---
   const confirmYes = document.getElementById("confirmDeleteYes");
   const confirmNo = document.getElementById("confirmDeleteNo");
 
@@ -298,7 +293,6 @@ if (resetPasswordLink) {
     }
   });
 
-
   // --- Month navigation ---
   if (prevBtn && nextBtn) {
     prevBtn.addEventListener("click", async () => {
@@ -308,46 +302,6 @@ if (resetPasswordLink) {
         currentYear--;
       }
       await refreshCalendar();
-    });
-
-    nextBtn.addEventListener("click", async () => {
-      currentMonth++;
-      if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-      }
-      await refreshCalendar();
-    });
-  }
-
-      await refreshCalendar();
-    });
-
-    nextBtn.addEventListener("click", async () => {
-      currentMonth++;
-      if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-      }
-      await refreshCalendar();
-    });
-  }
-
-});
-  // --- Month navigation ---
-  if (prevBtn && nextBtn) {
-    prevBtn.addEventListener("click", async () => {
-      currentMonth--;
-      if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-      }
- else {
-      document.body.classList.remove("logged-in");
-      calendarEl.innerHTML = "";
-      labelEl.textContent = "";
-    }
-});
     });
 
     nextBtn.addEventListener("click", async () => {
@@ -371,11 +325,6 @@ if (resetPasswordLink) {
 
       if (!email || !password) {
         alert("Please enter both email && password.");
-        return;
-      }
-
-      if (password.length < 6) {
-        alert("Password must be at least 6 characters long.");
         return;
       }
 
@@ -409,7 +358,7 @@ if (resetPasswordLink) {
       window.location.href = "index.html";
     });
   }
-});
+}););
 
 // Helpers to keep everything in LOCAL time (no UTC parsing)
 function parseLocalDate(ymd) {
