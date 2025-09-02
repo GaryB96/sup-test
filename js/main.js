@@ -280,6 +280,20 @@ document.addEventListener("DOMContentLoaded", () => {
       calendarEl.innerHTML = "";
       labelEl.textContent = "";
     }
+    import { onAuthStateChanged } from "firebase/auth";
+    import { auth } from "./firebaseConfig.js";
+
+onAuthStateChanged(auth, (user) => {
+  const notesBtn = document.getElementById("notesBtn");
+  if (user) {
+    // User logged in
+    notesBtn.style.display = "inline-block";
+  } else {
+    // User logged out
+    notesBtn.style.display = "none";
+  }
+});
+
   });
 
   // --- Month navigation ---

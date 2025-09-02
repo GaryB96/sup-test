@@ -308,6 +308,20 @@ body:not(.logged-in) #accountActions { display: none; }
   display: inline-block;
   width: auto;
 }
+#notesBtn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #4CAF50;
+  color: white;
+  cursor: pointer;
+}
+#notesBtn:hover {
+  background-color: #45a049;
+}
 
 .modal.hidden{display:none;}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;padding-top:10vh;}
