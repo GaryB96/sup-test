@@ -12,15 +12,20 @@ function el(id){ return document.getElementById(id); }
 function guessTZ() {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax";
-  } catch {
-    return "America/Halifax";
   }
-}
 
 function setNotesButtonVisibility(isLoggedIn) {
   const btn = document.getElementById("notesBtn");
   if (!btn) return;
   btn.style.display = isLoggedIn ? "inline-block" : "none";
+}
+ catch {
+    return "America/Halifax";
+  }
+}
+catch {
+    return "America/Halifax";
+  }
 }
 
 async function openNotificationsModal() {
@@ -172,16 +177,14 @@ async function downloadIcs(){
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Notes button click handler (opens notes or navigation)
-  const notesBtnEarly2 = document.getElementById("notesBtn");
-  if (notesBtnEarly2 && !notesBtnEarly2.dataset.bound) {
-    notesBtnEarly2.dataset.bound = "1";
-    notesBtnEarly2.addEventListener("click", () => {
+  // Notes button click handler
+  const notesBtn = document.getElementById("notesBtn");
+  if (notesBtn) {
+    notesBtn.addEventListener("click", () => {
       alert("Notes feature coming soon!");
     });
   }
-
-  // Notes button + modal wiring
+// Notes button + modal wiring
 const notesBtn = document.getElementById("notesBtn");
 const closeNotesBtn = document.getElementById("closeNotesBtn");
 const saveNotesBtn = document.getElementById("saveNotesBtn");
@@ -386,8 +389,7 @@ monitorAuthState(async user => {
   }
 });
 
-});
-
+}
   // --- Month navigation ---
   if (prevBtn && nextBtn) {
     prevBtn.addEventListener("click", async () => {
@@ -396,7 +398,7 @@ monitorAuthState(async user => {
         currentMonth = 11;
         currentYear--;
       }
-      await refreshCalendar();
+);      await refreshCalendar();
     });
 
     nextBtn.addEventListener("click", async () => {
