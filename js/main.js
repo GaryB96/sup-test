@@ -10,6 +10,11 @@ import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.co
 
 function el(id){ return document.getElementById(id); }
 function guessTZ(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax"; }
+function setNotesButtonVisibility(isLoggedIn) {
+  const btn = document.getElementById("notesBtn");
+  if (!btn) return;
+  btn.style.display = isLoggedIn ? "inline-block" : "none";
+}
 
 function setNotesButtonVisibility(isLoggedIn) {
   const btn = document.getElementById("notesBtn");
@@ -290,32 +295,36 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Auth state → show/hide app && render calendar ---
-  monitorAuthState(async user => {
-if (user) {
-      document.body.classList.add("logged-in");
-      currentUser = user;
-
-      const event = new CustomEvent("user-authenticated", { detail: user });
-      window.dispatchEvent(event);
-
-      await refreshCalendar();
-    } else {
-      document.body.classList.remove("logged-in");
-      calendarEl.innerHTML = "";
-      labelEl.textContent = "";
-      setNotesButtonVisibility(false);
-    }
-    import { onAuthStateChanged } from "firebase/auth";
-    import { auth } from "./firebaseConfig.js";
-
-onAuthStateChanged(auth, (user) => {
-  const notesBtn = document.getElementById("notesBtn");
+monitorAuthState(async user => {
   if (user) {
-    // User logged in
-    notesBtn.style.display = "inline-block";
+    document.body.classList.add("logged-in");
+    currentUser = user;
+
+    const event = new CustomEvent("user-authenticated", { detail: user });
+    window.dispatchEvent(event);
+
+    await refreshCalendar();
+
+    // Show Notes button
+    setNotesButtonVisibility(true);
   } else {
-    // User logged out
-    notesBtn.style.display = "none";
+    document.body.classList.remove("logged-in");
+    calendarEl.innerHTML = "";
+    labelEl.textContent = "";
+
+    // Hide Notes button
+    setNotesButtonVisibility(false);
+  }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const notesBtn = document.getElementById("notesBtn");
+  if (notesBtn) {
+    notesBtn.addEventListener("click", () => {
+      alert("Notes feature coming soon!");
+      // or window.location.href = "notes.html";
+    });
   }
 });
 
