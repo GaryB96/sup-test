@@ -112,8 +112,6 @@ function openNotesModal() {
       console.error(err);
       status && (status.textContent = "Could not load notes.");
     }
-  })();
-}
 
 function closeNotesModal() {
   const modal = document.getElementById("notesModal");
@@ -121,7 +119,6 @@ function closeNotesModal() {
 }
 
 async function saveNotes(){ /* deprecated: autosave handles this */ }
-}
 
 async function saveNotifications() {
   if (!currentUser) return;
