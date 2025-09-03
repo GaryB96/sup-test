@@ -108,6 +108,10 @@ function openNotesModal() {
     await saveNow();
     closeNotesModal();
   }, { once: true });
+} catch (err) {
+      console.error(err);
+      status && (status.textContent = "Could not load notes.");
+    }
 
 function closeNotesModal() {
   const modal = document.getElementById("notesModal");
@@ -201,6 +205,8 @@ document.addEventListener("DOMContentLoaded", () => {
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let currentUser = null;
+let calendarEl, labelEl, logoutBtn, loginForm, prevBtn, nextBtn;
+
 
 // Make cycle boundaries available to notifications.js
 window.getCycleBoundaries = async function(startISO, endISO) {
@@ -284,14 +290,13 @@ function closePasswordConfirmModal() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const logoutBtn = document.getElementById("logoutBtn");
-  const calendarEl = document.getElementById("calendar");
-  const labelEl = document.getElementById("currentMonthLabel");
-  const loginForm = document.getElementById("loginForm");
-  const prevBtn = document.getElementById("prevMonth");
-  const nextBtn = document.getElementById("nextMonth");
-
-  // Notes modal wiring
+  logoutBtn = document.getElementById("logoutBtn");
+  calendarEl = document.getElementById("calendar");
+  labelEl = document.getElementById("currentMonthLabel");
+  loginForm = document.getElementById("loginForm");
+  prevBtn = document.getElementById("prevMonth");
+  nextBtn = document.getElementById("nextMonth");
+// Notes modal wiring
   const notesBtn = document.getElementById("notesBtn");
   const closeNotesBtn = document.getElementById("closeNotesBtn");
   const saveNotesBtn = document.getElementById("saveNotesBtn");
@@ -320,15 +325,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (currentMonth < 0) {
         currentMonth = 11;
         currentYear--;
-      }
-      await refreshCalendar();
-    });
-
-    nextBtn.addEventListener("click", async () => {
-      currentMonth++;
-      if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
       }
       await refreshCalendar();
     });
@@ -412,7 +408,6 @@ document.addEventListener("DOMContentLoaded", () => {
       labelEl.textContent = "";
       
       setNotesButtonVisibility(false);
-setNotesButtonVisibility(false);
     }
     await refreshCalendar();
   });      
@@ -606,5 +601,4 @@ async function refreshCalendar() {
       }
     });
   }
-}
 }
