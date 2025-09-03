@@ -31,6 +31,9 @@ async function openNotificationsModal() {
 }
 function closeNotificationsModal(){ el("notificationsModal")?.classList.add("hidden"); }
 
+// simple debounce
+function debounce(fn, wait){ let t; return function(...args){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,args), wait); }; }
+
 function setNotesButtonVisibility(isLoggedIn) {
   const btn = document.getElementById("notesBtn");
   if (!btn) return;
@@ -44,20 +47,68 @@ function openNotesModal() {
   const status = document.getElementById("notesStatus");
   if (!modal || !ta) return;
 
-  status && (status.textContent = "Loading…");
   modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  status && (status.textContent = "Loading…");
 
-  // Focus textarea for accessibility
+  // focus textarea shortly after open
   setTimeout(() => ta.focus(), 30);
 
-  // Load existing note
+  // load latest
   (async () => {
     try {
-      const ref = doc(db, "users", currentUser.uid, "notes"); // a doc named "notes" under this user
+      const ref = doc(db, "users", currentUser.uid);
       const snap = await getDoc(ref);
-      ta.value = snap.exists() && snap.data().text ? snap.data().text : "";
-      status && (status.textContent = ta.value ? "Loaded." : "Start typing and click Save.");
+      const data = snap.exists() ? snap.data() : null;
+      if (data && data.notesText) ta.value = data.notesText;
+      status && (status.textContent = data && data.notesUpdatedAt ? ("Saved " + new Date(data.notesUpdatedAt).toLocaleTimeString()) : "Loaded.");
     } catch (err) {
+      console.error(err);
+      status && (status.textContent = "Could not load notes.");
+    }
+  })();
+
+  // autosave handlers
+  const saveNow = async () => {
+    if (!currentUser || !ta) return;
+    status && (status.textContent = "Saving…");
+    try {
+      const ref = doc(db, "users", currentUser.uid);
+      const payload = { notesText: ta.value || "", notesUpdatedAt: new Date().toISOString() };
+      await setDoc(ref, payload, { merge: true });
+      status && (status.textContent = "Saved just now");
+    } catch (e) {
+      console.error(e);
+      status && (status.textContent = "Save failed. Retry (Ctrl/Cmd+S).");
+    }
+  };
+
+  const debounced = debounce(saveNow, 800);
+
+  // remove prior listeners if any by cloning node
+  const taClone = ta.cloneNode(true);
+  ta.parentNode.replaceChild(taClone, ta);
+  taClone.addEventListener("input", () => {
+    status && (status.textContent = "Saving…");
+    debounced();
+  });
+  taClone.addEventListener("blur", saveNow);
+
+  // Ctrl/Cmd+S shortcut
+  const keyHandler = (ev) => {
+    if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "s") {
+      ev.preventDefault();
+      saveNow();
+    }
+  };
+  modal.addEventListener("keydown", keyHandler);
+
+  // hook close button to flush save
+  document.getElementById("closeNotesBtn")?.addEventListener("click", async () => {
+    await saveNow();
+    closeNotesModal();
+  }, { once: true });
+} catch (err) {
       console.error(err);
       status && (status.textContent = "Could not load notes.");
     }
@@ -69,21 +120,7 @@ function closeNotesModal() {
   if (modal) modal.classList.add("hidden");
 }
 
-async function saveNotes() {
-  if (!currentUser) return;
-  const ta = document.getElementById("notesTextarea");
-  const status = document.getElementById("notesStatus");
-  if (!ta) return;
-
-  try {
-    const ref = doc(db, "users", currentUser.uid, "notes");
-    await setDoc(ref, { text: ta.value || "", updatedAt: new Date().toISOString() }, { merge: true });
-    status && (status.textContent = "Saved.");
-  } catch (e) {
-    console.error(e);
-    status && (status.textContent = "Save failed.");
-    alert("Could not save notes: " + (e?.message || e));
-  }
+async function saveNotes(){ /* deprecated: autosave handles this */ }
 }
 
 async function saveNotifications() {

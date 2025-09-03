@@ -326,3 +326,11 @@ body:not(.logged-in) #accountActions { display: none; }
 .modal.hidden{display:none;}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;padding-top:10vh;}
 .modal .modal-content{background:#fff;border-radius:12px;padding:20px;max-width:600px;width:92%;}
+
+
+/* Notes status pill */
+#notesStatus {
+  font-size: 0.9rem;
+  color: #555;
+  margin-right: auto;
+}
