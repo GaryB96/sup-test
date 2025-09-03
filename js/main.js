@@ -607,3 +607,4 @@ async function refreshCalendar() {
     });
   }
 }
+}
