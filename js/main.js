@@ -384,8 +384,9 @@ document.addEventListener("DOMContentLoaded", () => {
       setNotesButtonVisibility(false);
 setNotesButtonVisibility(false);
     }
-  });      await refreshCalendar();
-    });
+    await refreshCalendar();
+  });      
+
 
     nextBtn.addEventListener("click", async () => {
       currentMonth++;
@@ -395,7 +396,6 @@ setNotesButtonVisibility(false);
       }
       await refreshCalendar();
     });
-  }
 
   // --- Login / Signup form ---
   if (loginForm) {
