@@ -260,7 +260,51 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
   const prevBtn = document.getElementById("prevMonth");
   const nextBtn = document.getElementById("nextMonth");
+
+  // Notes modal wiring
   const notesBtn = document.getElementById("notesBtn");
+  const closeNotesBtn = document.getElementById("closeNotesBtn");
+  const saveNotesBtn = document.getElementById("saveNotesBtn");
+  if (notesBtn) {
+    notesBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openNotesModal();
+    });
+  }
+  if (closeNotesBtn) {
+    closeNotesBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeNotesModal();
+    });
+  }
+  if (saveNotesBtn) {
+    saveNotesBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      saveNotes();
+    });
+  }
+  const notesBtn = document.getElementById("notesBtn");
+  // --- Month navigation ---
+  if (prevBtn && nextBtn) {
+    prevBtn.addEventListener("click", async () => {
+      currentMonth--;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      }
+      await refreshCalendar();
+    });
+
+    nextBtn.addEventListener("click", async () => {
+      currentMonth++;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      await refreshCalendar();
+    });
+  }
+
 })
 
   // --- Profile dropdown ---
@@ -331,23 +375,17 @@ document.addEventListener("DOMContentLoaded", () => {
       window.dispatchEvent(event);
 
       await refreshCalendar();
-    } else {
+    
+      setNotesButtonVisibility(true);
+} else {
       document.body.classList.remove("logged-in");
       calendarEl.innerHTML = "";
       labelEl.textContent = "";
+      
       setNotesButtonVisibility(false);
+setNotesButtonVisibility(false);
     }
-  });
-
-  // --- Month navigation ---
-  if (prevBtn && nextBtn) {
-    prevBtn.addEventListener("click", async () => {
-      currentMonth--;
-      if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-      }
-      await refreshCalendar();
+  });      await refreshCalendar();
     });
 
     nextBtn.addEventListener("click", async () => {
