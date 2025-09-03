@@ -44,23 +44,35 @@
 </head>
 <!-- Notes Modal -->
 <div id="notesModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="notesModalTitle" aria-describedby="notesModalDesc">
-  <div class="modal-content" role="document">
+  <div class="modal-content modal-notes" role="document">
     <div class="modal-header">
-      <h2 id="notesModalTitle">Notes</h2>
-      <button id="closeNotesBtn" class="icon-btn" aria-label="Close notes">&times;</button>
+      <div class="modal-title-wrap">
+        <h2 id="notesModalTitle" class="modal-title">Notes</h2>
+        <p id="notesModalDesc" class="modal-subtitle">Your personal note. It autosaves as you type.</p>
+      </div>
+      <button id="closeNotesBtn" class="icon-btn close-btn" aria-label="Close notes">
+        &times;
+      </button>
     </div>
 
-    <p id="notesModalDesc" class="muted">Your personal note. It autosaves as you type.</p>
-    <textarea id="notesTextarea" rows="12" placeholder="Write your notes here..."></textarea>
+    <div class="modal-body">
+      <textarea id="notesTextarea" rows="12" class="notes-textarea" placeholder="Write your notes here…"></textarea>
+    </div>
 
-    <div class="modal-actions">
-      <span id="notesStatus" role="status" aria-live="polite"></span></div>
+    <div class="modal-footer">
+      <span id="notesStatus" class="status-pill" role="status" aria-live="polite"> </span>
+      <div class="kbd-hint" aria-hidden="true">
+        <span class="kbd">Ctrl</span><span class="plus">/</span><span class="kbd">⌘</span><span class="plus">+</span><span class="kbd">S</span>
+        <span class="hint-text">Save now</span>
+      </div>
+    </div>
   </div>
 </div>
 
 <body>
 <div id="accountActions">
 <button class="logout-button" id="logoutBtn">Logout</button>
+
 <!-- Profile dropdown -->
 <div class="dropdown">
 <button class="profile-button" id="profileButton">Account Options</button>

@@ -334,3 +334,141 @@ body:not(.logged-in) #accountActions { display: none; }
   color: #555;
   margin-right: auto;
 }
+
+/* ===========================
+   Notes Modal – refreshed UI
+   =========================== */
+:root{
+  --modal-bg: rgba(20, 20, 25, 0.5);
+  --card-bg: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --ring: #3b82f6;
+  --shadow: 0 10px 30px rgba(2, 6, 23, 0.15);
+  --radius: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root{
+    --modal-bg: rgba(10, 10, 12, 0.55);
+    --card-bg: #0b1220;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #1e293b;
+    --ring: #60a5fa;
+    --shadow: 0 12px 36px rgba(0,0,0,0.55);
+  }
+}
+
+/* Backdrop */
+.modal {
+  position: fixed; inset: 0;
+  display: grid; place-items: center;
+  background: var(--modal-bg);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+}
+
+/* Card */
+.modal-content.modal-notes{
+  width: min(860px, 92vw);
+  background: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: clip;
+  animation: modal-pop .16s ease-out;
+}
+
+@keyframes modal-pop {
+  from { transform: translateY(6px) scale(.98); opacity: .0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* Header */
+.modal-header{
+  display:flex; align-items:flex-start; gap: 12px;
+  padding: 18px 18px 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-title-wrap{ flex:1; min-width:0; }
+.modal-title{
+  margin:0; font-size: 1.15rem; line-height: 1.2; font-weight: 700;
+}
+.modal-subtitle{
+  margin:.35rem 0 0; font-size:.925rem; color: var(--muted);
+}
+
+/* Close button */
+.icon-btn.close-btn{
+  appearance:none; border:none; background:transparent;
+  font-size: 1.6rem; line-height: 1; cursor: pointer;
+  color: var(--muted); padding: 2px 6px; border-radius: 10px;
+}
+.icon-btn.close-btn:hover{ color: var(--text); background: color-mix(in oklab, var(--border) 60%, transparent); }
+.icon-btn.close-btn:focus-visible{
+  outline: 3px solid var(--ring); outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* Body */
+.modal-body{ padding: 14px 18px 0 18px; }
+.notes-textarea{
+  width: 100%;
+  min-height: clamp(220px, 40vh, 480px);
+  resize: vertical;
+  padding: 14px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--card-bg) 85%, #000 0%);
+  color: var(--text);
+  font: 500 0.98rem/1.55 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.notes-textarea::placeholder{ color: color-mix(in oklab, var(--muted) 80%, transparent); }
+.notes-textarea:focus{
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--ring) 30%, transparent);
+}
+
+/* Footer */
+.modal-footer{
+  display:flex; align-items:center; gap: 10px;
+  padding: 12px 18px 16px 18px;
+  border-top: 1px solid var(--border);
+}
+.status-pill{
+  font-size: .92rem; color: var(--muted);
+  background: color-mix(in oklab, var(--border) 40%, transparent);
+  padding: 6px 10px; border-radius: 999px;
+  min-width: 6ch; text-align: left;
+}
+
+/* Keyboard hint */
+.kbd-hint{
+  margin-left: auto; display:flex; align-items:center; gap: 8px;
+  color: var(--muted);
+}
+.kbd{
+  display:inline-block; min-width: 1.8ch; text-align:center;
+  padding: 4px 7px; border: 1px solid var(--border);
+  border-bottom-width: 3px;
+  border-radius: 8px;
+  font: 600 .8rem/1 system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background: color-mix(in oklab, var(--card-bg) 90%, transparent);
+  color: var(--text);
+}
+.plus{ opacity:.5; font-weight:700; }
+.hint-text{ font-size: .9rem; }
+
+/* Mobile tweaks */
+@media (max-width: 480px){
+  .modal-header{ padding: 14px 14px 8px; }
+  .modal-body{ padding: 10px 14px 0; }
+  .modal-footer{ padding: 10px 14px 12px; }
+  .kbd-hint{ display:none; } /* optional: hide hint on very small screens */
+}
