@@ -283,7 +283,6 @@ document.addEventListener("DOMContentLoaded", () => {
       saveNotes();
     });
   }
-  const notesBtn = document.getElementById("notesBtn");
   // --- Month navigation ---
   if (prevBtn && nextBtn) {
     prevBtn.addEventListener("click", async () => {
