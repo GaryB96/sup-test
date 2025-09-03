@@ -108,10 +108,6 @@ function openNotesModal() {
     await saveNow();
     closeNotesModal();
   }, { once: true });
-} catch (err) {
-      console.error(err);
-      status && (status.textContent = "Could not load notes.");
-    }
 
 function closeNotesModal() {
   const modal = document.getElementById("notesModal");
