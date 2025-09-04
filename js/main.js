@@ -12,8 +12,14 @@ function showInlineStatus(message, type = "info") {
   if (type) el.classList.add(type);
   el.textContent = message;
 }
-  if (type === "error") el.classList.add("error"); else el.classList.remove("error");
+// Inline status helper (avoids browser alert banners)
+function showInlineStatus(message, type = "info") {
+  const el = document.getElementById("auth-status") || document.getElementById("app-status");
+  if (!el) { console[type === "error" ? "error" : "log"](message); return; }
+  el.classList.remove("error","success","warn","info");
+  if (type) el.classList.add(type);
   el.textContent = message;
+}
 
 // ==== Notifications UI & ICS Export ====
 import { db } from "./firebaseConfig.js";
