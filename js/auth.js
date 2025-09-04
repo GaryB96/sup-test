@@ -62,7 +62,6 @@ export function monitorAuthState(callback) {
     try { document.documentElement.classList.remove("auth-pending"); } catch {}
     if (typeof callback === "function") callback(user);
   });
-});
 }
 
 // 🚪 Logout function
