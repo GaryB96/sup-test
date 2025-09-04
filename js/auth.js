@@ -113,9 +113,6 @@ export function monitorAuthState(callback) {
     }
   });
 }
-    }
-  });
-}
 
 // Optional: expose auth/db for advanced callers
 export { auth, db };
