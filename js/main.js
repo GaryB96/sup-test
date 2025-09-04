@@ -14,8 +14,6 @@ function showInlineStatus(message, type = "info") {
 }
   if (type === "error") el.classList.add("error"); else el.classList.remove("error");
   el.textContent = message;
-}
-
 
 // ==== Notifications UI & ICS Export ====
 import { db } from "./firebaseConfig.js";
