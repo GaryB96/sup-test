@@ -4,6 +4,19 @@ import { fetchSupplements } from "./supplements.js";
 import { EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 import { auth } from "./firebaseConfig.js";
 
+// Inline status helper (avoids browser alert banners)
+function showInlineStatus(message, type = "info") {
+  const el = document.getElementById("auth-status") || document.getElementById("app-status");
+  if (!el) { console[type === "error" ? "error" : "log"](message); return; }
+  el.classList.remove("error","success","warn","info");
+  if (type) el.classList.add(type);
+  el.textContent = message;
+}
+  if (type === "error") el.classList.add("error"); else el.classList.remove("error");
+  el.textContent = message;
+}
+
+
 // ==== Notifications UI & ICS Export ====
 import { db } from "./firebaseConfig.js";
 import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
@@ -370,10 +383,10 @@ if (nextBtn) {
       e.preventDefault();
       try {
         await resetPassword();
-        alert("Password reset email sent (check your inbox).");
+        showInlineStatus("Password reset email sent. Please check your inbox.", "success");
       } catch (err) {
         console.error("Password reset error:", err);
-        alert("Could not send reset email: " + (err?.message || err));
+        showInlineStatus("Could not send reset email: " + (err?.message || err), "error");
       }
     });
   }
@@ -456,12 +469,12 @@ if (nextBtn) {
     forgotLink.addEventListener("click", async (e) => {
       e.preventDefault();
       const email = signinEmail?.value?.trim();
-      if (!email) { alert("Enter your email above, then click Forgot password."); return; }
+      if (!email) { showInlineStatus("Enter your email above, then click Forgot password.", "error"); return; }
       try {
         await resetPassword(email);
-        alert("Password reset email sent. Please check your inbox.");
+        showInlineStatus("Password reset email sent. Please check your inbox.", "success");
       } catch (err) {
-        alert("Could not send reset email: " + (err?.message || ""));
+        showInlineStatus("Could not send reset email: " + (err?.message || err), "error");
         console.error(err);
       }
     });
@@ -472,12 +485,12 @@ if (nextBtn) {
       e.preventDefault();
       const email = signinEmail?.value?.trim();
       const password = signinPass?.value || "";
-      if (!email || !password) { alert("Please enter both email and password."); return; }
+      if (!email || !password) { showInlineStatus("Please enter both email and password.", "error"); return; }
       try {
         await login(email, password);
         window.location.href = "index.html";
       } catch (error) {
-        alert("Login failed: " + (error?.message || ""));
+        showInlineStatus("Login failed: " + (error?.message || ""), "error");
         console.error("Login error:", error);
       }
     });
@@ -496,22 +509,27 @@ if (nextBtn) {
       const email = signupEmail?.value?.trim();
       const p1 = signupPass?.value || "";
       const p2 = signupPass2?.value || "";
-      if (!email || !p1 || !p2) { alert("Please complete all fields."); return; }
-      if (p1.length < 6) { alert("Password must be at least 6 characters."); return; }
-      if (p1 !== p2) { alert("Those passwords don’t match. Please re-enter the same password in both fields."); return; }
+      if (!email || !p1 || !p2) { showInlineStatus("Please complete all fields.", "error"); return; }
+      if (p1.length < 6) { showInlineStatus("Password must be at least 6 characters.", "error"); return; }
+      if (p1 !== p2) { showInlineStatus("Those passwords don’t match. Please re-enter the same password in both fields.", "error"); return; }
       try {
         await signup(email, p1);
       } catch (err) {
         if (err && err.code === "auth/email-not-verified") {
-          alert("Account created. We sent a verification email to " + email + ". Please click the link to activate your account.");
+          showInlineStatus("Account created. We sent a verification email to " + email + ". Please click the link to activate your account.", "success");
           if (resendBtn) resendBtn.style.display = "inline-block";
           setTab("signin");
           return;
         }
         if (err && err.code === "auth/email-already-in-use") {
-          alert("An account with this email already exists. Please sign in or use ‘Forgot password’ to reset it.");
-        } else {
-          alert("Signup failed: " + (err?.message || ""));
+  showInlineStatus("An account with this email already exists. Please sign in or use ‘Forgot password’ to reset it.", "error");
+  const tabBtn = document.querySelector('.tabs .tab[data-tab="signin"]');
+  if (tabBtn) tabBtn.click();
+  const emailField = document.getElementById("signinEmail");
+  if (emailField && email) emailField.value = email;
+  return;
+} else {
+          showInlineStatus("Signup failed: " + (err?.message || ""), "error");
         }
         console.error("Signup error:", err);
       }
@@ -522,9 +540,9 @@ if (nextBtn) {
     resendBtn.addEventListener("click", async () => {
       try {
         await resendVerification();
-        alert("Verification email sent. Please check your inbox.");
+        showInlineStatus("Verification email sent. Please check your inbox.", "success");
       } catch (e) {
-        alert(e?.message || "Could not send verification email.");
+        showInlineStatus(e?.message || "Could not send verification email.", "error");
       }
     });
   }
@@ -532,7 +550,7 @@ if (nextBtn) {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", async () => {
       await logout();
-      alert("You have been logged out.");
+      showInlineStatus("You have been logged out.", "info");
       window.location.href = "index.html";
     });
   }
@@ -636,30 +654,30 @@ async function refreshCalendar() {
     passwordConfirmBtn.addEventListener("click", async () => {
       const user = auth.currentUser;
       if (!user) {
-        alert("No user is currently signed in.");
+        showInlineStatus("No user is currently signed in.", "error");
         closePasswordConfirmModal();
         return;
       }
       const input = document.getElementById("confirmPasswordInput");
       const password = input ? input.value : "";
       if (!password) {
-        alert("Please enter your password.");
+        showInlineStatus("Please enter your password.", "error");
         return;
       }
       try {
         const credential = EmailAuthProvider.credential(user.email, password);
         await reauthenticateWithCredential(user, credential);
         await deleteAccount(user);
-        alert("Your account has been deleted.");
+        showInlineStatus("Your account has been deleted.", "success");
         window.location.href = "index.html";
       } catch (error) {
         console.error(error);
         if (error.code === "auth/wrong-password") {
-          alert("Incorrect password. Please try again.");
+          showInlineStatus("Incorrect password. Please try again.", "error");
         } else if (error.code === "auth/too-many-requests") {
-          alert("Too many attempts. Please try again later.");
+          showInlineStatus("Too many attempts. Please try again later.", "warn");
         } else {
-          alert("An error occurred. " + (error.message || ""));
+          showInlineStatus("An error occurred. " + (error.message || ""), "error");
         }
       } finally {
         closePasswordConfirmModal();

@@ -503,3 +503,8 @@ body:not(.logged-in) #accountActions { display: none; }
 
 /* professional status styles */
 .status-pill.error { color: #b91c1c; }
+
+/* inline status variants */
+.status-pill.success { color: #16a34a; }
+.status-pill.warn { color: #b45309; }
+.status-pill.info { color: #374151; }
