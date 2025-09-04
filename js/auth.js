@@ -90,18 +90,29 @@ export async function resendVerification() {
 }
 
 // Monitor auth and emit only when verified
-export function monitorAuthState() {
-  onAuthStateChanged(auth, (user) => {
-    if (user && (user.email === 'test@test.com' || user.emailVerified)) {
+export function monitorAuthState(callback) {
+  onAuthStateChanged(auth, async (user) => {
+    const isBypass = user && user.email === 'test@test.com';
+    const isVerified = !!(user && (isBypass || user.emailVerified));
+    if (isVerified) {
       document.body.classList.add("logged-in");
       emit("user-authenticated", user);
       showToast("Signed in");
+      if (typeof callback === "function") {
+        try { await callback(user); } catch (e) { console.warn("monitorAuthState callback error", e); }
+      }
     } else {
       document.body.classList.remove("logged-in");
       emit("user-signed-out", null);
-      if (user && !user.emailVerified) {
+      if (user && !isBypass && !user.emailVerified) {
         showToast("Please verify your email to continue.");
       }
+      if (typeof callback === "function") {
+        try { await callback(null); } catch (e) { console.warn("monitorAuthState callback error", e); }
+      }
+    }
+  });
+}
     }
   });
 }
