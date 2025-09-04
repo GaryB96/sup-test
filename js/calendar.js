@@ -1,11 +1,13 @@
 const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function renderCalendar(month, year, supplements, calendarEl, labelEl) {
-  if (calendarEl) calendarEl.replaceChildren();
+  calendarEl.innerHTML = "";
   const monthName = new Date(year, month).toLocaleString("default", { month: "long" });
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayIndex = new Date(year, month, 1).getDay();
-labelEl.textContent = `${monthName} ${year}`;
+  const supplementsContainer = document.createElement("div");
+  supplementsContainer.className = "supplements-container";
+  labelEl.textContent = `${monthName} ${year}`;
 
   // Weekday header row
   const weekdayRow = document.createElement("div");
@@ -45,7 +47,10 @@ for (let day = 1; day <= daysInMonth; day++) {
   dayEl.appendChild(numberEl);
 
   // Create a fresh container for this day's supplements
-// Get all supplements for this day
+  const supplementsContainer = document.createElement("div");
+  supplementsContainer.className = "supplements-container";
+
+  // Get all supplements for this day
   const supplementsForDay = supplements.filter(s => s.date === dateString);
   supplementsForDay.forEach(supplement => {
     const supplementEl = document.createElement("div");
