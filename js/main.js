@@ -336,7 +336,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       await refreshCalendar();
     });
-}
+nextBtn.addEventListener("click", async () => {
+      currentMonth++;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      await refreshCalendar();
+    });
+  }
 
 })
 
