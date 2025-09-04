@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="data:,">
-  <style>
-  html.auth-pending #appContent,
-  html.auth-pending #authContainer { visibility: hidden; }
-</style>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Supplement Tracker</title>
@@ -89,44 +84,30 @@
 <header>
   <button id="notesBtn" style="display:none;">Notes</button>
 </header>
-<main>
+<main class="auth-layout auth-layout">
 <h1>Supplement Tracker</h1>
 <!-- 🔐 Auth Section -->
-<section id="authContainer">
-  <div class="auth-card" role="region" aria-label="Account access">
-    <div class="tabs" role="tablist" aria-label="Auth tabs">
-      <button class="tab active" data-tab="signin" role="tab" aria-selected="true" aria-controls="signinPane" id="tabSignIn">Sign In</button>
-      <button class="tab" data-tab="signup" role="tab" aria-selected="false" aria-controls="signupPane" id="tabSignUp">Create Account</button>
-    </div>
-
-    <!-- Sign In -->
-    <form id="signinForm" class="tab-pane active" role="tabpanel" aria-labelledby="tabSignIn" novalidate>
-      <label for="signinEmail">Email</label>
-      <input type="email" id="signinEmail" placeholder="you@example.com" required />
-      <label for="signinPassword">Password</label>
-      <input type="password" id="signinPassword" required />
-      <div class="auth-row">
-        <button id="signinSubmit" type="submit" class="btn-primary">Sign In</button>
-        <a href="#" id="forgotPasswordLink" class="link">Forgot password?</a>
-      </div>
-    </form>
-
-    <!-- Sign Up -->
-    <form id="signupForm" class="tab-pane" role="tabpanel" aria-labelledby="tabSignUp" novalidate>
-      <label for="signupEmail">Email</label>
-      <input type="email" id="signupEmail" placeholder="you@example.com" required />
-      <label for="signupPassword">Password</label>
-      <input type="password" id="signupPassword" placeholder="At least 6 characters" required />
-      <label for="signupPassword2">Confirm password</label>
-      <input type="password" id="signupPassword2" placeholder="Re-enter password" required />
-      <div class="muted small" id="passwordHelp">Use at least 6 characters.</div>
-      <button id="signupSubmit" type="submit" class="btn-primary">Create Account</button>
-      <div class="muted small">We'll send a verification email to activate your account.</div>
-      <button id="resendVerificationBtn" type="button" class="btn-secondary" style="display:none;margin-top:8px;">Resend verification email</button>
-    </form>
-
-    <div id="auth-status" class="status-pill" role="status" aria-live="polite"></div>
+<section id="authIntro" class="auth-intro" aria-label="Welcome">
+  <div class="intro-wrap">
+    <div class="intro-eyebrow">Welcome</div>
+    <h1 class="intro-title">Supplement Tracker</h1>
+    <p class="intro-lede">
+      A simple, secure way to plan and track your supplements. Create an account to sync your schedule and download calendar events.
+    </p>
+    <ul class="intro-points" role="list">
+      <li><span class="icon">🔒</span> Verified accounts and private data</li>
+      <li><span class="icon">🗓️</span> Clean calendar view with ICS export</li>
+      <li><span class="icon">⚡</span> Fast, mobile‑friendly interface</li>
+    </ul>
   </div>
+</section>
+<section id="authContainer">
+<form id="loginForm">
+<input id="emailInput" placeholder="Email" required="" type="email"/>
+<input id="passwordInput" placeholder="Password" required="" type="password"/>
+<button id="loginBtn" type="submit">Login</button>
+<button id="signupBtn" type="submit">Sign Up</button>
+</form>
 </section>
 <!-- ✅ Main App Content -->
 <section id="appContent">
@@ -211,12 +192,9 @@
     document.getElementById('notificationsCloseBtn')?.click();
   });
 </script>
-<div id="auth-status" class="auth-status" style="margin:10px 0;"></div>
-<button id="resendVerificationBtn" type="button" class="btn btn-secondary" style="display:none;margin-bottom:10px;">Resend verification email</button>
 </main>
 <script src="./js/main.js" type="module"></script>
 <script src="./js/supplementsUI.js" type="module"></script>
 <script src="./js/notifications.js" type="module"></script>
-<script type="module" src="./js/verification-ui.js"></script>
 </body>
 </html>

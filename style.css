@@ -483,28 +483,22 @@ body:not(.logged-in) #accountActions { display: none; }
   font-weight: 700;
 }
 
-/* --- Auth card styles (scoped & minimal) --- */
-.auth-card { max-width: 420px; margin: 24px auto; padding: 24px; border-radius: 12px; background: #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
-.tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-.tab { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid #ddd; background: #f7f7f7; cursor: pointer; font-weight: 600; }
-.tab.active { background: #fff; border-color: #bbb; }
-.tab-pane { display: none; }
-.tab-pane.active { display: block; }
-.auth-card label { display: block; font-size: 14px; margin: 8px 0 4px; color: #333; }
-.auth-card input[type="email"], .auth-card input[type="password"] { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
-.auth-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
-.btn-primary { padding: 10px 14px; border-radius: 8px; background: #2d6cdf; color: #fff; border: none; cursor: pointer; }
-.btn-secondary { padding: 8px 12px; border-radius: 8px; background: #e9eaee; color: #111; border: 1px solid #d1d5db; cursor: pointer; }
-.link { color: #2d6cdf; text-decoration: none; font-size: 14px; }
-.link:hover { text-decoration: underline; }
-.status-pill { margin-top: 10px; font-size: 13px; color: #555; }
-.muted { color: #6b7280; }
-.small { font-size: 12px; }
+/* --- Auth page layout polish --- */
+.auth-layout { padding: 24px 16px; }
+.auth-intro { margin: 0 auto 20px; max-width: 880px; }
+.intro-wrap { background: linear-gradient(180deg, #f8fafc, #ffffff); border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; }
+.intro-eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+.intro-title { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+.intro-lede { font-size: 15px; color: #374151; margin: 0 0 12px; max-width: 60ch; }
+.intro-points { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 0; margin: 0; list-style: none; }
+.intro-points .icon { display: inline-block; width: 1.4em; text-align: center; margin-right: 6px; }
 
-/* professional status styles */
-.status-pill.error { color: #b91c1c; }
+/* Put hero beside the auth card on wide screens */
+@media (min-width: 980px) {
+  .auth-layout { display: grid; grid-template-columns: 1fr 440px; gap: 24px; align-items: start; }
+  #authIntro { margin: 0; }
+  .auth-card { margin: 0; }
+}
 
-/* inline status variants */
-.status-pill.success { color: #16a34a; }
-.status-pill.warn { color: #b45309; }
-.status-pill.info { color: #374151; }
+/* Subtle page background polish without affecting cards */
+body { background: radial-gradient(1200px 600px at 20% -10%, #eef2ff 0%, transparent 40%), radial-gradient(900px 500px at 120% 10%, #fdf2f8 0%, transparent 40%) fixed; }

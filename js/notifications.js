@@ -193,7 +193,7 @@ function handleICS() {
     try {
       const boundaries = await fetchCycleBoundaries();
       if (!Array.isArray(boundaries) || boundaries.length === 0) {
-        showInlineStatus('No cycle data available to build the calendar. Make sure your app provides cycle boundaries.', 'warn');
+        alert('No cycle data available to build the calendar. Make sure your app provides cycle boundaries.');
         return;
       }
       const ics = buildICS(boundaries, 'Cycle Notifications (Next Year)');
