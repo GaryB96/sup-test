@@ -230,189 +230,118 @@ function setCollapseState(state) {
 // ----------------------------------------------------------------------------
 function renderSupplements() {
   if (!supplementSummaryContainer) return;
-  // Clear container
-  supplementSummaryContainer.innerHTML = "";
-
-  // Helpers
+  if (typeof supplementSummaryContainer.replaceChildren === "function") {
+    supplementSummaryContainer.replaceChildren();
+  } else {
+    while (supplementSummaryContainer.firstChild) {
+      supplementSummaryContainer.removeChild(supplementSummaryContainer.firstChild);
+    }
+  }
   const norm = (v) => (typeof v === "string" ? v.trim().toLowerCase() : "");
   const cap1 = (s) => (s && s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s);
-
   const ORDER = ["Morning", "Afternoon", "Evening", "Unscheduled"];
   const groups = { Morning: [], Afternoon: [], Evening: [], Unscheduled: [] };
-
   (supplements || []).forEach((supplement) => {
     const times = Array.isArray(supplement && supplement.time) ? supplement.time : [];
-    // Normalize "Morning"/"morning"/"AM" etc. by first letter
-    const normalized = times
-      .map(norm)
-      .map((t) =>
-        t.startsWith("m") ? "morning" : t.startsWith("a") ? "afternoon" : t.startsWith("e") ? "evening" : ""
-      )
-      .filter(Boolean);
-
-    if (normalized.length === 0) {
-      groups.Unscheduled.push(supplement);
-    } else {
-      normalized.forEach((t) => {
-        const key = cap1(t);
-        if (groups[key]) groups[key].push(supplement);
-        else groups.Unscheduled.push(supplement);
-      });
-    }
+    const normalized = times.map(norm).map((t) =>
+      t.startsWith("m") ? "morning" : t.startsWith("a") ? "afternoon" : t.startsWith("e") ? "evening" : ""
+    ).filter(Boolean);
+    if (normalized.length === 0) groups.Unscheduled.push(supplement);
+    else normalized.forEach((t) => { const key = cap1(t); (groups[key] || groups.Unscheduled).push(supplement); });
   });
-
   const total = ORDER.reduce((n, k) => n + (groups[k] ? groups[k].length : 0), 0);
-
-  // If no groups have items, fall back to flat list
+  const buildBox = (supplement, labelForTime) => {
+    const box = document.createElement("div");
+    box.className = "supplement-box cycle-strip";
+    box.style.borderLeftColor = (supplement && supplement.color) || "#cccccc";
+    const nameRow = document.createElement("div");
+    const strong = document.createElement("strong");
+    strong.textContent = (supplement && supplement.name) ? supplement.name : "";
+    nameRow.appendChild(strong);
+    const doseRow = document.createElement("div");
+    doseRow.textContent = "Dosage: " + ((supplement && supplement.dosage) ? supplement.dosage : "");
+    const timeRow = document.createElement("div");
+    if (labelForTime) timeRow.textContent = "Time: " + labelForTime;
+    else {
+      const timesText = Array.isArray(supplement && supplement.time) && supplement.time.length
+        ? supplement.time.join(", ") : "None selected";
+      timeRow.textContent = "Time: " + timesText;
+    }
+    const c = (supplement && supplement.cycle) || {};
+    const onDays = Number(c["on"] || 0);
+    const offDays = Number(c["off"] || 0);
+    if (onDays > 0 || offDays > 0) {
+      const cycleDiv = document.createElement("div");
+      cycleDiv.textContent = `Cycle: ${onDays} days on / ${offDays} days off`;
+      box.appendChild(cycleDiv);
+    }
+    const actions = document.createElement("div");
+    actions.className = "actions";
+    const editBtn = document.createElement("button");
+    editBtn.className = "edit-btn";
+    editBtn.dataset.id = (supplement && supplement.id) ? supplement.id : "";
+    editBtn.textContent = "Edit";
+    const delBtn = document.createElement("button");
+    delBtn.className = "delete-btn";
+    delBtn.dataset.id = (supplement && supplement.id) ? supplement.id : "";
+    delBtn.textContent = "Delete";
+    actions.append(editBtn, delBtn);
+    box.append(nameRow, doseRow, timeRow, actions);
+    return box;
+  };
   if (total === 0) {
     (supplements || []).forEach((supplement) => {
-      const box = document.createElement("div");
-      box.className = "supplement-box cycle-strip";
-      box.style.borderLeftColor = (supplement && supplement.color) || "#cccccc";
-
-      const c = (supplement && supplement.cycle) || {};
-      const onDays = Number(c["on"] || 0);
-      const offDays = Number(c["off"] || 0);
-      const hasCycle = onDays > 0 || offDays > 0;
-
-      const timesText =
-        Array.isArray(supplement && supplement.time) && supplement.time.length
-          ? supplement.time.join(", ")
-          : "None selected";
-
-      const cycleInfo = hasCycle
-        ? "<div>Cycle: " + onDays + " days on / " + offDays + " days off</div>"
-        : "";
-
-      const html =
-        "<div><strong>" +
-        (supplement && supplement.name ? supplement.name : "") +
-        "</strong></div>" +
-        "<div>Dosage: " +
-        (supplement && supplement.dosage ? supplement.dosage : "") +
-        "</div>" +
-        "<div>Time: " +
-        timesText +
-        "</div>" +
-        cycleInfo +
-        '<div class="actions">' +
-        '<button class="edit-btn" data-id="' +
-        (supplement && supplement.id ? supplement.id : "") +
-        '">Edit</button>' +
-        '<button class="delete-btn" data-id="' +
-        (supplement && supplement.id ? supplement.id : "") +
-        '">Delete</button>' +
-        "</div>";
-
-      box.innerHTML = html;
+      const box = buildBox(supplement, null);
       supplementSummaryContainer.appendChild(box);
     });
-
     wireSummaryActions();
     return;
   }
-
-  // Expand/Collapse all controls
   const controls = document.createElement("div");
   controls.className = "summary-controls";
   const btnExpand = document.createElement("button");
   btnExpand.type = "button";
   btnExpand.className = "btn-expand-all";
   btnExpand.textContent = "Expand all";
-
   const btnCollapse = document.createElement("button");
   btnCollapse.type = "button";
   btnCollapse.className = "btn-collapse-all";
   btnCollapse.textContent = "Collapse all";
-
   controls.append(btnExpand, btnCollapse);
   supplementSummaryContainer.appendChild(controls);
-
-  const collapseState = getCollapseState(); // { Morning: true|false, ... } -> true means collapsed
-
-  // Build each group as <details>/<summary> with count
+  const collapseState = getCollapseState();
   ORDER.forEach((label) => {
     const arr = groups[label];
     if (!arr) return;
-
     const details = document.createElement("details");
     details.className = "supp-group";
-    // default open if no state stored
     details.open = collapseState[label] === undefined ? true : !collapseState[label];
-
     const summary = document.createElement("summary");
     summary.className = "supp-group__summary";
     summary.textContent = `${label} (${arr.length})`;
-
     const content = document.createElement("div");
     content.className = "supp-group__content";
-
-    // Render each item into this group
     arr.forEach((supplement) => {
-      const box = document.createElement("div");
-      box.className = "supplement-box cycle-strip";
-      box.style.borderLeftColor = (supplement && supplement.color) || "#cccccc";
-
-      const c = (supplement && supplement.cycle) || {};
-      const onDays = Number(c["on"] || 0);
-      const offDays = Number(c["off"] || 0);
-      const hasCycle = onDays > 0 || offDays > 0;
-
-      const cycleInfo = hasCycle
-        ? "<div>Cycle: " + onDays + " days on / " + offDays + " days off</div>"
-        : "";
-
-      const html =
-        "<div><strong>" +
-        (supplement && supplement.name ? supplement.name : "") +
-        "</strong></div>" +
-        "<div>Dosage: " +
-        (supplement && supplement.dosage ? supplement.dosage : "") +
-        "</div>" +
-        "<div>Time: " +
-        label +
-        "</div>" +
-        cycleInfo +
-        '<div class="actions">' +
-        '<button class="edit-btn" data-id="' +
-        (supplement && supplement.id ? supplement.id : "") +
-        '">Edit</button>' +
-        '<button class="delete-btn" data-id="' +
-        (supplement && supplement.id ? supplement.id : "") +
-        '">Delete</button>' +
-        "</div>";
-
-      box.innerHTML = html;
+      const box = buildBox(supplement, label);
       content.appendChild(box);
     });
-
     details.append(summary, content);
     supplementSummaryContainer.appendChild(details);
-
-    // Persist user toggles
     details.addEventListener("toggle", () => {
-      // when closed → collapsed = true
       collapseState[label] = !details.open;
       setCollapseState(collapseState);
     });
   });
-
-  // Wire expand/collapse all
   btnExpand.addEventListener("click", () => {
     document.querySelectorAll(".supp-group").forEach((d) => (d.open = true));
-    ["Morning", "Afternoon", "Evening", "Unscheduled"].forEach((k) => {
-      collapseState[k] = false;
-    });
+    ["Morning","Afternoon","Evening","Unscheduled"].forEach((k) => collapseState[k] = false);
     setCollapseState(collapseState);
   });
   btnCollapse.addEventListener("click", () => {
     document.querySelectorAll(".supp-group").forEach((d) => (d.open = false));
-    ["Morning", "Afternoon", "Evening", "Unscheduled"].forEach((k) => {
-      collapseState[k] = true;
-    });
+    ["Morning","Afternoon","Evening","Unscheduled"].forEach((k) => collapseState[k] = true);
     setCollapseState(collapseState);
   });
-
   wireSummaryActions();
 }
 
