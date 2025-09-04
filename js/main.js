@@ -301,8 +301,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const calendarEl = document.getElementById("calendar");
   const labelEl = document.getElementById("currentMonthLabel");
   const loginForm = document.getElementById("loginForm");
-  const prevBtn = document.getElementById("prevMonth");
-  const nextBtn = document.getElementById("nextMonth");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
 
   // Notes modal wiring
   const notesBtn = document.getElementById("notesBtn");
