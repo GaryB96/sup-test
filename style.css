@@ -327,7 +327,6 @@ body:not(.logged-in) #accountActions { display: none; }
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;padding-top:10vh;}
 .modal .modal-content{background:#fff;border-radius:12px;padding:20px;max-width:600px;width:92%;}
 
-
 /* Notes status pill */
 #notesStatus {
   font-size: 0.9rem;
@@ -484,24 +483,14 @@ body:not(.logged-in) #accountActions { display: none; }
 }
 
 /* --- Auth page layout polish --- */
-.auth-layout { padding: 24px 16px; }
-.auth-intro { margin: 0 auto 20px; max-width: 880px; }
-.intro-wrap { background: linear-gradient(180deg, #f8fafc, #ffffff); border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; }
-.intro-eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: 12px; color: #6b7280; margin-bottom: 6px; }
-.intro-title { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
-.intro-lede { font-size: 15px; color: #374151; margin: 0 0 12px; max-width: 60ch; }
-.intro-points { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 0; margin: 0; list-style: none; }
-.intro-points .icon { display: inline-block; width: 1.4em; text-align: center; margin-right: 6px; }
 
 /* Put hero beside the auth card on wide screens */
-@media (min-width: 980px) {
-  .auth-layout { display: grid; grid-template-columns: 1fr 440px; gap: 24px; align-items: start; }
-  #authIntro { margin: 0; }
+
   .auth-card { margin: 0; }
 }
 
 /* Subtle page background polish without affecting cards */
-body { background: radial-gradient(1200px 600px at 20% -10%, #eef2ff 0%, transparent 40%), radial-gradient(900px 500px at 120% 10%, #fdf2f8 0%, transparent 40%) fixed; }
+body {}
 
 /* --- Auth tabs/buttons --- */
 .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
