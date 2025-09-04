@@ -498,7 +498,7 @@ if (nextBtn) {
       const p2 = signupPass2?.value || "";
       if (!email || !p1 || !p2) { alert("Please complete all fields."); return; }
       if (p1.length < 6) { alert("Password must be at least 6 characters."); return; }
-      if (p1 !== p2) { alert("Passwords do not match."); return; }
+      if (p1 !== p2) { alert("Those passwords don’t match. Please re-enter the same password in both fields."); return; }
       try {
         await signup(email, p1);
       } catch (err) {
@@ -508,7 +508,11 @@ if (nextBtn) {
           setTab("signin");
           return;
         }
-        alert("Signup failed: " + (err?.message || ""));
+        if (err && err.code === "auth/email-already-in-use") {
+          alert("An account with this email already exists. Please sign in or use ‘Forgot password’ to reset it.");
+        } else {
+          alert("Signup failed: " + (err?.message || ""));
+        }
         console.error("Signup error:", err);
       }
     });
