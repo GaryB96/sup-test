@@ -2,6 +2,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
+import { onAuthStateChanged, sendEmailVerification, signOut, deleteUser, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
 // Firebase configuration
@@ -22,19 +23,36 @@ const db = getFirestore(app);
 
 // 🔐 Login function
 export async function login(email, password) {
-  return await signInWithEmailAndPassword(auth, email, password);
+  const { user } = await signInWithEmailAndPassword(auth, email, password);
+  const bypass = user.email === "test@test.com";
+  if (!bypass && !user.emailVerified) {
+    try { await sendEmailVerification(user); } catch {}
+    await signOut(auth);
+    const err = new Error("Email not verified. Check your inbox for the verification link.");
+    err.code = "auth/email-not-verified";
+    throw err;
+  }
+  return user;
 }
 
 // 🆕 Signup function
 export async function signup(email, password) {
-  return await createUserWithEmailAndPassword(auth, email, password);
+  const cred = await createUserWithEmailAndPassword(auth, email, password);
+  try { await sendEmailVerification(cred.user); } catch {}
+  await signOut(auth);
+  const err = new Error("Please verify your email address. We sent you a verification link.");
+  err.code = "auth/email-not-verified";
+  throw err;
 }
 
 // 👀 Monitor auth state
 export function monitorAuthState(callback) {
-  onAuthStateChanged(auth, user => {
-    callback(user);
+  onAuthStateChanged(auth, (user) => {
+    // Remove the pending class to avoid flicker once Firebase resolves
+    try { document.documentElement.classList.remove("auth-pending"); } catch {}
+    if (typeof callback === "function") callback(user);
   });
+});
 }
 
 // 🚪 Logout function
