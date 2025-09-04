@@ -46,6 +46,17 @@ for (let day = 1; day <= daysInMonth; day++) {
   numberEl.textContent = day;
   dayEl.appendChild(numberEl);
 
+  // Highlight today's date
+const _today = new Date();
+const _isToday =
+  _today.getFullYear() === date.getFullYear() &&
+  _today.getMonth() === date.getMonth() &&
+  _today.getDate() === day;
+
+if (_isToday) {
+  dayEl.classList.add("today");
+}
+
   // Create a fresh container for this day's supplements
   const supplementsContainer = document.createElement("div");
   supplementsContainer.className = "supplements-container";

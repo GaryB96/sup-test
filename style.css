@@ -472,3 +472,13 @@ body:not(.logged-in) #accountActions { display: none; }
   .modal-footer{ padding: 10px 14px 12px; }
   .kbd-hint{ display:none; } /* optional: hide hint on very small screens */
 }
+
+/* === Highlight current day === */
+.day.today {
+  outline: 2px solid #1976d2;
+  outline-offset: -2px;
+  background: rgba(25, 118, 210, 0.08);
+}
+.day.today .day-number {
+  font-weight: 700;
+}
