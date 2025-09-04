@@ -8,7 +8,8 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification,
   EmailAuthProvider,
-  reauthenticateWithCredential
+  reauthenticateWithCredential,
+  getAuth
 } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 // auth.js
 
