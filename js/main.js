@@ -327,16 +327,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   // --- Month navigation ---
-  if (prevBtn && nextBtn) {
-    prevBtn.addEventListener("click", async () => {
-      currentMonth--;
-      if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-      }
-      await refreshCalendar();
-    });
+// --- Month navigation ---
+if (prevBtn) {
+  prevBtn.addEventListener("click", async () => {
+    currentMonth--;
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    await refreshCalendar();
+  });
 }
+if (nextBtn) {
+  nextBtn.addEventListener("click", async () => {
+    currentMonth++;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    await refreshCalendar();
+  });
+}
+
 
 })
 
