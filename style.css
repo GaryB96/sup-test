@@ -500,3 +500,6 @@ body:not(.logged-in) #accountActions { display: none; }
 .status-pill { margin-top: 10px; font-size: 13px; color: #555; }
 .muted { color: #6b7280; }
 .small { font-size: 12px; }
+
+/* professional status styles */
+.status-pill.error { color: #b91c1c; }
