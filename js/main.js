@@ -4,6 +4,16 @@ import { fetchSupplements } from "./supplements.js";
 import { EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 import { auth } from "./firebaseConfig.js";
 
+// Inline status helper (avoids browser alert banners)
+function showInlineStatus(message, type = "info") {
+  const el = document.getElementById("auth-status") || document.getElementById("app-status");
+  if (!el) { console[type === "error" ? "error" : "log"](message); return; }
+  el.classList.remove("error","success","warn","info");
+  if (type) el.classList.add(type);
+  el.textContent = message;
+}
+
+
 // ==== Notifications UI & ICS Export ====
 import { db } from "./firebaseConfig.js";
 import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
@@ -426,47 +436,113 @@ if (nextBtn) {
     await refreshCalendar();
   });      
 // --- Login / Signup form ---
-  if (loginForm) {
-    loginForm.addEventListener("submit", async (e) => {
+  // Tabs
+  const tabs = Array.from(document.querySelectorAll(".tabs .tab"));
+  const panes = {
+    signin: document.getElementById("signinForm"),
+    signup: document.getElementById("signupForm")
+  };
+  function setTab(name) {
+    tabs.forEach(t => {
+      const active = t.dataset.tab === name;
+      t.classList.toggle("active", active);
+      t.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    Object.entries(panes).forEach(([key, pane]) => {
+      if (pane) pane.classList.toggle("active", key === name);
+    });
+    const firstInput = panes[name]?.querySelector("input");
+    if (firstInput) firstInput.focus();
+  }
+  tabs.forEach(t => t.addEventListener("click", () => setTab(t.dataset.tab)));
+
+  // Sign In
+  const signinForm = document.getElementById("signinForm");
+  const signinEmail = document.getElementById("signinEmail");
+  const signinPass = document.getElementById("signinPassword");
+  const forgotLink = document.getElementById("forgotPasswordLink");
+
+  if (forgotLink) {
+    forgotLink.addEventListener("click", async (e) => {
       e.preventDefault();
-
-      const email = document.getElementById("emailInput").value;
-      const password = document.getElementById("passwordInput").value;
-      const clickedButton = e.submitter?.id;
-
-      if (!email || !password) {
-        alert("Please enter both email && password.");
-        return;
-      }
-
-      if (password.length < 6) {
-        alert("Password must be at least 6 characters long.");
-        return;
-      }
-
+      const email = signinEmail?.value?.trim();
+      if (!email) { showInlineStatus("Enter your email above, then click Forgot password.", "error"); return; }
       try {
-        if (clickedButton === "loginBtn") {
-          await login(email, password);
-        } else if (clickedButton === "signupBtn") {
-          await signup(email, password);
-          alert("Account created & logged in!");
-        } else {
-          alert("Unknown action.");
-          return;
-        }
-
-        window.location.href = "index.html";
-      } catch (error) {
-        const action = clickedButton === "loginBtn" ? "Login" : "Signup";
-        alert(`${action} failed: ${error.message}`);
-        console.error(`${action} error:`, error);
+        await resetPassword(email);
+        showInlineStatus("Password reset email sent. Please check your inbox.", "success");
+      } catch (err) {
+        showInlineStatus("Could not send reset email: " + (err?.message || err), "error");
+        console.error(err);
       }
     });
-  } else {
-    console.warn("loginForm not found in DOM.");
   }
 
-  // --- Logout ---
+  if (signinForm) {
+    signinForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = signinEmail?.value?.trim();
+      const password = signinPass?.value || "";
+      if (!email || !password) { showInlineStatus("Please enter both email and password.", "error"); return; }
+      try {
+        await login(email, password);
+        showInlineStatus("Signed in.", "success");
+      } catch (error) {
+        showInlineStatus("Login failed: " + (error?.message || ""), "error");
+        console.error("Login error:", error);
+      }
+    });
+  }
+
+  // Sign Up
+  const signupForm = document.getElementById("signupForm");
+  const signupEmail = document.getElementById("signupEmail");
+  const signupPass = document.getElementById("signupPassword");
+  const signupPass2 = document.getElementById("signupPassword2");
+  const resendBtn = document.getElementById("resendVerificationBtn");
+
+  if (signupForm) {
+    signupForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = signupEmail?.value?.trim();
+      const p1 = signupPass?.value || "";
+      const p2 = signupPass2?.value || "";
+      if (!email || !p1 || !p2) { showInlineStatus("Please complete all fields.", "error"); return; }
+      if (p1.length < 6) { showInlineStatus("Password must be at least 6 characters.", "error"); return; }
+      if (p1 !== p2) { showInlineStatus("Those passwords don’t match. Please re-enter the same password in both fields.", "error"); return; }
+      try {
+        await signup(email, p1);
+      } catch (err) {
+        if (err && err.code === "auth/email-not-verified") {
+          showInlineStatus("Account created. We sent a verification email to " + email + ". Please click the link to activate your account.", "success");
+          if (resendBtn) resendBtn.style.display = "inline-block";
+          setTab("signin");
+          return;
+        }
+        if (err && err.code === "auth/email-already-in-use") {
+          showInlineStatus("An account with this email already exists. Please sign in or use ‘Forgot password’ to reset it.", "error");
+          const tabBtn = document.querySelector('.tabs .tab[data-tab="signin"]');
+          if (tabBtn) tabBtn.click();
+          const emailField = document.getElementById("signinEmail");
+          if (emailField && email) emailField.value = email;
+          return;
+        }
+        showInlineStatus("Signup failed: " + (err?.message || ""), "error");
+        console.error("Signup error:", err);
+      }
+    });
+  }
+
+  if (resendBtn) {
+    resendBtn.addEventListener("click", async () => {
+      try {
+        await resendVerification();
+        showInlineStatus("Verification email sent. Please check your inbox.", "success");
+      } catch (e) {
+        showInlineStatus(e?.message || "Could not send verification email.", "error");
+      }
+    });
+  }
+// --- Logout ---
   if (logoutBtn) {
     logoutBtn.addEventListener("click", async () => {
       await logout();

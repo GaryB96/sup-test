@@ -502,3 +502,18 @@ body:not(.logged-in) #accountActions { display: none; }
 
 /* Subtle page background polish without affecting cards */
 body { background: radial-gradient(1200px 600px at 20% -10%, #eef2ff 0%, transparent 40%), radial-gradient(900px 500px at 120% 10%, #fdf2f8 0%, transparent 40%) fixed; }
+
+/* --- Auth tabs/buttons --- */
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.tab { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid #ddd; background: #f7f7f7; cursor: pointer; font-weight: 600; }
+.tab.active { background: #fff; border-color: #bbb; }
+.tab-pane { display: none; } .tab-pane.active { display: block; }
+.auth-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.btn-primary { padding: 10px 14px; border-radius: 8px; background: #2d6cdf; color: #fff; border: none; cursor: pointer; }
+.btn-secondary { padding: 8px 12px; border-radius: 8px; background: #e9eaee; color: #111; border: 1px solid #d1d5db; cursor: pointer; }
+.link { color: #2d6cdf; text-decoration: none; font-size: 14px; } .link:hover { text-decoration: underline; }
+.muted { color: #6b7280; } .small { font-size: 12px; }
+.status-pill.error { color: #b91c1c; }
+.status-pill.success { color: #16a34a; }
+.status-pill.warn { color: #b45309; }
+.status-pill.info { color: #374151; }
