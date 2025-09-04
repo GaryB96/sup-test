@@ -92,6 +92,9 @@ export async function resendVerification() {
 // Monitor auth and emit only when verified
 export function monitorAuthState(callback) {
   onAuthStateChanged(auth, async (user) => {
+    // ✅ stop hiding the UI now that Firebase has resolved the user
+    document.documentElement.classList.remove("auth-pending");
+
     const isBypass = user && user.email === 'test@test.com';
     const isVerified = !!(user && (isBypass || user.emailVerified));
     if (isVerified) {
@@ -113,6 +116,7 @@ export function monitorAuthState(callback) {
     }
   });
 }
+
 
 // Optional: expose auth/db for advanced callers
 export { auth, db };

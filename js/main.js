@@ -483,8 +483,8 @@ if (nextBtn) {
       const password = signinPass?.value || "";
       if (!email || !password) { showInlineStatus("Please enter both email and password.", "error"); return; }
       try {
-        await login(email, password);
-        window.location.href = "index.html";
+        await login(email, password);            // monitorAuthState will flip the UI
+        showInlineStatus("Signed in.", "success");  // optional
       } catch (error) {
         showInlineStatus("Login failed: " + (error?.message || ""), "error");
         console.error("Login error:", error);
