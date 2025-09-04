@@ -8,29 +8,6 @@ import { auth } from "./firebaseConfig.js";
 import { db } from "./firebaseConfig.js";
 import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
-// Safe element builder: never uses innerHTML
-function el(tag, opts = {}, ...children) {
-  const node = document.createElement(tag);
-  if (opts.class) node.className = opts.class;
-  if (opts.id) node.id = opts.id;
-  if (opts.text != null) node.textContent = String(opts.text); // <- safe text
-  if (opts.attrs) {
-    for (const [k, v] of Object.entries(opts.attrs)) {
-      node.setAttribute(k, String(v));
-    }
-  }
-  for (const c of children) {
-    if (c == null) continue;
-    node.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
-  }
-  return node;
-}
-
-// Replace container contents safely
-function replaceChildrenSafe(container, ...children) {
-  container.replaceChildren(...children.filter(Boolean));
-}
-
 function el(id){ return document.getElementById(id); }
 function guessTZ(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Halifax"; } catch { return "America/Halifax"; } }
 
@@ -324,8 +301,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const calendarEl = document.getElementById("calendar");
   const labelEl = document.getElementById("currentMonthLabel");
   const loginForm = document.getElementById("loginForm");
-  const prevBtn = document.getElementById("prevBtn");
-  const nextBtn = document.getElementById("nextBtn");
+  const prevBtn = document.getElementById("prevMonth");
+  const nextBtn = document.getElementById("nextMonth");
 
   // Notes modal wiring
   const notesBtn = document.getElementById("notesBtn");
@@ -359,7 +336,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       await refreshCalendar();
     });
-  }
+}
+
 })
 
   // --- Profile dropdown ---
@@ -434,26 +412,14 @@ document.addEventListener("DOMContentLoaded", () => {
       setNotesButtonVisibility(true);
 } else {
       document.body.classList.remove("logged-in");
-      if (calendarEl) calendarEl.replaceChildren();
+      calendarEl.innerHTML = "";
       labelEl.textContent = "";
       
       setNotesButtonVisibility(false);
-setNotesButtonVisibility(false);
     }
     await refreshCalendar();
   });      
-
-
-    nextBtn.addEventListener("click", async () => {
-      currentMonth++;
-      if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-      }
-      await refreshCalendar();
-    });
-
-  // --- Login / Signup form ---
+// --- Login / Signup form ---
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
