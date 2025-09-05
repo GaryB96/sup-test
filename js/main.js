@@ -379,11 +379,16 @@ if (nextBtn) {
     resetPasswordLink.addEventListener("click", async (e) => {
       e.preventDefault();
       try {
-        await resetPassword();
-        showInlineStatus("Password reset email sent. Please check your inbox and spam folder.", "success");
+        const result = await resetPassword();
+        showInlineStatus(result.message, "success");
       } catch (err) {
         console.error("Password reset error:", err);
-        showInlineStatus("Could not send reset email: " + (err?.message || err), "error");
+        if (err && err.code === "auth/missing-email") {
+          showInlineStatus("Please enter your email first.", "error");
+        } else {
+          // Keep UX non-enumerating even on errors
+          showInlineStatus("If an account exists for that email, a reset link has been sent. Please check your inbox and spam.", "success");
+        }
       }
     });
   }
@@ -469,11 +474,12 @@ if (nextBtn) {
       const email = signinEmail?.value?.trim();
       if (!email) { showInlineStatus("Enter your email above, then click Forgot password.", "error"); return; }
       try {
-        await resetPassword(email);
-        showInlineStatus("Password reset email sent. Please check your inbox.", "success");
+        const result = await resetPassword(email);
+        showInlineStatus(result.message, "success");
       } catch (err) {
-        showInlineStatus("Could not send reset email: " + (err?.message || err), "error");
         console.error(err);
+        // Keep UX non-enumerating even on errors
+        showInlineStatus("If an account exists for that email, a reset link has been sent. Please check your inbox and spam.", "success");
       }
     });
   }
