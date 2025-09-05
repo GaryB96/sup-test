@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="240" viewBox="0 0 1100 240">
+  <title>Supplement Tracker — Monogram + Wordmark + Tagline</title>
+  <!-- Left: Monogram with dark rounded square -->
+  <g transform="translate(20,20)">
+    <rect x="0" y="0" width="160" height="160" rx="24" fill="#0b1220"/>
+    <rect x="20" y="40" width="120" height="44" rx="22" fill="#22c55e" opacity="0.20"/>
+    <rect x="20" y="90" width="120" height="44" rx="22" fill="#22c55e" opacity="0.15"/>
+    <text x="80" y="100" text-anchor="middle" dominant-baseline="middle"
+          font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+          font-weight="800" font-size="88" fill="#22c55e">ST</text>
+  </g>
+
+  <!-- Right: Wordmark + Tagline -->
+  <g transform="translate(220,0)">
+    <text x="0" y="110"
+      font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+      font-size="56" font-weight="800" fill="#0f172a">Supplement Tracker</text>
+    <text x="0" y="160"
+      font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+      font-size="22" fill="#94a3b8">Plan, track, and stay consistent with your daily supplements.</text>
+  </g>
+</svg>

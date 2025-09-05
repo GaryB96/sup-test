@@ -99,17 +99,13 @@
 <h1>Supplement Tracker</h1>
 <!-- 🔐 Auth Section -->
 <section id="authContainer">
+<section id="authIntro" aria-label="Welcome">
+  <div class="logo-wrap">
+    <img id="authLogo" src="./assets/logo-combined-wordmark.svg"
+         alt="Supplement Tracker — Plan, track, and stay consistent with your daily supplements." />
+  </div>
+</section>
 
-  <section id="authIntro" aria-label="Welcome">
-    <div class="auth-intro-inner">
-
-      <p class="auth-tagline">Plan, track, and stay consistent with your daily supplements.</p>
-      <p class="auth-desc">
-        Ideal for busy students, educators, athletes, and anyone who wants a simple way to organize supplements,
-        log intake, and track supplement cycles.
-      </p>
-    </div>
-  </section>
 <div aria-label="Account access" class="auth-card" role="region">
 <div aria-label="Auth tabs" class="tabs" role="tablist">
 <button aria-controls="signinPane" aria-selected="true" class="tab active" data-tab="signin" id="tabSignIn" role="tab">Sign In</button>
@@ -227,6 +223,5 @@
 <script src="./js/main.js" type="module"></script>
 <script src="./js/supplementsUI.js" type="module"></script>
 <script src="./js/notifications.js" type="module"></script>
-  <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>

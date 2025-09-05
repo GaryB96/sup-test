@@ -484,7 +484,7 @@ body:not(.logged-in) #accountActions { display: none; }
 }
 
 /* --- Auth UI minimal styles --- */
-.auth-card{ margin-top: 10px; max-width:420px;margin:24px auto;padding:24px;border-radius:12px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,.08);}
+.auth-card{max-width:420px;margin:24px auto;padding:24px;border-radius:12px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,.08);}
 .tabs{display:flex;gap:8px;margin-bottom:16px;}
 .tab{flex:1;padding:10px 12px;border-radius:8px;border:1px solid #ddd;background:#f7f7f7;cursor:pointer;font-weight:600;}
 .tab.active{background:#fff;border-color:#bbb;}
@@ -504,58 +504,10 @@ body:not(.logged-in) #accountActions { display: none; }
 .status-pill:empty{display:none}
 #app-status{position:fixed; top:12px; right:12px; z-index:1000; padding:6px 10px; border-radius:8px}
 
-
-/* ===== Toasts ===== */
-.toast-container{
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 1100;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  pointer-events: none;
+/* ===== SVG header on login ===== */
+#authContainer { padding-top: 10vh; }
+.logo-wrap { display:flex; justify-content:center; margin: 0 16px 16px; }
+#authLogo { height: 84px; width: auto; }
+@media (max-width: 640px){
+  #authLogo { height: 64px; }
 }
-.toast{
-  min-width: 260px;
-  max-width: 360px;
-  border-radius: 10px;
-  padding: 10px 12px;
-  box-shadow: 0 10px 24px rgba(0,0,0,.18);
-  background: #111827;  /* slate-900 */
-  color: #f9fafb;       /* gray-50 */
-  font-size: 14px;
-  line-height: 1.35;
-  border: 1px solid rgba(255,255,255,.08);
-  pointer-events: auto;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity .2s ease, transform .2s ease;
-}
-.toast.show{ opacity: 1; transform: translateY(0); }
-.toast .toast-close{
-  background: transparent; border: 0; color: inherit; cursor: pointer; font-size: 18px; line-height: 1;
-}
-.toast .toast-row{ display:flex; align-items:flex-start; gap:10px; }
-.toast .toast-msg{ flex:1; }
-.toast.info{ background:#111827; color:#e5e7eb; }         /* default */
-.toast.success{ background:#052e16; color:#dcfce7; }      /* green-ish */
-.toast.warn{ background:#3a2500; color:#ffedd5; }         /* amber-ish */
-.toast.error{ background:#3f1d1d; color:#fee2e2; }        /* red-ish */
-
-
-
-/* ===== Auth Intro (logged-out landing above tabs) ===== */
-#authContainer{ padding-top: 12vh; }
-@media (max-width: 640px){ #authContainer{ padding-top: 8vh; } }
-
-#authIntro{ text-align:center; margin: 0 16px 18px; }
-.auth-intro-inner{ max-width: 820px; margin: 0 auto; }
-.auth-title{ font-size: clamp(28px, 5vw, 44px); line-height:1.1; margin: 0 0 8px; }
-.auth-tagline{ font-size: clamp(16px, 2.5vw, 20px); color:#475569; margin: 0 0 10px; }
-.auth-desc{ font-size: 20px; color:#64748b; max-width: 720px; margin: 0 auto 4px; }
-@media (prefers-color-scheme: dark){
-  .auth-tagline{ color:#a8b3cf; }
-  .auth-desc{ color:#94a3b8; }
-}
-

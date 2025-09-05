@@ -7,48 +7,6 @@ document.documentElement.classList.add("auth-pending");
 
 // Inline status helper (avoids browser alert banners)
 // Inline status helper (avoids browser alert banners)
-
-// Accessible toast helper
-function showToast(message, type = "info", opts = {}) {
-  const container = document.getElementById("toast-container");
-  if (!container) { return showInlineStatus(message, type); }
-
-  const toast = document.createElement("div");
-  toast.className = "toast " + (type || "info");
-  toast.setAttribute("role", "status");
-  toast.setAttribute("aria-live", "polite");
-  toast.tabIndex = 0;
-
-  const row = document.createElement("div");
-  row.className = "toast-row";
-
-  const msg = document.createElement("div");
-  msg.className = "toast-msg";
-  msg.textContent = message;
-
-  const close = document.createElement("button");
-  close.className = "toast-close";
-  close.setAttribute("aria-label", "Close notification");
-  close.innerHTML = "&times;";
-  close.addEventListener("click", () => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 200);
-  });
-
-  row.appendChild(msg);
-  row.appendChild(close);
-  toast.appendChild(row);
-  container.appendChild(toast);
-
-  // animate in
-  requestAnimationFrame(() => toast.classList.add("show"));
-
-  const ttl = opts.ttl ?? 5000;
-  if (ttl > 0) setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 200);
-  }, ttl);
-}
 function showInlineStatus(message, type = "info") {
   const el =
     document.getElementById("auth-status") ||
@@ -444,7 +402,7 @@ if (nextBtn) {
       e.preventDefault();
       try {
         const result = await resetPassword();
-        showToast(result.message, "success");
+        showInlineStatus(result.message, "success");
       } catch (err) {
         console.error("Password reset error:", err);
         if (err && err.code === "auth/missing-email") {
