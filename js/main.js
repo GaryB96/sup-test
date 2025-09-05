@@ -7,6 +7,48 @@ document.documentElement.classList.add("auth-pending");
 
 // Inline status helper (avoids browser alert banners)
 // Inline status helper (avoids browser alert banners)
+
+// Accessible toast helper
+function showToast(message, type = "info", opts = {}) {
+  const container = document.getElementById("toast-container");
+  if (!container) { return showInlineStatus(message, type); }
+
+  const toast = document.createElement("div");
+  toast.className = "toast " + (type || "info");
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  toast.tabIndex = 0;
+
+  const row = document.createElement("div");
+  row.className = "toast-row";
+
+  const msg = document.createElement("div");
+  msg.className = "toast-msg";
+  msg.textContent = message;
+
+  const close = document.createElement("button");
+  close.className = "toast-close";
+  close.setAttribute("aria-label", "Close notification");
+  close.innerHTML = "&times;";
+  close.addEventListener("click", () => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 200);
+  });
+
+  row.appendChild(msg);
+  row.appendChild(close);
+  toast.appendChild(row);
+  container.appendChild(toast);
+
+  // animate in
+  requestAnimationFrame(() => toast.classList.add("show"));
+
+  const ttl = opts.ttl ?? 5000;
+  if (ttl > 0) setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 200);
+  }, ttl);
+}
 function showInlineStatus(message, type = "info") {
   const el =
     document.getElementById("auth-status") ||
@@ -398,29 +440,22 @@ if (nextBtn) {
   }
 
   if (resetPasswordLink) {
-  resetPasswordLink.addEventListener("click", async (e) => {
-    e.preventDefault();
-    try {
-      // visual "busy" state for accessibility and UX
-      resetPasswordLink.setAttribute("aria-busy", "true");
-      resetPasswordLink.setAttribute("aria-disabled", "true");
-
-      const result = await resetPassword();
-      showInlineStatus(result.message, "success");
-    } catch (err) {
-      console.error("Password reset error:", err);
-      if (err && err.code === "auth/missing-email") {
-        showInlineStatus("Please enter your email first.", "error");
-      } else {
-        // Keep UX non-enumerating even on errors
-        showInlineStatus("If an account exists for that email, a reset link has been sent. Please check your inbox and spam.", "success");
+    resetPasswordLink.addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        const result = await resetPassword();
+        showToast(result.message, "success");
+      } catch (err) {
+        console.error("Password reset error:", err);
+        if (err && err.code === "auth/missing-email") {
+          showInlineStatus("Please enter your email first.", "error");
+        } else {
+          // Keep UX non-enumerating even on errors
+          showInlineStatus("If an account exists for that email, a reset link has been sent. Please check your inbox and spam.", "success");
+        }
       }
-    } finally {
-      resetPasswordLink.removeAttribute("aria-busy");
-      resetPasswordLink.removeAttribute("aria-disabled");
-    }
-  });
-}
+    });
+  }
 
   // Open delete confirmation modal from dropdown
   if (deleteAccountLink) {
