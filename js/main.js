@@ -643,31 +643,48 @@ if (nextBtn) {
       const email = signupEmail?.value?.trim();
       const p1 = signupPass?.value || "";
       const p2 = signupPass2?.value || "";
-      if (!email || !p1 || !p2) { showInlineStatus("Please complete all fields.", "error"); return; }
-      if (p1.length < 6) { showInlineStatus("Password must be at least 6 characters.", "error"); return; }
-      if (p1 !== p2) { showInlineStatus("Those passwords don’t match. Please re-enter the same password in both fields.", "error"); return; }
+      const submitBtn = document.getElementById("signupSubmit");
+      if (!email || !p1 || !p2) { showToast("Please complete all fields.", "error"); return; }
+      if (p1.length < 6) { showToast("Password must be at least 6 characters.", "error"); return; }
+      if (p1 !== p2) { showToast("Those passwords don’t match. Please re-enter the same password in both fields.", "error"); return; }
+      submitBtn?.setAttribute("aria-busy", "true");
+      submitBtn?.setAttribute("disabled", "true");
+      const originalText = submitBtn?.textContent;
+      if (submitBtn) submitBtn.textContent = "Creating…";
       try {
         await signup(email, p1);
+        // In our auth.js, signup() signs out and throws auth/email-not-verified
       } catch (err) {
         if (err && err.code === "auth/email-not-verified") {
-          showInlineStatus("Account created. We sent a verification email to " + email + ". Please click the link to activate your account.", "success");
-          if (resendBtn) resendBtn.style.display = "inline-block";
-          setTab("signin");
-          return;
+          showToast("Account created. We sent a verification email to " + email + ". Please click the link to activate your account.", "success");
+          // Switch to sign-in modal with the email prefilled
+          const signupModal = document.getElementById("signupModal");
+          const signinModal = document.getElementById("signinModal");
+          const signinEmailField = document.getElementById("signinEmail");
+          if (signupModal) signupModal.classList.add("hidden");
+          if (signinModal) signinModal.classList.remove("hidden");
+          if (signinEmailField && email) signinEmailField.value = email;
+        } else if (err && err.code === "auth/email-already-in-use") {
+          showToast("An account with this email already exists. Please log in or use ‘Forgot password’ to reset it.", "error");
+          // Open sign-in modal
+          const signupModal = document.getElementById("signupModal");
+          const signinModal = document.getElementById("signinModal");
+          const signinEmailField = document.getElementById("signinEmail");
+          if (signupModal) signupModal.classList.add("hidden");
+          if (signinModal) signinModal.classList.remove("hidden");
+          if (signinEmailField && email) signinEmailField.value = email;
+        } else {
+          showToast("Signup failed: " + (err?.message || ""), "error");
+          console.error("Signup error:", err);
         }
-        if (err && err.code === "auth/email-already-in-use") {
-  showInlineStatus("An account with this email already exists. Please sign in or use ‘Forgot password’ to reset it.", "error");
-  const tabBtn = document.querySelector('.tabs .tab[data-tab="signin"]');
-  if (tabBtn) tabBtn.click();
-  const emailField = document.getElementById("signinEmail");
-  if (emailField && email) emailField.value = email;
-  return;
-} else {
-          showInlineStatus("Signup failed: " + (err?.message || ""), "error");
+      } finally {
+        if (submitBtn) {
+          submitBtn.removeAttribute("aria-busy");
+          submitBtn.removeAttribute("disabled");
+          submitBtn.textContent = originalText || "Create Account";
         }
-        console.error("Signup error:", err);
       }
-    });
+    }); 
   }
 
   if (resendBtn) {
