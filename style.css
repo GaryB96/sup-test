@@ -493,7 +493,7 @@ body:not(.logged-in) #accountActions { display: none; }
 .btn-primary{padding:10px 14px;border-radius:8px;background:#2d6cdf;color:#fff;border:none;cursor:pointer;}
 .btn-secondary{padding:8px 12px;border-radius:8px;background:#e9eaee;color:#111;border:1px solid #d1d5db;cursor:pointer;}
 .link{color:#2d6cdf;text-decoration:none;font-size:14px}.link:hover{text-decoration:underline}
-.muted{color:#8e94a1}.small{font-size:12px}
+.muted{color:#c2c6ce}.small{font-size:12px}
 .status-pill.error{color:#b91c1c}
 .status-pill.success{color:#00802f}
 .status-pill.warn{color:#b45309}
