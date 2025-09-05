@@ -95,27 +95,70 @@ export async function changePassword(newPassword) {
   throw new Error("No user is currently signed in.");
 }
 
-// Make sure this is imported at the top:
-// import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
+/**
+ * Utility: mask an email address for UI messages to avoid leaking full addresses.
+ * e.g., "jdoe@example.com" -> "jd•••@example.com"
+ */
+function maskEmail(email) {
+  try {
+    const [local, domain] = email.split("@");
+    if (!local || !domain) return email;
+    const visible = Math.min(2, local.length);
+    const maskedLocal = local.slice(0, visible) + "•••";
+    return `${maskedLocal}@${domain}`;
+  } catch {
+    return email;
+  }
+}
 
-export async function resetPassword() {
-  // Prefer the signed-in user's email; fall back to the login form field if visible
+/**
+ * 🔁 Resend verification email for the currently signed-in user.
+ * Returns an object you can use for UI messaging.
+ */
+export async function resendVerification() {
   const user = auth.currentUser;
-  let email = user?.email;
+  if (!user) {
+    const err = new Error("Please sign in first to resend the verification email.");
+    err.code = "auth/no-current-user";
+    throw err;
+  }
+  if (user.emailVerified) {
+    return { alreadyVerified: true, email: user.email };
+  }
+  await sendEmailVerification(user);
+  return { sent: true, email: user.email, maskedEmail: maskEmail(user.email) };
+}
 
+/**
+ * 📧 Send a password reset email.
+ * - If a targetEmail is provided, use that first.
+ * - Otherwise prefer the signed-in user's email, then fall back to #emailInput if present.
+ * Returns a result object for UI messaging.
+ */
+export async function resetPassword(targetEmail) {
+  const user = auth.currentUser;
+  let email = (targetEmail || "").trim();
+  if (!email) email = user?.email || "";
   if (!email) {
     const input = document.getElementById("emailInput");
     if (input && input.value) email = input.value.trim();
   }
-
   if (!email) {
-    throw new Error("No email available. Please enter your email in the login form or sign in first.");
+    const err = new Error("No email available. Please enter your email in the login form or sign in first.");
+    err.code = "auth/missing-email";
+    throw err;
   }
 
   await sendPasswordResetEmail(auth, email);
-  // If we get here, Firebase accepted the request.
-  // (If the email isn't registered, Firebase intentionally does not reveal that.)
-}
 
+  // Firebase does not disclose whether the address exists; we keep UX consistent.
+  const masked = maskEmail(email);
+  return {
+    sent: true,
+    email,
+    maskedEmail: masked,
+    message: `If an account exists for ${masked}, a reset link has been sent. Please check your inbox and spam.`
+  };
+}
 
 export { auth, db };
