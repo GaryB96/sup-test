@@ -6,28 +6,34 @@ import { auth } from "./firebaseConfig.js";
 document.documentElement.classList.add("auth-pending");
 
 // Inline status helper (avoids browser alert banners)
+// Inline status helper (avoids browser alert banners)
 function showInlineStatus(message, type = "info") {
-  const el = document.getElementById("auth-status") || document.getElementById("app-status");
-  if (!el) { console[type === "error" ? "error" : "log"](message); return; }
-  // Clear any previous state
-  el.classList.remove("error","success","warn","info");
+  const el =
+    document.getElementById("auth-status") ||
+    document.getElementById("app-status");
+
+  if (!el) {
+    console[type === "error" ? "error" : "log"](message);
+    return;
+  }
+
+  // Clear previous state
+  el.classList.remove("error", "success", "warn", "info");
   if (type) el.classList.add(type);
+
+  // Set text and show the pill
   el.textContent = message || "";
-  // Show when we have a message, otherwise hide
   el.style.display = message ? "inline-block" : "none";
+
   // Auto-hide after 8s
   clearTimeout(el._hideTimer);
   if (message) {
     el._hideTimer = setTimeout(() => {
       el.style.display = "none";
       el.textContent = "";
-      el.classList.remove("error","success","warn","info");
+      el.classList.remove("error", "success", "warn", "info");
     }, 8000);
   }
-}
-  el.classList.remove("error","success","warn","info");
-  if (type) el.classList.add(type);
-  el.textContent = message;
 }
 
 // ==== Notifications UI & ICS Export ====
