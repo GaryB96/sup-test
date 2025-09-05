@@ -498,3 +498,8 @@ body:not(.logged-in) #accountActions { display: none; }
 .status-pill.success{color:#16a34a}
 .status-pill.warn{color:#b45309}
 .status-pill.info{color:#374151}
+
+
+/* Auto-hide and position for status pill */
+.status-pill:empty{display:none}
+#app-status{position:fixed; top:12px; right:12px; z-index:1000; padding:6px 10px; border-radius:8px}
