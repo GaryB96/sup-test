@@ -543,3 +543,64 @@ body:not(.logged-in) #accountActions { display: none; }
 .toast.warn{ background:#3a2500; color:#ffedd5; }         /* amber-ish */
 .toast.error{ background:#3f1d1d; color:#fee2e2; }        /* red-ish */
 
+
+
+/* ===== Public Header (Logged-out) ===== */
+#publicHeader {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 10px;
+  z-index: 999;
+}
+body.logged-in #publicHeader { display: none; }
+
+/* Button variants */
+.btn-outline{
+  padding:10px 14px; border-radius:10px; background:transparent; color:#0f172a;
+  border:1px solid #cbd5e1; cursor:pointer; font-weight:600;
+}
+.btn-outline:hover{ background:#f1f5f9; }
+@media (prefers-color-scheme: dark){
+  .btn-outline{ color:#e2e8f0; border-color:#334155; }
+  .btn-outline:hover{ background:#0b1220; }
+}
+
+.btn-ghost{
+  padding:10px 14px; border-radius:10px; background:transparent; color:#0f172a;
+  border:1px solid transparent; cursor:pointer; font-weight:600;
+}
+.btn-ghost:hover{ background:#f1f5f9; }
+@media (prefers-color-scheme: dark){
+  .btn-ghost{ color:#e2e8f0; }
+  .btn-ghost:hover{ background:#0b1220; }
+}
+
+/* ===== Hero ===== */
+#hero{
+  display:block; padding: 16vh 20px 12vh; text-align:center;
+}
+body.logged-in #hero{ display:none; }
+.hero-inner{ max-width: 880px; margin: 0 auto; }
+.hero-title{ font-size: clamp(32px, 6vw, 56px); line-height:1.05; margin: 0 0 10px; }
+.hero-tagline{ font-size: clamp(18px, 2.5vw, 22px); color:#475569; margin: 0 0 14px; }
+.hero-desc{ font-size: 16px; color:#64748b; max-width: 720px; margin: 0 auto 22px; }
+.hero-cta{ display:flex; gap:12px; justify-content:center; }
+@media (prefers-color-scheme: dark){
+  .hero-tagline{ color:#a8b3cf; }
+  .hero-desc{ color:#94a3b8; }
+}
+
+/* ===== Auth modals polish ===== */
+.modal .modal-header{
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
+}
+.modal .modal-close{
+  background:transparent; border:none; font-size:22px; cursor:pointer; color:#334155;
+}
+@media (prefers-color-scheme: dark){ .modal .modal-close{ color:#94a3b8; } }
+
+/* Default app visibility: hidden until logged in */
+body:not(.logged-in) #appContent { display: none; }
+

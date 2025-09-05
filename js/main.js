@@ -279,6 +279,39 @@ async function downloadIcs(){
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  // --- Public header & hero modals ---
+  const openSignUpBtn = document.getElementById("openSignUpBtn");
+  const openSignInBtn = document.getElementById("openSignInBtn");
+  const heroSignUp = document.getElementById("heroSignUp");
+  const heroSignIn = document.getElementById("heroSignIn");
+  const signinModal = document.getElementById("signinModal");
+  const signupModal = document.getElementById("signupModal");
+  const closeSigninModal = document.getElementById("closeSigninModal");
+  const closeSignupModal = document.getElementById("closeSignupModal");
+
+  function openModal(el){ if (el) el.classList.remove("hidden"); }
+  function closeModal(el){ if (el) el.classList.add("hidden"); }
+
+  [openSignUpBtn, heroSignUp].forEach(btn => btn && btn.addEventListener("click", (e)=>{ e.preventDefault(); openModal(signupModal); }));
+  [openSignInBtn, heroSignIn].forEach(btn => btn && btn.addEventListener("click", (e)=>{ e.preventDefault(); openModal(signinModal); }));
+
+  closeSigninModal?.addEventListener("click", ()=> closeModal(signinModal));
+  closeSignupModal?.addEventListener("click", ()=> closeModal(signupModal));
+
+  // Close when clicking backdrop
+  [signinModal, signupModal].forEach(mod => {
+    mod?.addEventListener("click", (e) => {
+      if (e.target === mod) closeModal(mod);
+    });
+  });
+  // Escape closes modal
+  document.addEventListener("keydown", (e)=>{
+    if (e.key === "Escape") {
+      closeModal(signinModal);
+      closeModal(signupModal);
+    }
+  });
+
   document.getElementById("openNotifications")?.addEventListener("click", (e)=>{ e.preventDefault(); openNotificationsModal(); });
   document.getElementById("closeNotificationsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); closeNotificationsModal(); });
   document.getElementById("saveNotificationsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); saveNotifications(); });
@@ -371,6 +404,39 @@ function closePasswordConfirmModal() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  // --- Public header & hero modals ---
+  const openSignUpBtn = document.getElementById("openSignUpBtn");
+  const openSignInBtn = document.getElementById("openSignInBtn");
+  const heroSignUp = document.getElementById("heroSignUp");
+  const heroSignIn = document.getElementById("heroSignIn");
+  const signinModal = document.getElementById("signinModal");
+  const signupModal = document.getElementById("signupModal");
+  const closeSigninModal = document.getElementById("closeSigninModal");
+  const closeSignupModal = document.getElementById("closeSignupModal");
+
+  function openModal(el){ if (el) el.classList.remove("hidden"); }
+  function closeModal(el){ if (el) el.classList.add("hidden"); }
+
+  [openSignUpBtn, heroSignUp].forEach(btn => btn && btn.addEventListener("click", (e)=>{ e.preventDefault(); openModal(signupModal); }));
+  [openSignInBtn, heroSignIn].forEach(btn => btn && btn.addEventListener("click", (e)=>{ e.preventDefault(); openModal(signinModal); }));
+
+  closeSigninModal?.addEventListener("click", ()=> closeModal(signinModal));
+  closeSignupModal?.addEventListener("click", ()=> closeModal(signupModal));
+
+  // Close when clicking backdrop
+  [signinModal, signupModal].forEach(mod => {
+    mod?.addEventListener("click", (e) => {
+      if (e.target === mod) closeModal(mod);
+    });
+  });
+  // Escape closes modal
+  document.addEventListener("keydown", (e)=>{
+    if (e.key === "Escape") {
+      closeModal(signinModal);
+      closeModal(signupModal);
+    }
+  });
+
   const logoutBtn = document.getElementById("logoutBtn");
   const calendarEl = document.getElementById("calendar");
   const labelEl = document.getElementById("currentMonthLabel");
