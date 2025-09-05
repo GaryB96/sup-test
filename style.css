@@ -504,10 +504,21 @@ body:not(.logged-in) #accountActions { display: none; }
 .status-pill:empty{display:none}
 #app-status{position:fixed; top:12px; right:12px; z-index:1000; padding:6px 10px; border-radius:8px}
 
-/* ===== SVG header on login ===== */
+
+/* ===== Auth header (SVG) and description ===== */
 #authContainer { padding-top: 10vh; }
-.logo-wrap { display:flex; justify-content:center; margin: 0 16px 16px; }
+.logo-wrap { display:flex; justify-content:center; margin: 0 16px 10px; }
 #authLogo { height: 84px; width: auto; }
 @media (max-width: 640px){
   #authLogo { height: 64px; }
 }
+.auth-desc {
+  text-align: center;
+  font-size: 15px;
+  color: #64748b;
+  margin: 0 16px 18px;
+}
+@media (prefers-color-scheme: dark){
+  .auth-desc { color: #94a3b8; }
+}
+
