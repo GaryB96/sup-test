@@ -398,22 +398,29 @@ if (nextBtn) {
   }
 
   if (resetPasswordLink) {
-    resetPasswordLink.addEventListener("click", async (e) => {
-      e.preventDefault();
-      try {
-        const result = await resetPassword();
-        showInlineStatus(result.message, "success");
-      } catch (err) {
-        console.error("Password reset error:", err);
-        if (err && err.code === "auth/missing-email") {
-          showInlineStatus("Please enter your email first.", "error");
-        } else {
-          // Keep UX non-enumerating even on errors
-          showInlineStatus("If an account exists for that email, a reset link has been sent. Please check your inbox and spam.", "success");
-        }
+  resetPasswordLink.addEventListener("click", async (e) => {
+    e.preventDefault();
+    try {
+      // visual "busy" state for accessibility and UX
+      resetPasswordLink.setAttribute("aria-busy", "true");
+      resetPasswordLink.setAttribute("aria-disabled", "true");
+
+      const result = await resetPassword();
+      showInlineStatus(result.message, "success");
+    } catch (err) {
+      console.error("Password reset error:", err);
+      if (err && err.code === "auth/missing-email") {
+        showInlineStatus("Please enter your email first.", "error");
+      } else {
+        // Keep UX non-enumerating even on errors
+        showInlineStatus("If an account exists for that email, a reset link has been sent. Please check your inbox and spam.", "success");
       }
-    });
-  }
+    } finally {
+      resetPasswordLink.removeAttribute("aria-busy");
+      resetPasswordLink.removeAttribute("aria-disabled");
+    }
+  });
+}
 
   // Open delete confirmation modal from dropdown
   if (deleteAccountLink) {
