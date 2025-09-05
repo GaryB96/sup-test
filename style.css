@@ -553,7 +553,7 @@ body:not(.logged-in) #accountActions { display: none; }
 .auth-intro-inner{ max-width: 820px; margin: 0 auto; }
 .auth-title{ font-size: clamp(28px, 5vw, 44px); line-height:1.1; margin: 0 0 8px; }
 .auth-tagline{ font-size: clamp(16px, 2.5vw, 20px); color:#475569; margin: 0 0 10px; }
-.auth-desc{ font-size: 15px; color:#64748b; max-width: 720px; margin: 0 auto 4px; }
+.auth-desc{ font-size: 20px; color:#64748b; max-width: 720px; margin: 0 auto 4px; }
 @media (prefers-color-scheme: dark){
   .auth-tagline{ color:#a8b3cf; }
   .auth-desc{ color:#94a3b8; }
