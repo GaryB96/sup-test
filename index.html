@@ -96,34 +96,16 @@
 <button id="notesBtn" style="display:none;">Notes</button>
 </header>
 <main>
-
+<h1>Supplement Tracker</h1>
 <!-- 🔐 Auth Section -->
-
 <section id="authContainer">
-  <!-- Public Marketing Hero -->
-  <section id="hero" role="region" aria-label="Welcome">
-    <div class="hero-inner">
-      <h1 class="hero-title">Supplement Tracker</h1>
-      <p class="hero-tagline">Plan, track, and stay consistent with your daily supplements.</p>
-      <p class="hero-desc">
-        Built for busy students, educators, athletes, and anyone who wants a simple way to
-        organize routines, log intake, and download a calendar to stay on track.
-      </p>
-      <div class="hero-cta">
-        <button id="heroSignUp" class="btn-primary">Create account</button>
-        <button id="heroSignIn" class="btn-outline">Log in</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Sign In Modal -->
-  <div class="modal hidden" id="signinModal" role="dialog" aria-modal="true" aria-labelledby="signinTitle">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="signinTitle">Log in</h2>
-        <button class="modal-close" id="closeSigninModal" aria-label="Close">&times;</button>
-      </div>
-      <form aria-labelledby="tabSignIn" class="auth-form" id="signinForm" novalidate="">
+<div aria-label="Account access" class="auth-card" role="region">
+<div aria-label="Auth tabs" class="tabs" role="tablist">
+<button aria-controls="signinPane" aria-selected="true" class="tab active" data-tab="signin" id="tabSignIn" role="tab">Sign In</button>
+<button aria-controls="signupPane" aria-selected="false" class="tab" data-tab="signup" id="tabSignUp" role="tab">Create Account</button>
+</div>
+<!-- Sign In -->
+<form aria-labelledby="tabSignIn" class="tab-pane active" id="signinForm" novalidate="" role="tabpanel">
 <label for="signinEmail">Email</label>
 <input id="signinEmail" placeholder="you@example.com" required="" type="email"/>
 <label for="signinPassword">Password</label>
@@ -133,17 +115,8 @@
 <a class="link" href="#" id="forgotPasswordLink">Forgot password?</a>
 </div>
 </form>
-    </div>
-  </div>
-
-  <!-- Sign Up Modal -->
-  <div class="modal hidden" id="signupModal" role="dialog" aria-modal="true" aria-labelledby="signupTitle">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="signupTitle">Create your account</h2>
-        <button class="modal-close" id="closeSignupModal" aria-label="Close">&times;</button>
-      </div>
-      <form aria-labelledby="tabSignUp" class="auth-form" id="signupForm" novalidate="">
+<!-- Sign Up -->
+<form aria-labelledby="tabSignUp" class="tab-pane" id="signupForm" novalidate="" role="tabpanel">
 <label for="signupEmail">Email</label>
 <input id="signupEmail" placeholder="you@example.com" required="" type="email"/>
 <label for="signupPassword">Password</label>
@@ -154,10 +127,9 @@
 <button class="btn-primary" id="signupSubmit" type="submit">Create Account</button>
 <div class="muted small">We'll send a verification email to activate your account.</div>
 </form>
-    </div>
-  </div>
+<div aria-live="polite" class="status-pill" id="auth-status" role="status"></div>
+</div>
 </section>
-
 <!-- ✅ Main App Content -->
 <section id="appContent">
 <div aria-labelledby="confirmDeleteTitle" aria-modal="true" class="modal hidden" id="confirmDeleteModal" role="dialog">
