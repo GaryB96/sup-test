@@ -1,14 +1,1 @@
-<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
-  <ns0:title>Supplement Tracker &#8212; Monogram + Wordmark + Tagline</ns0:title>
-  
-  <ns0:g transform="translate(20,20)">
-    <ns0:rect x="0" y="0" width="160" height="160" rx="24" fill="#0b1220" />
-    <ns0:rect x="20" y="40" width="120" height="44" rx="22" fill="#22c55e" opacity="0.20" />
-    <ns0:rect x="20" y="90" width="120" height="44" rx="22" fill="#22c55e" opacity="0.15" />
-    <ns0:text x="80" y="100" text-anchor="middle" dominant-baseline="middle" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-weight="800" font-size="88" fill="#22c55e">ST</ns0:text>
-  </ns0:g>
-
-  
-  <ns0:g transform="translate(220,0)">
-    </ns0:g>
-</ns0:svg>
+<svg width="227" height="229" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" overflow="hidden"><g transform="translate(-121 -121)"><path d="M187.042 0C205.271 0 220.049 14.7779 220.049 33.0074L220.049 187.042C220.049 205.271 205.271 220.049 187.042 220.049L33.0073 220.049C14.7779 220.049-4.19711e-05 205.271-4.19711e-05 187.042L-4.19711e-05 33.0073C-4.19711e-05 14.7779 14.7779-4.19711e-05 33.0073-4.19711e-05Z" fill="#0B1220" transform="matrix(1 0 0 1.00025 124.097 125.278)"/><path d="M162.286 55.0123C178.997 55.0123 192.543 68.5587 192.543 85.2691L192.543 85.2691C192.543 101.979 178.997 115.526 162.286 115.526L57.7629 115.526C41.0525 115.526 27.5061 101.979 27.5061 85.2691L27.5061 85.2691C27.5061 68.5587 41.0525 55.0123 57.7629 55.0123Z" fill="#22C55E" fill-opacity="0.2" transform="matrix(1 0 0 1.00025 124.097 125.278)"/><path d="M162.286 123.778C178.997 123.778 192.543 137.324 192.543 154.034L192.543 154.034C192.543 170.745 178.997 184.291 162.286 184.291L57.7629 184.291C41.0525 184.291 27.5061 170.745 27.5061 154.034L27.5061 154.034C27.5061 137.324 41.0525 123.778 57.7629 123.778Z" fill="#22C55E" fill-opacity="0.15" transform="matrix(1 0 0 1.00025 124.097 125.278)"/><text fill="#22C55E" font-family="Segoe UI,Segoe UI_MSFontService,sans-serif" font-weight="700" font-size="88" transform="matrix(1.37531 0 0 1.37565 164.744 263)">ST</text></g></svg>
