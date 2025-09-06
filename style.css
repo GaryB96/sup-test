@@ -547,6 +547,14 @@ body:not(.logged-in) #accountActions { display: none; }
   text-align: center;
   color: #555;
   font-size: 1rem;
-  margin-top: 12px;
+  padding-bottom: 5px;
+  padding-top: 5px;
+  margin-top: 18px;
   line-height: 1.4;
+}
+
+.auth-logo {
+  max-width: 280px;
+  height: auto;
+  align-content: center;
 }
