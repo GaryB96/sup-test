@@ -710,6 +710,27 @@ body:not(.logged-in) #accountActions { display: none; }
   font-size: 14px;
 }
 
+/* Make inputs hug the left inside this modal */
+#supplementModal .modal-content { padding-left: 6px; }          /* bring overall content left */
+#supplementModal .form-row { padding-left: 2px; }                /* nudge rows left */
+#supplementModal input,
+#supplementModal select { margin-left: 2px; }                    /* “couple px” feel */
+
+/* Footer buttons: Save on left, Cancel on right */
+#supplementModal .modal-actions--split{
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* pushes ends apart */
+  margin-top: 16px;
+}
+
+/* Optional: keep buttons tidy on small screens */
+@media (max-width: 420px){
+  #supplementModal .modal-actions--split{
+    gap: 10px;
+  }
+}
+
 .modal .btn-primary { background: #22c55e; color: #fff; }
 .modal .btn-secondary { background: #1f2937; color: #e5e7eb; }
 .modal .btn-primary:hover,
