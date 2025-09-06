@@ -615,13 +615,15 @@ body:not(.logged-in) #accountActions { display: none; }
   top: calc(100% + 6px);
 }
 
-#icon .banner-logo {
+#sidebar .banner-logo {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 80px;
   height: auto;
   margin: 10px;
+  display: block;
+  max-width: calc(100% - 20px);
 }
 
 /* Push main content to the right when sidebar is visible */
