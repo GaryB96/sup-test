@@ -80,21 +80,24 @@
 </div>
 </div>
 <body>
-<div id="accountActions">
-<button class="logout-button" id="logoutBtn">Logout</button>
-<!-- Profile dropdown -->
-<div class="dropdown">
+
+<aside id="sidebar" class="sidebar hidden" role="navigation" aria-label="App controls">
+  <button id="logoutBtn" class="sidebar-btn">Logout</button>
+  <!-- Account Options dropdown -->
+  <div class="dropdown">
 <button class="profile-button" id="profileButton">Account Options</button>
 <div class="dropdown-content" id="profileDropdown">
 <a href="#" id="resetPassword">Reset Password</a>
 <a href="#" id="deleteAccount">Delete Account</a>
 <a href="#" id="openNotifications">Download Calendar</a>
 </div>
+  <button id="notesBtn" class="sidebar-btn">Notes</button>
+  <button id="addSupplementBtn" class="sidebar-btn">Add New Supplement</button>
+</aside>
+
 </div><div aria-live="polite" class="status-pill" id="app-status" role="status"></div>
 </div>
-<header>
-<button id="notesBtn" style="display:none;">Notes</button>
-</header>
+
 <main>
 <!-- 🔐 Auth Section -->
 <section id="authContainer">

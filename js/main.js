@@ -67,11 +67,17 @@ function closeNotificationsModal(){ el("notificationsModal")?.classList.add("hid
 // simple debounce
 function debounce(fn, wait){ let t; return function(...args){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,args), wait); }; }
 
+
 function setNotesButtonVisibility(isLoggedIn) {
-  const btn = document.getElementById("notesBtn");
-  if (!btn) return;
-  btn.style.display = isLoggedIn ? "inline-block" : "none"; btn.disabled = !isLoggedIn;
+  const sidebar = document.getElementById("sidebar");
+  if (!sidebar) return;
+  if (isLoggedIn) {
+    sidebar.classList.remove("hidden");
+  } else {
+    sidebar.classList.add("hidden");
+  }
 }
+
 
 function openNotesModal() {
   if (!currentUser) return;
