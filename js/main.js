@@ -69,8 +69,9 @@ function debounce(fn, wait){ let t; return function(...args){ clearTimeout(t); t
 
 function setNotesButtonVisibility(isLoggedIn) {
   const btn = document.getElementById("notesBtn");
-  if (!btn) return;
-  btn.style.display = isLoggedIn ? "inline-block" : "none"; btn.disabled = !isLoggedIn;
+  const addBtn = document.getElementById("addSupplementBtn");
+  if (btn) { btn.style.display = isLoggedIn ? "inline-block" : "none"; btn.disabled = !isLoggedIn; }
+  if (addBtn) { addBtn.style.display = isLoggedIn ? "inline-block" : "none"; addBtn.disabled = !isLoggedIn; }
 }
 
 function openNotesModal() {

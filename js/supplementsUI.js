@@ -29,6 +29,21 @@ const notesClose = document.getElementById("notesClose");
 const notesSave  = document.getElementById("notesSave");
 const notesInput = document.getElementById("notesInput");
 
+
+// Add Supplement modal controls
+const addSuppBtn   = document.getElementById("addSupplementBtn");
+const addSuppModal = document.getElementById("addSupplementModal");
+const addSuppClose = document.getElementById("addSuppClose");
+const addSuppCancel= document.getElementById("addSuppCancel");
+function openAddSupp(){ addSuppModal && addSuppModal.classList.remove("hidden"); }
+function closeAddSupp(){ addSuppModal && addSuppModal.classList.add("hidden"); }
+addSuppBtn && addSuppBtn.addEventListener("click", (e)=>{ e.preventDefault(); openAddSupp(); });
+addSuppClose && addSuppClose.addEventListener("click", closeAddSupp);
+addSuppCancel && addSuppCancel.addEventListener("click", closeAddSupp);
+// close when clicking backdrop
+addSuppModal && addSuppModal.addEventListener("click", (e)=>{ if(e.target === addSuppModal) closeAddSupp(); });
+
+
 document.addEventListener("DOMContentLoaded", () => {
   calendarEl = document.getElementById("calendar");
   labelEl = document.getElementById("currentMonthLabel");
@@ -109,9 +124,9 @@ if (form) {
       if (cancelEditBtn) cancelEditBtn.classList.add("hidden");
 
       await refreshData();
-      if (typeof window.refreshCalendar === "function") {
-        await window.refreshCalendar();
-      }
+      if (typeof window.refreshCalendar === "function") await window.refreshCalendar();
+      // Close add-supplement modal on success
+      try { closeAddSupp(); } catch(_) {}}
     } catch (error) {
       console.error("❌ Failed to submit supplement:", error);
     }
@@ -354,7 +369,8 @@ function wireSummaryActions() {
       await deleteSupplement(currentUser && currentUser.uid, btn.dataset.id);
       await refreshData();
       if (typeof window.refreshCalendar === "function") await window.refreshCalendar();
-    });
+      // Close add-supplement modal on success
+      try { closeAddSupp(); } catch(_) {}});
   });
 }
 
