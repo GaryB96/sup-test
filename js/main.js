@@ -69,9 +69,8 @@ function debounce(fn, wait){ let t; return function(...args){ clearTimeout(t); t
 
 function setNotesButtonVisibility(isLoggedIn) {
   const btn = document.getElementById("notesBtn");
-  const addBtn = document.getElementById("addSupplementBtn");
-  if (btn) { btn.style.display = isLoggedIn ? "inline-block" : "none"; btn.disabled = !isLoggedIn; }
-  if (addBtn) { addBtn.style.display = isLoggedIn ? "inline-block" : "none"; addBtn.disabled = !isLoggedIn; }
+  if (!btn) return;
+  btn.style.display = isLoggedIn ? "inline-block" : "none"; btn.disabled = !isLoggedIn;
 }
 
 function openNotesModal() {
@@ -451,7 +450,6 @@ if (nextBtn) {
     if (user) {
       document.body.classList.add("logged-in");
       currentUser = user;
-      window.__currentUser = user;
       setNotesButtonVisibility(true);
       const event = new CustomEvent("user-authenticated", { detail: user });
       window.dispatchEvent(event);
@@ -461,7 +459,6 @@ if (nextBtn) {
       setNotesButtonVisibility(true);
 } else {
       document.body.classList.remove("logged-in");
-      window.__currentUser = null;
       calendarEl.innerHTML = "";
       labelEl.textContent = "";
       

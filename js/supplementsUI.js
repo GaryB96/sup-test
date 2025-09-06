@@ -29,46 +29,16 @@ const notesClose = document.getElementById("notesClose");
 const notesSave  = document.getElementById("notesSave");
 const notesInput = document.getElementById("notesInput");
 
-
-
-// Add Supplement modal controls
-const addSuppBtn   = document.getElementById("addSupplementBtn");
-const addSuppModal = document.getElementById("addSupplementModal");
-const addSuppClose = document.getElementById("addSuppClose");
-const addSuppCancel= document.getElementById("addSuppCancel");
-
-function openAddSupp(){ if (addSuppModal) addSuppModal.classList.remove("hidden"); }
-function closeAddSupp(){ if (addSuppModal) addSuppModal.classList.add("hidden"); }
-
-if (addSuppBtn) {
-  addSuppBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    openAddSupp();
-  });
-}
-if (addSuppClose) addSuppClose.addEventListener("click", closeAddSupp);
-if (addSuppCancel) addSuppCancel.addEventListener("click", closeAddSupp);
-// backdrop close
-if (addSuppModal) {
-  addSuppModal.addEventListener("click", (e) => {
-    if (e.target === addSuppModal) closeAddSupp();
-  });
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   calendarEl = document.getElementById("calendar");
   labelEl = document.getElementById("currentMonthLabel");
-});window.addEventListener("user-authenticated", async (e) => {
+});
+
+window.addEventListener("user-authenticated", async (e) => {
   currentUser = e.detail;
   await refreshData();
 });
 
-
-// Utility: pick a distinct color for cycle items
-function getRandomColor() {
-  const colors = ["#2196F3", "#FF9800", "#9C27B0", "#E91E63", "#4CAF50", "#00BCD4"];
-  return colors[Math.floor(Math.random() * colors.length)];
-}
 // ----------------------------------------------------------------------------
 // Utilities
 // ----------------------------------------------------------------------------
@@ -84,7 +54,6 @@ if (cycleCheckbox && cycleDetails) {
     cycleDetails.classList.toggle("hidden", !cycleCheckbox.checked);
   });
 }
-
 
 if (form) {
   form.addEventListener("submit", async (e) => {
@@ -108,6 +77,7 @@ if (form) {
         ? document.getElementById("cycleStartInput").value
         : null;
 
+    // If cycling, allow user to pick the cycle start date; otherwise default to today
     const startDate = onCycle && picked ? picked : new Date().toISOString().split("T")[0];
     const color = onCycle ? getRandomColor() : "#cccccc";
 
@@ -116,32 +86,104 @@ if (form) {
       dosage,
       time,
       startDate,
-      cycle: onCycle && (onDays > 0 || offDays > 0)
-        ? { on: onDays, off: offDays, startDate }
-        : null,
+      cycle:
+        onCycle && (onDays > 0 || offDays > 0)
+          ? { on: onDays, off: offDays, startDate: startDate }
+          : null,
       color
     };
 
     try {
       if (editingSupplementId) {
-        // update (not shown in this snippet, keep your existing update call if present)
-      } else {
-        await addSupplement(currentUser.uid, supplement);
+        await deleteSupplement(currentUser.uid, editingSupplementId);
+        editingSupplementId = null;
       }
 
+      await addSupplement(currentUser.uid, supplement);
+
+      // Reset form UI
       form.reset();
       if (cycleCheckbox) cycleCheckbox.checked = false;
       if (cycleDetails) cycleDetails.classList.add("hidden");
       timeCheckboxes.forEach((cb) => (cb.checked = false));
+      if (cancelEditBtn) cancelEditBtn.classList.add("hidden");
 
       await refreshData();
-      if (typeof window.refreshCalendar === "function") await window.refreshCalendar();
-      // Close the modal on success
-      try { closeAddSupp(); } catch (_) {}
+      if (typeof window.refreshCalendar === "function") {
+        await window.refreshCalendar();
+      }
     } catch (error) {
       console.error("❌ Failed to submit supplement:", error);
     }
   });
+}
+
+function getRandomColor() {
+  const colors = ["#2196F3", "#FF9800", "#9C27B0", "#E91E63"];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function editSupplement(id) {
+  const supplement = supplements.find((s) => s.id === id);
+  if (!supplement) return;
+
+  editingSupplementId = id;
+
+  document.getElementById("nameInput").value = supplement.name || "";
+  document.getElementById("dosageInput").value = supplement.dosage || "";
+
+  const timeCheckboxes = getTimeCheckboxes();
+  timeCheckboxes.forEach((cb) => {
+    cb.checked = Array.isArray(supplement.time) && supplement.time.includes(cb.value);
+  });
+
+  const hasCycle = !!(
+    supplement.cycle &&
+    (Number(supplement.cycle["on"]) > 0 || Number(supplement.cycle["off"]) > 0)
+  );
+  if (cycleCheckbox) cycleCheckbox.checked = hasCycle;
+  if (cycleDetails) cycleDetails.classList.toggle("hidden", !hasCycle);
+
+  const onInput = document.getElementById("onDaysInput");
+  const offInput = document.getElementById("offDaysInput");
+  const startInput = document.getElementById("cycleStartInput");
+  if (onInput) onInput.value = hasCycle ? Number(supplement.cycle["on"]) : "";
+  if (offInput) offInput.value = hasCycle ? Number(supplement.cycle["off"]) : "";
+  if (startInput)
+    startInput.value = hasCycle
+      ? supplement.cycle["startDate"] || supplement.startDate || ""
+      : "";
+
+  if (cancelEditBtn) cancelEditBtn.classList.remove("hidden");
+}
+
+if (cancelEditBtn) {
+  cancelEditBtn.addEventListener("click", () => {
+    editingSupplementId = null;
+    form.reset();
+    if (cycleCheckbox) cycleCheckbox.checked = false;
+    if (cycleDetails) cycleDetails.classList.add("hidden");
+    getTimeCheckboxes().forEach((cb) => (cb.checked = false));
+    cancelEditBtn.classList.add("hidden");
+  });
+}
+
+async function refreshData() {
+  if (!currentUser || !currentUser.uid) {
+    console.warn("⛔ currentUser is not ready yet.");
+    return;
+  }
+
+  try {
+    supplements = await fetchSupplements(currentUser.uid);
+    renderSupplements();
+
+    if (typeof window.refreshCalendar === "function") {
+      await window.refreshCalendar();
+    }
+  } catch (error) {
+    console.error("❌ Failed to fetch supplements:", error);
+  }
 }
 function openNotes() {
   if (!currentUser?.uid) return;
@@ -312,15 +354,8 @@ function wireSummaryActions() {
       await deleteSupplement(currentUser && currentUser.uid, btn.dataset.id);
       await refreshData();
       if (typeof window.refreshCalendar === "function") await window.refreshCalendar();
-      try { closeAddSupp(); } catch (_) {}});
+    });
   });
 }
 
 // (module has side effects; no explicit exports)
-
-
-// Eager-auth pickup AFTER functions are defined
-if (window.__currentUser) {
-  currentUser = window.__currentUser;
-  try { refreshData(); } catch (e) { console.warn("refreshData not ready yet:", e); }
-}

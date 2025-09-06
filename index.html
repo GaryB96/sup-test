@@ -93,10 +93,7 @@
 </div><div aria-live="polite" class="status-pill" id="app-status" role="status"></div>
 </div>
 <header>
-  <div class="top-actions">
-    <button id="notesBtn" style="display:none;">Notes</button>
-    <button id="addSupplementBtn" class="btn-primary" style="display:none;">Add New Supplement</button>
-  </div>
+<button id="notesBtn" style="display:none;">Notes</button>
 </header>
 <main>
 <!-- 🔐 Auth Section -->
@@ -164,7 +161,28 @@
 </div>
 </div>
 </div>
+<form id="supplementForm">
+<input id="nameInput" placeholder="Supplement name" required=""/>
+<input id="dosageInput" placeholder="Dosage (e.g., 500mg)" required=""/>
+<!-- Unified checkbox group: desktop = 4 tiles across, mobile = stacked -->
+<div class="checkbox-tiles">
+<label class="check-item"><input name="time" type="checkbox" value="Morning"/> <span>Morning</span></label>
+<label class="check-item"><input name="time" type="checkbox" value="Afternoon"/> <span>Afternoon</span></label>
+<label class="check-item"><input name="time" type="checkbox" value="Evening"/> <span>Evening</span></label>
+<label class="check-item"><input id="cycleCheckbox" name="cycle" type="checkbox" value="1"/> <span>On a cycle</span></label>
+</div>
+<div class="hidden" id="cycleDetails">
+<input id="onDaysInput" placeholder="Days on" type="number"/>
+<input id="offDaysInput" placeholder="Days off" type="number"/>
 
+
+<div class="cycle-start-row">
+<label class="cycle-start-label" for="cycleStartInput">Start Date</label>
+<input id="cycleStartInput" type="date"/>
+</div>
+</div>
+<button type="submit">Add Supplement</button>
+</form>
 <div class="summary-container" id="supplementSummaryContainer"></div>
 <div id="calendarContainer">
 <h2>Cycle Calendar</h2>
@@ -201,44 +219,6 @@
     document.getElementById('notificationsCloseBtn')?.click();
   });
 </script>
-
-<!-- Add Supplement Modal -->
-<div id="addSupplementModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="addSuppTitle">
-  <div class="modal-content" role="document">
-    <div class="modal-header">
-      <h2 id="addSuppTitle" class="modal-title">Add New Supplement</h2>
-      <button class="modal-close" id="addSuppClose" aria-label="Close">×</button>
-    </div>
-    <div class="modal-body">
-      <form id="supplementForm">
-<input id="nameInput" placeholder="Supplement name" required=""/>
-<input id="dosageInput" placeholder="Dosage (e.g., 500mg)" required=""/>
-<!-- Unified checkbox group: desktop = 4 tiles across, mobile = stacked -->
-<div class="checkbox-tiles">
-<label class="check-item"><input name="time" type="checkbox" value="Morning"/> <span>Morning</span></label>
-<label class="check-item"><input name="time" type="checkbox" value="Afternoon"/> <span>Afternoon</span></label>
-<label class="check-item"><input name="time" type="checkbox" value="Evening"/> <span>Evening</span></label>
-<label class="check-item"><input id="cycleCheckbox" name="cycle" type="checkbox" value="1"/> <span>On a cycle</span></label>
-</div>
-<div class="hidden" id="cycleDetails">
-<input id="onDaysInput" placeholder="Days on" type="number"/>
-<input id="offDaysInput" placeholder="Days off" type="number"/>
-
-
-<div class="cycle-start-row">
-<label class="cycle-start-label" for="cycleStartInput">Start Date</label>
-<input id="cycleStartInput" type="date"/>
-</div>
-</div>
-</form>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-secondary" id="addSuppCancel" type="button">Cancel</button>
-      <button class="btn-primary" type="submit" form="supplementForm">Add Supplement</button>
-    </div>
-  </div>
-</div>
-
 </main>
 <script src="./js/toast.js" type="module"></script>
 <script src="./js/main.js" type="module"></script>
