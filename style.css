@@ -506,12 +506,6 @@ body:not(.logged-in) #accountActions { display: none; }
 
 
 /* ===== Auth header (SVG) and description ===== */
-#authContainer { padding-top: 3vh; }
-.logo-wrap { display:flex; justify-content:center; margin: 0 16px 10px; }
-#authLogo { height: 184px; width: auto; }
-@media (max-width: 640px){
-  #authLogo { height: 64px; }
-}
 .auth-desc {
   text-align: center;
   font-size: 18px;
@@ -520,4 +514,20 @@ body:not(.logged-in) #accountActions { display: none; }
 }
 @media (prefers-color-scheme: dark){
   .auth-desc { color: #17191b; }
+}
+/* --- Logo centering & responsive scaling (override) --- */
+.logo-wrap {
+  display: grid;            /* easier centering than flex */
+  place-items: center;      /* centers horizontally & vertically */
+  width: 100%;
+  margin: 0 16px 10px;
+}
+
+/* Works whether you're using <img id="authLogo" src="...svg"> or inline <svg> */
+#authLogo,
+.logo-wrap > svg {
+  display: block;
+  height: clamp(64px, 22vw, 184px); /* scales down on phones, caps at 184px */
+  width: auto;                      /* maintain aspect ratio */
+  max-width: min(92vw, 1100px);     /* prevent overflow on small screens */
 }
