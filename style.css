@@ -506,9 +506,9 @@ body:not(.logged-in) #accountActions { display: none; }
 
 
 /* ===== Auth header (SVG) and description ===== */
-#authContainer { padding-top: 10vh; }
+#authContainer { padding-top: 6vh; }
 .logo-wrap { display:flex; justify-content:center; margin: 0 16px 10px; }
-#authLogo { height: 168px; width: auto; }
+#authLogo { height: 184px; width: auto; }
 @media (max-width: 640px){
   #authLogo { height: 64px; }
 }
