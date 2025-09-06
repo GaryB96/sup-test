@@ -1,3 +1,4 @@
+import { showToast } from "./toast.js";
 import { login, signup, logout, deleteAccount, monitorAuthState, changePassword, resetPassword, resendVerification } from "./auth.js";
 import { renderCalendar } from "./calendar.js";
 import { fetchSupplements } from "./supplements.js";
@@ -403,6 +404,7 @@ if (nextBtn) {
       try {
         const result = await resetPassword();
         showInlineStatus(result.message, "success");
+    try { showToast(result.message, "success", 5000); } catch(e) {}
       } catch (err) {
         console.error("Password reset error:", err);
         if (err && err.code === "auth/missing-email") {
@@ -410,6 +412,7 @@ if (nextBtn) {
         } else {
           // Keep UX non-enumerating even on errors
           showInlineStatus("If an account exists for that email, a reset link has been sent. Please check your inbox and spam.", "success");
+        try { showToast("Password reset email sent. Check your inbox and spam.", "success", 5000); } catch(e) {}
         }
       }
     });
@@ -498,10 +501,12 @@ if (nextBtn) {
       try {
         const result = await resetPassword(email);
         showInlineStatus(result.message, "success");
+    try { showToast(result.message, "success", 5000); } catch(e) {}
       } catch (err) {
         console.error(err);
         // Keep UX non-enumerating even on errors
         showInlineStatus("If an account exists for that email, a reset link has been sent. Please check your inbox and spam.", "success");
+        try { showToast("Password reset email sent. Check your inbox and spam.", "success", 5000); } catch(e) {}
       }
     });
   }
