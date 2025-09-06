@@ -788,6 +788,51 @@ body:not(.logged-in) #accountActions { display: none; }
   display: none;
 }
 
+/* Uniform checkbox size in the modal (16x16) */
+#supplementModal input[type="checkbox"],
+#supplementModal .time-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* Inline row: left = checkbox/label, right = date area */
+#supplementModal .form-row-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Left side ("On a cycle?") */
+#supplementModal .cycle-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto; /* push date area to the right */
+  font-size: 13px;
+}
+
+/* Right side: date input with caption underneath */
+#supplementModal .cycle-start {
+  display: inline-flex;
+  flex-direction: column;    /* caption under the input */
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 220px;          /* reserve space so modal doesn't resize */
+}
+
+/* Hide without collapsing space (prevents modal reflow/resize) */
+#supplementModal .cycle-start.hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Small caption style under the date input */
+#supplementModal .field-caption {
+  font-size: 12px;
+  color: #cbd5e1;
+}
 
 .modal .btn-primary { background: #22c55e; color: #fff; }
 .modal .btn-secondary { background: #1f2937; color: #e5e7eb; }
