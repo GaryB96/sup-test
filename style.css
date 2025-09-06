@@ -308,7 +308,7 @@ body:not(.logged-in) #accountActions { display: none; }
   display: inline-block;
   width: auto;
 }
-#notesBtn { padding: 6px 12px; border: none; border-radius: 6px; background-color: #4CAF50; color: #fff; cursor: pointer; }
+#notesBtn { padding: 6px 12px; border: none; border-radius: 6px; background-color: #22c55e; color: #fff; cursor: pointer; }
 #notesBtn:hover {
   background-color: #22c55e;
 }
@@ -595,7 +595,10 @@ body:not(.logged-in) #accountActions { display: none; }
   background: #22c55e;
   color: #fff;
   cursor: pointer;
-  text-align: left;
+  text-align: center;
+  font-size: 13px;
+  height: auto;
+  width: 80%;
 }
 .sidebar .logout-button,
 #logoutBtn.sidebar-btn { background: #22c55e; }
