@@ -506,7 +506,7 @@ body:not(.logged-in) #accountActions { display: none; }
 
 
 /* ===== Auth header (SVG) and description ===== */
-#authContainer { padding-top: 6vh; }
+#authContainer { padding-top: 3vh; }
 .logo-wrap { display:flex; justify-content:center; margin: 0 16px 10px; }
 #authLogo { height: 184px; width: auto; }
 @media (max-width: 640px){
@@ -514,11 +514,10 @@ body:not(.logged-in) #accountActions { display: none; }
 }
 .auth-desc {
   text-align: center;
-  font-size: 15px;
+  font-size: 18px;
   color: #34393f;
   margin: 0 16px 18px;
 }
 @media (prefers-color-scheme: dark){
-  .auth-desc { color: #94a3b8; }
+  .auth-desc { color: #17191b; }
 }
-
