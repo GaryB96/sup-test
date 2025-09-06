@@ -556,5 +556,5 @@ body:not(.logged-in) #accountActions { display: none; }
 .auth-logo {
   max-width: 280px;
   height: auto;
-  align-content: center;
+  align-items: center;
 }
