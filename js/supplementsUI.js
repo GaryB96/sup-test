@@ -58,15 +58,17 @@ if (addSuppModal) {
 document.addEventListener("DOMContentLoaded", () => {
   calendarEl = document.getElementById("calendar");
   labelEl = document.getElementById("currentMonthLabel");
-});
-
-if (window.__currentUser) { currentUser = window.__currentUser; refreshData(); }
-
-window.addEventListener("user-authenticated", async (e) => {
+});window.addEventListener("user-authenticated", async (e) => {
   currentUser = e.detail;
   await refreshData();
 });
 
+
+// Utility: pick a distinct color for cycle items
+function getRandomColor() {
+  const colors = ["#2196F3", "#FF9800", "#9C27B0", "#E91E63", "#4CAF50", "#00BCD4"];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
 // ----------------------------------------------------------------------------
 // Utilities
 // ----------------------------------------------------------------------------
@@ -315,3 +317,10 @@ function wireSummaryActions() {
 }
 
 // (module has side effects; no explicit exports)
+
+
+// Eager-auth pickup AFTER functions are defined
+if (window.__currentUser) {
+  currentUser = window.__currentUser;
+  try { refreshData(); } catch (e) { console.warn("refreshData not ready yet:", e); }
+}
