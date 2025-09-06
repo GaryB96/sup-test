@@ -798,5 +798,13 @@ document.addEventListener("DOMContentLoaded", () => {
       form.reset();
       closeModal();
     });
+    // Show/hide Start Date when "On a cycle?" is toggled
+const cycleChk   = modal.querySelector('#suppCycleChk');
+const startWrap  = modal.querySelector('#suppCycleStartWrap');
+if (cycleChk && startWrap) {
+  const sync = () => startWrap.classList.toggle('hidden', !cycleChk.checked);
+  cycleChk.addEventListener('change', sync);
+  sync(); // initialize
+}
   }
 });
