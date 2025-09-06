@@ -157,7 +157,7 @@ export async function resetPassword(targetEmail) {
     sent: true,
     email,
     maskedEmail: masked,
-    message: `If an account exists for ${masked}, a reset link has been sent. Please check your inbox and spam.`
+    message: `A reset link has been sent. Please check your inbox and spam.`
   };
 }
 
