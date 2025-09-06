@@ -310,7 +310,7 @@ body:not(.logged-in) #accountActions { display: none; }
 }
 #notesBtn { padding: 6px 12px; border: none; border-radius: 6px; background-color: #4CAF50; color: #fff; cursor: pointer; }
 #notesBtn:hover {
-  background-color: #45a049;
+  background-color: #22c55e;
 }
 
 .modal.hidden{display:none;}
@@ -574,8 +574,9 @@ body:not(.logged-in) #accountActions { display: none; }
   left: 0;
   width: 200px;
   height: 100dvh;
-  background: #f4f4f4;
-  border-right: 1px solid #ddd;
+  background: #0b1220;
+  border-right: 1px solid #22c55e;
+  border-right-width: 5px;
   padding: 16px 10px;
   display: flex;
   flex-direction: column;
@@ -591,15 +592,15 @@ body:not(.logged-in) #accountActions { display: none; }
   padding: 8px 12px;
   border: none;
   border-radius: 8px;
-  background: #2d6cdf;
+  background: #22c55e;
   color: #fff;
   cursor: pointer;
   text-align: left;
 }
 .sidebar .logout-button,
-#logoutBtn.sidebar-btn { background: rgb(247,102,102); }
-.sidebar .profile-button { background: #2196F3; }
-.sidebar button:hover { filter: brightness(.95); }
+#logoutBtn.sidebar-btn { background: #22c55e; }
+.sidebar .profile-button { background: #22c55e; }
+.sidebar button:hover { filter: brightness(.90); }
 
 /* Place dropdown within sidebar */
 .sidebar .dropdown { position: relative; }
