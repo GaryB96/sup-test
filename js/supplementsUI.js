@@ -49,6 +49,8 @@ document.addEventListener("DOMContentLoaded", () => {
   labelEl = document.getElementById("currentMonthLabel");
 });
 
+if (window.__currentUser) { currentUser = window.__currentUser; refreshData(); }
+
 window.addEventListener("user-authenticated", async (e) => {
   currentUser = e.detail;
   await refreshData();

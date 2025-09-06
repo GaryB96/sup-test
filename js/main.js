@@ -451,6 +451,7 @@ if (nextBtn) {
     if (user) {
       document.body.classList.add("logged-in");
       currentUser = user;
+      window.__currentUser = user;
       setNotesButtonVisibility(true);
       const event = new CustomEvent("user-authenticated", { detail: user });
       window.dispatchEvent(event);
@@ -460,6 +461,7 @@ if (nextBtn) {
       setNotesButtonVisibility(true);
 } else {
       document.body.classList.remove("logged-in");
+      window.__currentUser = null;
       calendarEl.innerHTML = "";
       labelEl.textContent = "";
       
