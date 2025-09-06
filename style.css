@@ -545,16 +545,10 @@ body:not(.logged-in) #accountActions { display: none; }
 
 .auth-desc {
   text-align: center;
-  color: #555;
-  font-size: 1rem;
-  padding-bottom: 5px;
+  color: #1a1717;
+  font-size: 18px;
+  padding-bottom: 25px;
   padding-top: 5px;
   margin-top: 18px;
-  line-height: 1.4;
-}
-
-.auth-logo {
-  max-width: 280px;
-  height: auto;
-  align-items: center;
+  line-height: 1.6;
 }
