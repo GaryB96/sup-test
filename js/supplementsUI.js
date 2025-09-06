@@ -125,7 +125,7 @@ if (form) {
 
       await refreshData();
       if (typeof window.refreshCalendar === "function") await window.refreshCalendar();
-      // Close add-supplement modal on success
+      try { closeAddSupp(); } catch(_) {}// Close add-supplement modal on success
       try { closeAddSupp(); } catch(_) {}}
     } catch (error) {
       console.error("❌ Failed to submit supplement:", error);
@@ -369,7 +369,7 @@ function wireSummaryActions() {
       await deleteSupplement(currentUser && currentUser.uid, btn.dataset.id);
       await refreshData();
       if (typeof window.refreshCalendar === "function") await window.refreshCalendar();
-      // Close add-supplement modal on success
+      try { closeAddSupp(); } catch(_) {}// Close add-supplement modal on success
       try { closeAddSupp(); } catch(_) {}});
   });
 }

@@ -566,3 +566,4 @@ body:not(.logged-in) #accountActions { display: none; }
     height: clamp(48px, 22vw, 120px);  /* smaller on small screens */
   }
 }
+.top-actions{display:flex;gap:8px;align-items:center;}
