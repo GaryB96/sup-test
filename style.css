@@ -617,13 +617,11 @@ body:not(.logged-in) #accountActions { display: none; }
 
 #sidebar .banner-logo {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 80px;
+  bottom: 10%;
+  left: -10%;
   height: auto;
-  margin: 10px;
   display: block;
-  max-width: calc(100% - 20px);
+  max-width: 80%;
 }
 
 /* Push main content to the right when sidebar is visible */
