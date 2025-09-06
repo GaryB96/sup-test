@@ -543,3 +543,10 @@ body:not(.logged-in) #accountActions { display: none; }
 .toast.warn{ background:#3a2500; color:#ffedd5; }         /* amber-ish */
 .toast.error{ background:#3f1d1d; color:#fee2e2; }        /* red-ish */
 
+.auth-desc {
+  text-align: center;
+  color: #555;
+  font-size: 1rem;
+  margin-top: 12px;
+  line-height: 1.4;
+}
