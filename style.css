@@ -618,11 +618,11 @@ body:not(.logged-in) #accountActions { display: none; }
 /* Push main content to the right when sidebar is visible */
 body.logged-in main { margin-left: 220px; }
 
-#banner {
+#icon {
   position: relative;
 }
 
-#banner .banner-logo {
+#icon .banner-logo {
   position: absolute;
   bottom: 0;
   left: 0;
