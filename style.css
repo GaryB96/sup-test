@@ -563,7 +563,8 @@ body:not(.logged-in) #accountActions { display: none; }
 .logo-wrap > svg {        /* works for <img> or inline <svg> */
   display: block;
   margin: 0 auto;
-  width: auto;           
+  width: auto;   
+  padding-left: 220px;        
   max-width: 92vw;        /* never overflow on small screens */
   height: clamp(64px, 18vw, 184px);  /* phone → desktop scaling (max stays ~your current size) */
 }
