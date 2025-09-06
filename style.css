@@ -714,7 +714,7 @@ body:not(.logged-in) #accountActions { display: none; }
 #supplementModal .modal-content { padding-left: 6px; }          /* bring overall content left */
 #supplementModal .form-row { padding-left: 2px; }                /* nudge rows left */
 #supplementModal input,
-#supplementModal select { margin-left: 2px; }                    /* “couple px” feel */
+#supplementModal select { margin-left: 5px; }                    /* “couple px” feel */
 
 /* Footer buttons: Save on left, Cancel on right */
 #supplementModal .modal-actions--split{
