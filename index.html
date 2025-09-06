@@ -234,18 +234,7 @@
 
       <div class="form-row">
         <label for="suppDosage">Dosage</label>
-        <input id="suppDosage" placeholder="e.g., 500mg" name="dosage" type="number" min="0" step="0.01" />
-      </div>
-
-      <div class="form-row">
-        <label for="suppUnit">Unit</label>
-        <select id="suppUnit" name="unit">
-          <option value="">Select…</option>
-          <option>mg</option>
-          <option>mcg</option>
-          <option>g</option>
-          <option>IU</option>
-        </select>
+        <input id="suppDosage" placeholder="e.g., 500mg" name="dosage" type="text" inputmode="decimal" pattern="[0-9]*" />
       </div>
 
       <!-- FOOTER: Save (left) + Cancel (right) -->
