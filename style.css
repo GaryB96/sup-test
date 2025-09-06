@@ -515,7 +515,7 @@ body:not(.logged-in) #accountActions { display: none; }
 .auth-desc {
   text-align: center;
   font-size: 15px;
-  color: #64748b;
+  color: #34393f;
   margin: 0 16px 18px;
 }
 @media (prefers-color-scheme: dark){
