@@ -760,6 +760,34 @@ body:not(.logged-in) #accountActions { display: none; }
     gap: 10px;
   }
 }
+/* Inline layout for cycle row */
+#supplementModal .form-row-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Checkbox on the left */
+#supplementModal .cycle-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;   /* push date picker to the right side */
+  font-size: 13px;
+}
+
+/* Start date chunk on the right */
+#supplementModal .cycle-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Hide/show helper */
+#supplementModal .cycle-start.hidden {
+  display: none;
+}
+
 
 .modal .btn-primary { background: #22c55e; color: #fff; }
 .modal .btn-secondary { background: #1f2937; color: #e5e7eb; }
