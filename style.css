@@ -721,7 +721,13 @@ body:not(.logged-in) #accountActions { display: none; }
   display: flex;
   align-items: center;
   justify-content: space-between; /* pushes ends apart */
-  margin-top: 16px;
+  margin-top: 20px;
+}
+#supplementModal .modal-actions--split .btn-primary { 
+  margin-left: 0;
+}
+#supplementModal .modal-actions--split .btn-secondary { 
+  margin-right: 0;
 }
 
 /* Optional: keep buttons tidy on small screens */
