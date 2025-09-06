@@ -237,6 +237,24 @@
         <input id="suppDosage" placeholder="e.g., 500mg" name="dosage" type="text" inputmode="decimal" pattern="[0-9]*" />
       </div>
 
+<!-- Time of day -->
+<div class="form-row">
+  <div class="time-grid">
+    <label class="time-item">
+      <input type="checkbox" name="time" value="Morning">
+      <span>Morning</span>
+    </label>
+    <label class="time-item">
+      <input type="checkbox" name="time" value="Afternoon">
+      <span>Afternoon</span>
+    </label>
+    <label class="time-item">
+      <input type="checkbox" name="time" value="Evening">
+      <span>Evening</span>
+    </label>
+  </div>
+</div>
+
       <!-- FOOTER: Save (left) + Cancel (right) -->
       <div class="modal-actions modal-actions--split">
         <button type="submit" id="saveSupplementBtn" class="btn-primary">Save</button>

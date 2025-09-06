@@ -730,6 +730,30 @@ body:not(.logged-in) #accountActions { display: none; }
   margin-right: 0;
 }
 
+/* 3 equal columns under Dosage; labels centered */
+#supplementModal .time-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-items: center;     /* center each label horizontally */
+  align-items: center;
+  gap: 0;
+  margin-top: 4px;
+}
+
+#supplementModal .time-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+#supplementModal .time-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+
 /* Optional: keep buttons tidy on small screens */
 @media (max-width: 420px){
   #supplementModal .modal-actions--split{
