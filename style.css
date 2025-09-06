@@ -531,3 +531,45 @@ body:not(.logged-in) #accountActions { display: none; }
   width: auto;                      /* maintain aspect ratio */
   max-width: min(92vw, 1100px);     /* prevent overflow on small screens */
 }
+/* --- Keep logo + description aligned with the auth card --- */
+:root {
+  /* set this to your card width (adjust if your card is wider/narrower) */
+  --auth-width: 680px;
+}
+
+.logo-wrap,
+.auth-desc,
+.auth-card {
+  max-width: var(--auth-width);
+  margin-left: auto;
+  margin-right: auto;   /* centers each block to match the card */
+}
+
+.logo-wrap {
+  display: grid;        /* simple centering */
+  place-items: center;  /* centers the SVG inside the logo area */
+  margin: 0 16px 10px;
+}
+
+/* Works whether you use <img id="authLogo" ...> or inline <svg> */
+#authLogo,
+.logo-wrap > svg {
+  display: block;
+  max-width: 100%;                  /* don’t overflow the --auth-width */
+  height: clamp(64px, 22vw, 184px); /* responsive scaling phone → desktop */
+  width: auto;
+}
+
+/* optional: a little breathing room above the section */
+#authContainer { padding-top: 6vh; }
+
+/* description styles */
+.auth-desc {
+  text-align: center;
+  font-size: 18px;
+  color: #34393f;
+  margin: 0 16px 18px;
+}
+@media (prefers-color-scheme: dark){
+  .auth-desc { color: #94a3b8; }
+}
