@@ -471,6 +471,11 @@ body:not(.logged-in) #accountActions { display: none; }
   .modal-body{ padding: 10px 14px 0; }
   .modal-footer{ padding: 10px 14px 12px; }
   .kbd-hint{ display:none; } /* optional: hide hint on very small screens */
+  #authLogo,
+  .logo-wrap > svg {
+    .logo-wrap > svg {
+      padding-left: 0;  /* override left padding on small screens */
+    }
 }
 
 /* === Highlight current day === */
