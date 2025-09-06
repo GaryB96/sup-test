@@ -599,6 +599,8 @@ body:not(.logged-in) #accountActions { display: none; }
   font-size: 13px;
   height: auto;
   width: 80%;
+  margin-bottom: 10px;
+  margin-left: 8%;
 }
 .sidebar .logout-button,
 #logoutBtn.sidebar-btn { background: #22c55e; }
