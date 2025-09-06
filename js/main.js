@@ -722,3 +722,81 @@ async function refreshCalendar() {
     });
   }
 }
+
+// === Add New Supplement Modal ===
+document.addEventListener("DOMContentLoaded", () => {
+  const openBtn = document.getElementById("addSupplementBtn");
+  const modal = document.getElementById("supplementModal");
+  const form = document.getElementById("supplementForm");
+
+  // If modal markup isn't present, gracefully skip
+  if (!openBtn || !modal) return;
+
+  let lastFocusedEl = null;
+  const focusableSelector = `a[href],area[href],input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])`;
+
+  function trapFocus(e) {
+    if (e.key !== "Tab") return;
+    const focusables = Array.from(modal.querySelectorAll(focusableSelector))
+      .filter(el => el.offsetParent !== null);
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+
+  function openModal() {
+    lastFocusedEl = document.activeElement;
+    modal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+    modal.addEventListener("keydown", trapFocus);
+    // focus first focusable
+    const first = modal.querySelector(focusableSelector);
+    if (first) first.focus();
+  }
+
+  function closeModal() {
+    modal.classList.add("hidden");
+    document.body.style.overflow = "";
+    modal.removeEventListener("keydown", trapFocus);
+    if (lastFocusedEl && typeof lastFocusedEl.focus === "function") lastFocusedEl.focus();
+  }
+
+  // Open
+  openBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    openModal();
+  });
+
+  // Close on backdrop or any element marked data-close-modal
+  modal.addEventListener("click", (e) => {
+    if (e.target.matches("[data-close-modal]")) {
+      e.preventDefault();
+      closeModal();
+    }
+  });
+
+  // Close on ESC
+  window.addEventListener("keydown", (e) => {
+    if (modal.classList.contains("hidden")) return;
+    if (e.key === "Escape") closeModal();
+  });
+
+  // Submit handler (replace with your saving logic as needed)
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(form).entries());
+      // TODO: Integrate with your backend/local storage
+      console.log("[Add Supplement] Submitted:", data);
+      try {
+        if (typeof showInlineStatus === "function") {
+          showInlineStatus("Supplement saved.", "success");
+        }
+      } catch {}
+      form.reset();
+      closeModal();
+    });
+  }
+});

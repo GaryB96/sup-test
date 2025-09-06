@@ -633,5 +633,90 @@ body:not(.logged-in) #accountActions { display: none; }
   max-width: 80%;
 }
 
+/* Base modal container (hidden via .hidden) */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000; /* above sidebar (yours is 900) */
+}
+
+/* Backdrop */
+.modal .modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+}
+
+/* Panel */
+.modal .modal-content {
+  position: relative;
+  z-index: 1;
+  width: min(560px, 92vw);
+  max-height: 85vh;
+  overflow: auto;
+  margin: 8vh auto 0; /* centered horizontally */
+  background: #0b1220;        /* matches your sidebar theme */
+  border: 1px solid #22c55e;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  color: #fff;
+}
+
+/* Close button */
+.modal .modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Form styling */
+.modal .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.modal label { font-size: 13px; color: #cbd5e1; }
+.modal input, .modal select, .modal textarea {
+  background: #0f172a;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.modal .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.modal .btn-primary,
+.modal .btn-secondary {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modal .btn-primary { background: #22c55e; color: #fff; }
+.modal .btn-secondary { background: #1f2937; color: #e5e7eb; }
+.modal .btn-primary:hover,
+.modal .btn-secondary:hover { filter: brightness(0.9); }
+
+/* Utility (you already use this on .sidebar.hidden) */
+.hidden { display: none !important; }
+
 /* Push main content to the right when sidebar is visible */
 body.logged-in main { margin-left: 220px; }
