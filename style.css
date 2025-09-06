@@ -567,3 +567,7 @@ body:not(.logged-in) #accountActions { display: none; }
   }
 }
 .top-actions{display:flex;gap:8px;align-items:center;}
+
+body.logged-in .top-actions{display:flex;}
+
+.top-actions{display:none;gap:8px;align-items:center;}

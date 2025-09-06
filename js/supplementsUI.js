@@ -38,7 +38,7 @@ const addSuppCancel= document.getElementById("addSuppCancel");
 function openAddSupp(){ addSuppModal && addSuppModal.classList.remove("hidden"); }
 function closeAddSupp(){ addSuppModal && addSuppModal.classList.add("hidden"); }
 addSuppBtn && addSuppBtn.addEventListener("click", (e)=>{ e.preventDefault(); openAddSupp(); });
-addSuppClose && addSuppClose.addEventListener("click", closeAddSupp);
+addSuppClose && addSuppClose.addEventListener("click", closeAddSupp);ck", closeAddSupp);
 addSuppCancel && addSuppCancel.addEventListener("click", closeAddSupp);
 // close when clicking backdrop
 addSuppModal && addSuppModal.addEventListener("click", (e)=>{ if(e.target === addSuppModal) closeAddSupp(); });
