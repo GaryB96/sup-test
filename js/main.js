@@ -1,7 +1,7 @@
 import { showToast } from "./toast.js";
 import { login, signup, logout, deleteAccount, monitorAuthState, changePassword, resetPassword, resendVerification } from "./auth.js";
 import { renderCalendar } from "./calendar.js";
-import { fetchSupplements } from "./supplements.js";
+import { fetchSupplements, addSupplement } from "./supplements.js";
 import { addSupplement } from "./supplements.js";
 import { EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 import { auth } from "./firebaseConfig.js";
@@ -722,15 +722,17 @@ async function refreshCalendar() {
   }
 }
 
-// === Add New Supplement Modal ===
+// === Add New Supplement Modal (self-contained) ===
 document.addEventListener("DOMContentLoaded", () => {
   const openBtn = document.getElementById("addSupplementBtn");
-  const modal = document.getElementById("supplementModal");
-  const form = document.getElementById("supplementForm");
-
-  // If modal markup isn't present, gracefully skip
+  const modal   = document.getElementById("supplementModal");
   if (!openBtn || !modal) return;
 
+  // Prefer the dedicated modal form id; else fall back to any form inside the modal
+  const form = document.getElementById("supplementModalForm") || modal.querySelector("form");
+  if (!form) return;
+
+  // ---------- Focus trap + open/close ----------
   let lastFocusedEl = null;
   const focusableSelector = `a[href],area[href],input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])`;
 
@@ -740,7 +742,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .filter(el => el.offsetParent !== null);
     if (!focusables.length) return;
     const first = focusables[0];
-    const last = focusables[focusables.length - 1];
+    const last  = focusables[focusables.length - 1];
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   }
@@ -750,7 +752,6 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.classList.remove("hidden");
     document.body.style.overflow = "hidden";
     modal.addEventListener("keydown", trapFocus);
-    // focus first focusable
     const first = modal.querySelector(focusableSelector);
     if (first) first.focus();
   }
@@ -763,12 +764,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Open
-  openBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    openModal();
-  });
+  openBtn.addEventListener("click", (e) => { e.preventDefault(); openModal(); });
 
-  // Close on backdrop or any element marked data-close-modal
+  // Close on backdrop / explicit close targets
   modal.addEventListener("click", (e) => {
     if (e.target.matches("[data-close-modal]")) {
       e.preventDefault();
@@ -778,86 +776,73 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Close on ESC
   window.addEventListener("keydown", (e) => {
-    if (modal.classList.contains("hidden")) return;
-    if (e.key === "Escape") closeModal();
+    if (!modal.classList.contains("hidden") && e.key === "Escape") closeModal();
   });
 
-  // Submit handler (replace with your saving logic as needed)
-  if (form) {
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(form).entries());
-      // TODO: Integrate with your backend/local storage
-      console.log("[Add Supplement] Submitted:", data);
-      try {
-        if (typeof showInlineStatus === "function") {
-          showInlineStatus("Supplement saved.", "success");
-        }
-      } catch {}
-      form.reset();
-      closeModal();
-    });
-    // Show/hide Start Date when "On a cycle?" is toggled
-const cycleChk   = modal.querySelector('#suppCycleChk');
-const startWrap  = modal.querySelector('#suppCycleStartWrap');
-if (cycleChk && startWrap) {
-  const sync = () => startWrap.classList.toggle('hidden', !cycleChk.checked);
-  cycleChk.addEventListener('change', sync);
-  sync(); // initialize
-}
-}
+  // ---------- Cycle UI toggle (non-collapsing by default) ----------
+  const cycleChk  = form.querySelector("#suppCycleChk");
+  const startWrap = form.querySelector("#suppCycleStartWrap");
+  if (cycleChk && startWrap) {
+    // Prefer .is-hidden (keeps space reserved); fallback to .hidden if that's what you have
+    const hideClass = startWrap.classList.contains("is-hidden") ? "is-hidden" : "hidden";
+    const sync = () => {
+      if (hideClass === "is-hidden") {
+        startWrap.classList.toggle("is-hidden", !cycleChk.checked);
+      } else {
+        // If you must use .hidden, also ensure your CSS preserves layout; otherwise this will reflow.
+        startWrap.classList.toggle("hidden", !cycleChk.checked);
+      }
+    };
+    cycleChk.addEventListener("change", sync);
+    sync();
+  }
 
-// === Wire Add New Supplement modal ===
-(function wireAddSupplementModal(){
-  const modal      = document.getElementById("supplementModal");
-  const modalForm  = document.getElementById("supplementModalForm"); // new id from step 1
-  if (!modal || !modalForm) return;
-
-  const closeModal = () => {
-    modal.classList.add("hidden");
-    document.body.style.overflow = "";
-  };
-
-  modalForm.addEventListener("submit", async (e) => {
+  // ---------- Submit (writes to Firestore and refreshes UI) ----------
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const uid = auth.currentUser?.uid || window.currentUser?.uid;
-    if (!uid) { console.error("Not signed in"); return; }
 
-    // Gather modal values (use your current ids/names)
-    const name   = modalForm.querySelector("#suppName")?.value ?? "";
-    const dosage = modalForm.querySelector("#suppDosage")?.value ?? "";
+    const uid = auth?.currentUser?.uid || window.currentUser?.uid;
+    if (!uid) {
+      try { typeof showInlineStatus === "function" && showInlineStatus("Please sign in first.", "error"); } catch {}
+      return;
+    }
 
-    const times = Array.from(
-      modalForm.querySelectorAll('input[name="time"]:checked')
-    ).map(cb => cb.value);
+    // Collect values from the modal
+    const name   = form.querySelector("#suppName")?.value?.trim() || "";
+    const dosage = form.querySelector("#suppDosage")?.value?.trim() || "";
 
-    const cycleEnabled = !!modalForm.querySelector("#suppCycleChk")?.checked;
-    const onDays  = modalForm.querySelector("#suppDaysOn")?.value ?? "";
-    const offDays = modalForm.querySelector("#suppDaysOff")?.value ?? "";
-    const start   = modalForm.querySelector("#suppCycleStart")?.value ?? "";
+    const times = Array.from(form.querySelectorAll('input[name="time"]:checked'))
+      .map(cb => cb.value); // e.g., ["Morning","Evening"]
+
+    const onCycle   = !!form.querySelector("#suppCycleChk")?.checked;
+    const startDate = onCycle ? (form.querySelector("#suppCycleStart")?.value || null) : null;
+    const daysOn    = onCycle ? (form.querySelector("#suppDaysOn")?.value || "") : "";
+    const daysOff   = onCycle ? (form.querySelector("#suppDaysOff")?.value || "") : "";
 
     const data = {
-      name, dosage, times,
-      cycle: cycleEnabled ? { on: onDays, off: offDays } : null,
-      startDate: cycleEnabled ? start : null
+      name,
+      dosage,            // keep as string unless you want Number()
+      times,             // []
+      cycle: onCycle ? { on: daysOn, off: daysOff } : null,
+      startDate          // "YYYY-MM-DD" or null
     };
 
     try {
-      await addSupplement(uid, data);               // ← shared function
-      if (typeof refreshCalendar === "function") {  // calendar uses `cycle/startDate`
-        await refreshCalendar();                    // exposed globally in your app
+      await addSupplement(uid, data);               // <-- shared create function
+      if (typeof refreshCalendar === "function") {
+        await refreshCalendar();                    // re-render calendar/summary
       }
-      // Optional toast if you use it:
-      // showInlineStatus("Supplement added.", "success");
+      try { typeof showInlineStatus === "function" && showInlineStatus("Supplement saved.", "success"); } catch {}
 
-      modalForm.reset();
+      // Reset modal UI
+      form.reset();
+      if (startWrap && startWrap.classList.contains("is-hidden")) {
+        startWrap.classList.add("is-hidden");       // keep cycle block hidden after reset
+      }
       closeModal();
     } catch (err) {
       console.error("Add supplement failed:", err);
-      // showInlineStatus("Failed to add supplement.", "error");
+      try { typeof showInlineStatus === "function" && showInlineStatus(err?.message || "Failed to save supplement.", "error"); } catch {}
     }
   });
-
-  // Close actions already in your HTML use [data-close-modal]; keep those.
-})();
 });
