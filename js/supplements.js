@@ -61,7 +61,7 @@ export async function addSupplement(uid, data) {
   const docData = {
     name,
     dosage,
-    time: times,     // back-compat for any code reading singular "time"
+    time: Array.isArray(times) ? (times[0] || null) : (data?.time ?? null),
     times,
     cycle,
     startDate,
@@ -111,7 +111,7 @@ export async function updateSupplement(uid, supplementId, data) {
   const payload = {
     ...(name   !== undefined ? { name: String(name).trim() } : {}),
     ...(dosage !== undefined ? { dosage: String(dosage).trim() } : {}),
-    ...(times  !== undefined ? { times, time: times } : {}), // keep back-compat "time"
+    ...(times  !== undefined ? { times, time: (Array.isArray(times) ? (times[0] || null) : null) } : {}),
     ...(cycle  !== undefined ? { cycle } : {}),
     ...(startDate !== undefined ? { startDate } : {}),
     ...(color !== undefined ? { color } : {}),

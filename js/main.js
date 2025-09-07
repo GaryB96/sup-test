@@ -5,48 +5,25 @@ import { fetchSupplements, addSupplement } from "./supplements.js";
 import { EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 import { auth } from "./firebaseConfig.js";
 import { updateSupplement } from "./supplements.js";
+// ===== Color helper for supplements (stable per-name) =====
+function pickColor(seed) {
+  const palette = ["#2196F3", "#FF9800", "#9C27B0", "#E91E63", "#4CAF50", "#F44336", "#3F51B5", "#009688"];
+  if (!seed) return palette[Math.floor(Math.random() * palette.length)];
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash + seed.charCodeAt(i)) >>> 0;
+  }
+  return palette[hash % palette.length];
+}
+// Also expose globally in case other files expect window.pickColor
+try { window.pickColor = window.pickColor || pickColor; } catch {}
+// ===== End color helper =====
 
 document.documentElement.classList.add("auth-pending");
 
 
 // Modal State - edit vs add
 let SUPP_MODAL_CTX = { mode: "add", id: null };
-
-// Helper to prefill the supplement modal inputs
-function setModalValues(s) {
-  const formEl = document.getElementById("supplementModalForm") || document;
-  // Basic fields
-  const nameEl   = formEl.querySelector("#suppName");
-  const dosageEl = formEl.querySelector("#suppDosage");
-  if (nameEl)   nameEl.value   = s?.name   || "";
-  if (dosageEl) dosageEl.value = s?.dosage || "";
-
-  // Times (checkboxes)
-  const times = Array.isArray(s?.times) ? s.times : (Array.isArray(s?.time) ? s.time : (s?.time ? [s.time] : []));
-  const timeBoxes = formEl.querySelectorAll('input[name="time"]');
-  timeBoxes.forEach(cb => { cb.checked = times.includes(cb.value); });
-
-  // Cycle
-  const cycleChk  = formEl.querySelector("#suppCycleChk");
-  const onEl      = formEl.querySelector("#suppDaysOn");
-  const offEl     = formEl.querySelector("#suppDaysOff");
-  const startEl   = formEl.querySelector("#suppCycleStart");
-  const hasCycle  = !!(s?.cycle && (Number(s.cycle.on) > 0 || Number(s.cycle.off) > 0));
-  if (cycleChk) cycleChk.checked = hasCycle;
-  if (onEl)     onEl.value   = hasCycle ? Number(s.cycle.on || 0)  : "";
-  if (offEl)    offEl.value  = hasCycle ? Number(s.cycle.off || 0) : "";
-  if (startEl)  startEl.value= hasCycle ? (s.startDate || s.cycle?.startDate || "") : "";
-
-  // Trigger UI toggle if listener exists
-  try { cycleChk && cycleChk.dispatchEvent(new Event("change", { bubbles: true })); } catch(e) {}
-
-  // Color (optional)
-  const colorEl = formEl.querySelector("#supp-color");
-  if (colorEl && s?.color) colorEl.value = s.color;
-}
-
-// Expose for other modules
-window.setModalValues = setModalValues;
 
 // Inline status helper (avoids browser alert banners)
 // Inline status helper (avoids browser alert banners)
@@ -795,10 +772,7 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.addEventListener("keydown", trapFocus);
     const first = modal.querySelector(focusableSelector);
     if (first) first.focus();
-  
-  // Expose modal opener globally for other modules
-  window.openSupplementModal = openModal;
-}
+  }
 
   function closeModal() {
     modal.classList.add("hidden");
@@ -948,7 +922,7 @@ function getModalValues() {
 }
 
 document.addEventListener("click", async (e) => {
-  const editBtn = e.target.closest(".btn-edit-supp, .edit-btn");
+  const editBtn = e.target.closest(".btn-edit-supp");
   if (!editBtn) return;
 
   const id = editBtn.dataset.id;
@@ -956,9 +930,7 @@ document.addEventListener("click", async (e) => {
 
   // Get the item from your in-memory store OR fetch it.
   // Prefer your existing list in memory to avoid 2nd read:
-  const getter = (typeof window.getSupplementById === "function") ? window.getSupplementById : (typeof getSupplementById === "function" ? getSupplementById : null);
-  if (!getter) return;
-  const supp = getter(id);
+  const supp = getSupplementById(id); // implement or use your store
 
   if (!supp) return;
 
@@ -973,7 +945,7 @@ document.addEventListener("click", async (e) => {
     color: supp.color || pickColor?.(supp.name) || "#cccccc"
   });
 
-  window.openSupplementModal ? window.openSupplementModal() : null; // your existing function to show the modal
+  openSupplementModal(); // your existing function to show the modal
 });
 
 });

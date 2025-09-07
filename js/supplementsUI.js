@@ -123,67 +123,60 @@ function getRandomColor() {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
-
 function editSupplement(id) {
   const supplement = supplements.find((s) => s.id === id);
   if (!supplement) return;
 
-  // Set modal context for submit handler (edit mode)
-  if (typeof window.SUPP_MODAL_CTX === "undefined" || !window.SUPP_MODAL_CTX) {
-    window.SUPP_MODAL_CTX = { mode: "edit", id };
-  } else {
-    window.SUPP_MODAL_CTX.mode = "edit";
-    window.SUPP_MODAL_CTX.id = id;
+  // Tell the modal we're editing this doc
+  window.SUPP_MODAL_CTX = { mode: "edit", id };
+
+  // Open the modal by clicking the existing "Add Supplement" button
+  const openBtn = document.getElementById("addSupplementBtn");
+  if (openBtn) {
+    openBtn.click();
   }
 
-  const payload = {
-    name: supplement.name || "",
-    dosage: supplement.dosage || "",
-    times: Array.isArray(supplement.times)
-      ? supplement.times
-      : (Array.isArray(supplement.time) ? supplement.time : (supplement.time ? [supplement.time] : [])),
-    cycle: supplement.cycle || null,
-    startDate: supplement.startDate || (supplement.cycle && supplement.cycle.startDate) || "",
-    color: supplement.color || null
-  };
+  // Prefill modal fields
+  const formModal = document.getElementById("supplementModalForm") || document.querySelector("#supplementModal form");
+  if (!formModal) return;
 
-  // Prefer centralized setter if available
-  if (typeof window.setModalValues === "function") {
-    window.setModalValues(payload);
-  } else {
-    // Fallback: set fields directly by modal ids
-    const formEl = document.getElementById("supplementModalForm") || document;
-    const nameEl   = formEl.querySelector("#suppName");
-    const dosageEl = formEl.querySelector("#suppDosage");
-    if (nameEl)   nameEl.value   = payload.name;
-    if (dosageEl) dosageEl.value = payload.dosage;
+  const q = (sel) => formModal.querySelector(sel);
 
-    const timeBoxes = formEl.querySelectorAll('input[name="time"]');
-    timeBoxes.forEach(cb => { cb.checked = payload.times.includes(cb.value); });
+  const nameEl   = q("#suppName");
+  const dosageEl = q("#suppDosage");
+  if (nameEl)   nameEl.value   = supplement.name || "";
+  if (dosageEl) dosageEl.value = supplement.dosage || "";
 
-    const cycleChk = formEl.querySelector("#suppCycleChk");
-    const onEl     = formEl.querySelector("#suppDaysOn");
-    const offEl    = formEl.querySelector("#suppDaysOff");
-    const startEl  = formEl.querySelector("#suppCycleStart");
+  // Times checkboxes in modal
+  const selectedTimes = Array.isArray(supplement.times)
+    ? supplement.times
+    : (Array.isArray(supplement.time) ? supplement.time : []);
+  formModal.querySelectorAll('input[name="time"]').forEach((cb) => {
+    cb.checked = selectedTimes.includes(cb.value);
+  });
 
-    const hasCycle = !!(payload.cycle && (Number(payload.cycle.on) > 0 || Number(payload.cycle.off) > 0));
-    if (cycleChk) cycleChk.checked = hasCycle;
-    if (onEl) onEl.value   = hasCycle ? Number(payload.cycle.on || 0)  : "";
-    if (offEl) offEl.value = hasCycle ? Number(payload.cycle.off || 0) : "";
-    if (startEl) startEl.value = hasCycle ? (payload.startDate || "") : "";
-
-    try { cycleChk && cycleChk.dispatchEvent(new Event("change", { bubbles: true })); } catch(e) {}
+  // Cycle fields
+  const chk   = q("#suppCycleChk");
+  const onEl  = q("#suppDaysOn");
+  const offEl = q("#suppDaysOff");
+  const startEl = q("#suppCycleStart");
+  const hasCycle = !!(supplement.cycle && (Number(supplement.cycle.on) > 0 || Number(supplement.cycle.off) > 0));
+  if (chk) {
+    chk.checked = hasCycle;
+    // Let existing UI logic show/hide the cycle section
+    chk.dispatchEvent(new Event("change", { bubbles: true }));
   }
+  if (onEl)   onEl.value   = hasCycle ? Number(supplement.cycle.on)  : "";
+  if (offEl)  offEl.value  = hasCycle ? Number(supplement.cycle.off) : "";
+  if (startEl) startEl.value = hasCycle ? (supplement.startDate || supplement.cycle.startDate || "") : "";
 
-  // Open the modal
-  if (window.openSupplementModal) {
-    window.openSupplementModal();
-  } else {
-    // graceful fallback: click the "Add" button if it opens the modal
-    const openBtn = document.getElementById("addSupplementBtn");
-    if (openBtn) openBtn.click();
-  }
-}
+  // Optional color
+  const colorEl = q("#suppColor");
+  if (colorEl) colorEl.value = supplement.color || (window.pickColor ? window.pickColor(supplement.name) : "#cccccc");
+
+  // Optionally show a cancel-edit button if you have one
+  if (cancelEditBtn) cancelEditBtn.classList.remove("hidden");
+}}
 
 if (cancelEditBtn) {
   cancelEditBtn.addEventListener("click", () => {
@@ -312,7 +305,7 @@ function renderSupplements() {
     const actions = document.createElement("div");
     actions.className = "actions";
     const editBtn = document.createElement("button");
-    editBtn.className = "edit-btn";
+    editBtn.className = "edit-btn btn-edit-supp";
     editBtn.dataset.id = (supplement && supplement.id) ? supplement.id : "";
     editBtn.textContent = "Edit";
     const delBtn = document.createElement("button");
