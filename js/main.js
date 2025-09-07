@@ -2,7 +2,6 @@ import { showToast } from "./toast.js";
 import { login, signup, logout, deleteAccount, monitorAuthState, changePassword, resetPassword, resendVerification } from "./auth.js";
 import { renderCalendar } from "./calendar.js";
 import { fetchSupplements, addSupplement } from "./supplements.js";
-import { addSupplement } from "./supplements.js";
 import { EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 import { auth } from "./firebaseConfig.js";
 document.documentElement.classList.add("auth-pending");
@@ -828,21 +827,33 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      await addSupplement(uid, data);               // <-- shared create function
-      if (typeof refreshCalendar === "function") {
-        await refreshCalendar();                    // re-render calendar/summary
-      }
-      try { typeof showInlineStatus === "function" && showInlineStatus("Supplement saved.", "success"); } catch {}
+  await addSupplement(uid, data);  // write to Firestore
 
-      // Reset modal UI
-      form.reset();
-      if (startWrap && startWrap.classList.contains("is-hidden")) {
-        startWrap.classList.add("is-hidden");       // keep cycle block hidden after reset
-      }
-      closeModal();
-    } catch (err) {
-      console.error("Add supplement failed:", err);
-      try { typeof showInlineStatus === "function" && showInlineStatus(err?.message || "Failed to save supplement.", "error"); } catch {}
-    }
-  });
+  // Refresh the SUMMARY (which also rebuilds calendar inside)
+  if (typeof window.refreshSuppSummary === "function") {
+    await window.refreshSuppSummary();
+  } else if (typeof window.refreshCalendar === "function") {
+    await window.refreshCalendar();
+  }
+
+  // Toast (optional)
+  try {
+    typeof showInlineStatus === "function" &&
+      showInlineStatus("Supplement saved.", "success");
+  } catch {}
+
+  // Reset + close modal
+  form.reset();
+  if (startWrap && startWrap.classList.contains("is-hidden")) {
+    startWrap.classList.add("is-hidden"); // keep cycle section hidden after reset
+  }
+  closeModal();
+} catch (err) {
+  console.error("Add supplement failed:", err);
+  try {
+    typeof showInlineStatus === "function" &&
+      showInlineStatus(err?.message || "Failed to save supplement.", "error");
+  } catch {}
+}
+});
 });

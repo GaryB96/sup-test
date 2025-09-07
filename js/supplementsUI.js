@@ -185,6 +185,8 @@ async function refreshData() {
     console.error("❌ Failed to fetch supplements:", error);
   }
 }
+window.refreshSuppSummary = refreshData;
+
 function openNotes() {
   if (!currentUser?.uid) return;
   notesModal.classList.remove("hidden");
@@ -242,7 +244,11 @@ function renderSupplements() {
   const ORDER = ["Morning", "Afternoon", "Evening", "Unscheduled"];
   const groups = { Morning: [], Afternoon: [], Evening: [], Unscheduled: [] };
   (supplements || []).forEach((supplement) => {
-    const times = Array.isArray(supplement && supplement.time) ? supplement.time : [];
+    const times = Array.isArray(supplement?.time)
+  ? supplement.time
+  : Array.isArray(supplement?.times)
+    ? supplement.times
+    : [];
     const normalized = times.map(norm).map((t) =>
       t.startsWith("m") ? "morning" : t.startsWith("a") ? "afternoon" : t.startsWith("e") ? "evening" : ""
     ).filter(Boolean);
