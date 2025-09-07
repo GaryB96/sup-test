@@ -123,38 +123,66 @@ function getRandomColor() {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
+
 function editSupplement(id) {
   const supplement = supplements.find((s) => s.id === id);
   if (!supplement) return;
 
-  editingSupplementId = id;
+  // Set modal context for submit handler (edit mode)
+  if (typeof window.SUPP_MODAL_CTX === "undefined" || !window.SUPP_MODAL_CTX) {
+    window.SUPP_MODAL_CTX = { mode: "edit", id };
+  } else {
+    window.SUPP_MODAL_CTX.mode = "edit";
+    window.SUPP_MODAL_CTX.id = id;
+  }
 
-  document.getElementById("nameInput").value = supplement.name || "";
-  document.getElementById("dosageInput").value = supplement.dosage || "";
+  const payload = {
+    name: supplement.name || "",
+    dosage: supplement.dosage || "",
+    times: Array.isArray(supplement.times)
+      ? supplement.times
+      : (Array.isArray(supplement.time) ? supplement.time : (supplement.time ? [supplement.time] : [])),
+    cycle: supplement.cycle || null,
+    startDate: supplement.startDate || (supplement.cycle && supplement.cycle.startDate) || "",
+    color: supplement.color || null
+  };
 
-  const timeCheckboxes = getTimeCheckboxes();
-  timeCheckboxes.forEach((cb) => {
-    cb.checked = Array.isArray(supplement.time) && supplement.time.includes(cb.value);
-  });
+  // Prefer centralized setter if available
+  if (typeof window.setModalValues === "function") {
+    window.setModalValues(payload);
+  } else {
+    // Fallback: set fields directly by modal ids
+    const formEl = document.getElementById("supplementModalForm") || document;
+    const nameEl   = formEl.querySelector("#suppName");
+    const dosageEl = formEl.querySelector("#suppDosage");
+    if (nameEl)   nameEl.value   = payload.name;
+    if (dosageEl) dosageEl.value = payload.dosage;
 
-  const hasCycle = !!(
-    supplement.cycle &&
-    (Number(supplement.cycle["on"]) > 0 || Number(supplement.cycle["off"]) > 0)
-  );
-  if (cycleCheckbox) cycleCheckbox.checked = hasCycle;
-  if (cycleDetails) cycleDetails.classList.toggle("hidden", !hasCycle);
+    const timeBoxes = formEl.querySelectorAll('input[name="time"]');
+    timeBoxes.forEach(cb => { cb.checked = payload.times.includes(cb.value); });
 
-  const onInput = document.getElementById("onDaysInput");
-  const offInput = document.getElementById("offDaysInput");
-  const startInput = document.getElementById("cycleStartInput");
-  if (onInput) onInput.value = hasCycle ? Number(supplement.cycle["on"]) : "";
-  if (offInput) offInput.value = hasCycle ? Number(supplement.cycle["off"]) : "";
-  if (startInput)
-    startInput.value = hasCycle
-      ? supplement.cycle["startDate"] || supplement.startDate || ""
-      : "";
+    const cycleChk = formEl.querySelector("#suppCycleChk");
+    const onEl     = formEl.querySelector("#suppDaysOn");
+    const offEl    = formEl.querySelector("#suppDaysOff");
+    const startEl  = formEl.querySelector("#suppCycleStart");
 
-  if (cancelEditBtn) cancelEditBtn.classList.remove("hidden");
+    const hasCycle = !!(payload.cycle && (Number(payload.cycle.on) > 0 || Number(payload.cycle.off) > 0));
+    if (cycleChk) cycleChk.checked = hasCycle;
+    if (onEl) onEl.value   = hasCycle ? Number(payload.cycle.on || 0)  : "";
+    if (offEl) offEl.value = hasCycle ? Number(payload.cycle.off || 0) : "";
+    if (startEl) startEl.value = hasCycle ? (payload.startDate || "") : "";
+
+    try { cycleChk && cycleChk.dispatchEvent(new Event("change", { bubbles: true })); } catch(e) {}
+  }
+
+  // Open the modal
+  if (window.openSupplementModal) {
+    window.openSupplementModal();
+  } else {
+    // graceful fallback: click the "Add" button if it opens the modal
+    const openBtn = document.getElementById("addSupplementBtn");
+    if (openBtn) openBtn.click();
+  }
 }
 
 if (cancelEditBtn) {
