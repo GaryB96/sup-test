@@ -222,7 +222,7 @@
   <div class="modal-content" role="document">
     <button class="modal-close" type="button" aria-label="Close" data-close-modal>×</button>
 
-    <h2 id="supplementModalTitle">    Add New Supplement</h2>
+    <h2 id="supplementModalTitle">Add New Supplement</h2>
     <p id="supplementModalDesc" class="modal-desc">Fill in the details and click Save.</p>
 
     <!-- CHANGED: unique form id -->
@@ -261,11 +261,13 @@
     <span>On a cycle?</span>
   </label>
 
-  <div id="suppCycleStartWrap" class="cycle-start hidden">
-    <label for="suppCycleStart">Start Date</label>
+  <!-- keep space reserved; hide visually when off -->
+  <div id="suppCycleStartWrap" class="cycle-start is-hidden">
     <input type="date" id="suppCycleStart" name="startDate">
+    <span class="field-caption">Start Date</span>
   </div>
 </div>
+
 
       <!-- FOOTER: Save (left) + Cancel (right) -->
       <div class="modal-actions modal-actions--split">

@@ -763,8 +763,12 @@ body:not(.logged-in) #accountActions { display: none; }
 /* Inline layout for cycle row */
 #supplementModal .form-row-inline {
   display: flex;
+  grid-template-columns: auto 120px;
+  flex-direction: row;
   align-items: center;
-  gap: 12px;
+  column-gap: 1px;
+  margin-left: 10px;
+  margin-top: 10px;
 }
 
 /* Checkbox on the left */
@@ -772,8 +776,9 @@ body:not(.logged-in) #accountActions { display: none; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-right: auto;   /* push date picker to the right side */
+  margin-right: 20px;  /* push date picker to the right side */
   font-size: 13px;
+  min-width: 0px;
 }
 
 /* Start date chunk on the right */
@@ -781,6 +786,7 @@ body:not(.logged-in) #accountActions { display: none; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  margin-top: 15px;
 }
 
 /* Hide/show helper */
@@ -796,34 +802,13 @@ body:not(.logged-in) #accountActions { display: none; }
   margin: 0;
 }
 
-/* Inline row: left = checkbox/label, right = date area */
-#supplementModal .form-row-inline {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* Left side ("On a cycle?") */
-#supplementModal .cycle-inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-right: auto; /* push date area to the right */
-  font-size: 13px;
-}
-
 #supplementModal .cycle-start {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 1px;
-  min-width: 220px;          /* reserve space so modal doesn't resize */
-}
-
-/* Nudge the "On a cycle?" checkbox to the right a bit */
-#supplementModal .form-row-inline .cycle-inline {
-  margin-left: 12px;   /* tweak 8–16px to taste */
-  margin-top: 5px;
+  min-width: 0px;          /* reserve space so modal doesn't resize */
+  min-height: 52px;
 }
 
 /* Hide without collapsing space (prevents modal reflow/resize) */
@@ -831,12 +816,29 @@ body:not(.logged-in) #accountActions { display: none; }
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
+  display: flex !important;
 }
 
 /* Small caption style under the date input */
 #supplementModal .field-caption {
   font-size: 12px;
   color: #cbd5e1;
+  margin-left: 10px;
+}
+
+/* Date input respects its column width */
+#supplementModal input[type="date"] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Tint the built-in calendar icon (WebKit/Blink) */
+#supplementModal input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(67%) sepia(24%) saturate(734%) hue-rotate(83deg) brightness(95%) contrast(92%);
+  /* above approximates #22c55e */
+  opacity: 1;
 }
 
 .modal .btn-primary { background: #22c55e; color: #fff; }
