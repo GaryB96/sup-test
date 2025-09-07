@@ -689,6 +689,7 @@ body:not(.logged-in) #accountActions { display: none; }
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 14px;
+  margin-left: -10px;
 }
 
 .modal .modal-actions {
