@@ -823,6 +823,7 @@ body:not(.logged-in) #accountActions { display: none; }
 /* Nudge the "On a cycle?" checkbox to the right a bit */
 #supplementModal .form-row-inline .cycle-inline {
   margin-left: 12px;   /* tweak 8–16px to taste */
+  margin-top: 5px;
 }
 
 /* Hide without collapsing space (prevents modal reflow/resize) */
