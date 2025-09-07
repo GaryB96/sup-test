@@ -295,26 +295,40 @@ function renderSupplements() {
       timeRow.textContent = "Time: " + timesText;
     }
     const c = (supplement && supplement.cycle) || {};
-    const onDays = Number(c["on"] || 0);
-    const offDays = Number(c["off"] || 0);
-    if (onDays > 0 || offDays > 0) {
-      const cycleDiv = document.createElement("div");
-      cycleDiv.textContent = `Cycle: ${onDays} days on / ${offDays} days off`;
-      box.appendChild(cycleDiv);
-    }
-    const actions = document.createElement("div");
-    actions.className = "actions";
-    const editBtn = document.createElement("button");
-    editBtn.className = "edit-btn btn-edit-supp";
-    editBtn.dataset.id = (supplement && supplement.id) ? supplement.id : "";
-    editBtn.textContent = "Edit";
-    const delBtn = document.createElement("button");
-    delBtn.className = "delete-btn";
-    delBtn.dataset.id = (supplement && supplement.id) ? supplement.id : "";
-    delBtn.textContent = "Delete";
-    actions.append(editBtn, delBtn);
-    box.append(nameRow, doseRow, timeRow, actions);
-    return box;
+const onDays = Number(c.on || 0);
+const offDays = Number(c.off || 0);
+
+let cycleDiv = null;
+if (onDays > 0 || offDays > 0) {
+  cycleDiv = document.createElement("div");
+  cycleDiv.textContent = `Cycle: ${onDays} days on / ${offDays} days off`;
+  // optional: a small class if you want to style it
+  // cycleDiv.className = "cycle-line";
+}
+
+const actions = document.createElement("div");
+actions.className = "actions";
+
+const editBtn = document.createElement("button");
+editBtn.className = "edit-btn btn-edit-supp";
+editBtn.dataset.id = (supplement && supplement.id) ? supplement.id : "";
+editBtn.textContent = "Edit";
+
+const delBtn = document.createElement("button");
+delBtn.className = "delete-btn";
+delBtn.dataset.id = (supplement && supplement.id) ? supplement.id : "";
+delBtn.textContent = "Delete";
+
+actions.append(editBtn, delBtn);
+
+// append in the order you want to see them
+const children = [nameRow, doseRow, timeRow];
+if (cycleDiv) children.push(cycleDiv);
+children.push(actions);
+
+box.append(...children);
+return box;
+
   };
   if (total === 0) {
     (supplements || []).forEach((supplement) => {
@@ -381,6 +395,28 @@ function wireSummaryActions() {
       await deleteSupplement(currentUser && currentUser.uid, btn.dataset.id);
       await refreshData();
       if (typeof window.refreshCalendar === "function") await window.refreshCalendar();
+    });
+  });
+}
+
+// ---- Size controls (optional) ----
+const summaryContainer = document.getElementById("supplementSummaryContainer");
+const sizeControls = document.getElementById("summarySizeControls");
+const SIZE_KEY = "suppSummarySize";
+
+function applySavedSize() {
+  const saved = localStorage.getItem(SIZE_KEY) || "size-cozy";
+  summaryContainer.classList.remove("size-compact", "size-cozy", "size-comfy");
+  summaryContainer.classList.add(saved);
+}
+applySavedSize();
+
+if (sizeControls) {
+  sizeControls.querySelectorAll("button[data-size]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const size = btn.getAttribute("data-size");
+      localStorage.setItem(SIZE_KEY, size);
+      applySavedSize();
     });
   });
 }

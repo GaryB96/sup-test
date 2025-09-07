@@ -46,7 +46,7 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 .hidden { display: none; }
 
 /* ===== Summary Cards ===== */
-.supplement-box { border:1px solid #ccc; padding:10px; margin-bottom:10px; background:#fff; border-radius:5px; }
+.supplement-box { border:1px solid #ccc; background:#fff; }
 .cycle-strip { border-left:8px solid transparent; }
 .cycle-color-1 { border-left-color:#2196F3; }
 .cycle-color-2 { border-left-color:#FF9800; }
@@ -236,11 +236,6 @@ body:not(.logged-in) #accountActions { display: none; }
   color: #444;
   border-bottom: 1px solid #e5e5e5;
   padding-bottom: 4px;
-}
-
-/* Space between individual summary tiles */
-.supplement-box + .supplement-box {
-  margin-top: 8px;
 }
 
 /* Supplement summary group headings */
@@ -852,3 +847,60 @@ body:not(.logged-in) #accountActions { display: none; }
 
 /* Push main content to the right when sidebar is visible */
 body.logged-in main { margin-left: 220px; }
+
+/* === Supplement summaries: responsive grid + size presets === */
+
+/* Container-level variables for easy tweaking */
+.summary-container {
+  --card-min: 240px;   /* min width of each card */
+  --card-gap: 12px;    /* space between cards */
+  --card-pad: 12px;    /* internal padding on cards */
+  --card-radius: 10px;
+  --card-font: 14px;   /* base font size inside cards */
+}
+
+/* Responsive grid for each time-of-day group */
+.supp-group__content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
+  gap: var(--card-gap);
+  padding: .6rem .8rem;
+}
+
+/* Reset old vertical spacing; the grid gap now handles it */
+.supplement-box {
+  margin: 0;
+  padding: var(--card-pad);
+  border-radius: var(--card-radius);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--card-font);
+
+  box-sizing: border-box;
+}
+
+/* Optional: tidy action buttons inside cards */
+.supplement-box .actions { display:flex; gap:6px; margin-top:auto; }
+
+/* Size presets you can toggle with a single class */
+.summary-container.size-compact {
+  --card-min: 200px;
+  --card-gap: 8px;
+  --card-pad: 10px;
+  --card-font: 13px;
+}
+
+.summary-container.size-cozy {
+  --card-min: 260px;
+  --card-gap: 12px;
+  --card-pad: 12px;
+  --card-font: 14px;
+}
+
+.summary-container.size-comfy {
+  --card-min: 320px;
+  --card-gap: 14px;
+  --card-pad: 14px;
+  --card-font: 15px;
+}

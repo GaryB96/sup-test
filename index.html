@@ -1,31 +1,31 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta content="
-  default-src 'self';
-  script-src 'self' https://www.gstatic.com 'unsafe-inline';
-  style-src 'self' 'unsafe-inline';
-  connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com;
-  img-src 'self' data:;
-  font-src 'self';
-  object-src 'none';
-  base-uri 'self';
-  form-action 'self';
-  frame-ancestors 'none';
-  upgrade-insecure-requests;
-" http-equiv="Content-Security-Policy"/>
-<meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<link href="data:," rel="icon"/>
-<title>Supplement Tracker</title>
-<link href="style.css?v=9" rel="stylesheet">
-<link href="notifications.css" rel="stylesheet"/>
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
-<style>
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' https://www.gstatic.com 'unsafe-inline';
+    style-src 'self' 'unsafe-inline';
+    connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com;
+    img-src 'self' data:;
+    font-src 'self';
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none';
+    upgrade-insecure-requests;
+  ">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" href="data:," />
+  <title>Supplement Tracker</title>
+  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="notifications.css"/>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+  <style>
     body:not(.logged-in) #appContent { display: none; }
+    body:not(.logged-in) .sidebar { display: none; }
     body.logged-in #authContainer { display: none; }
     #authContainer { margin-bottom: 20px; }
     .modal.hidden { display: none; }
@@ -55,223 +55,249 @@
     .btn-secondary:hover { background:#d5d5d5; }
     .btn-danger:hover { background:#c62828; }
     #confirmPasswordInput { width:90%; padding:10px; border:1px solid #ccc; border-radius:8px; margin-top:8px; }
-</style>
-</link></meta></head>
-<!-- Notes Modal -->
-<div aria-describedby="notesModalDesc" aria-labelledby="notesModalTitle" aria-modal="true" class="modal hidden" id="notesModal" role="dialog">
-<div class="modal-content modal-notes" role="document">
-<div class="modal-header">
-<div class="modal-title-wrap">
-<h2 class="modal-title" id="notesModalTitle">Notes</h2>
-<p class="modal-subtitle" id="notesModalDesc">Your personal note. It autosaves as you type.</p>
-</div>
-<button aria-label="Close notes" class="icon-btn close-btn" id="closeNotesBtn">
-        ×
-      </button>
-</div>
-<div class="modal-body">
-<textarea class="notes-textarea" id="notesTextarea" placeholder="Write your notes here…" rows="12"></textarea>
-</div>
-<div class="modal-footer">
-<span aria-live="polite" class="status-pill" id="notesStatus" role="status"> </span>
-<div aria-hidden="true" class="kbd-hint">
-</div>
-</div>
-</div>
-</div>
+  </style>
+</head>
+
 <body>
 
-<aside id="sidebar" class="sidebar hidden" role="navigation" aria-label="App controls">
-  <button id="logoutBtn" class="sidebar-btn">Logout</button>
-  <!-- Account Options dropdown -->
-  <div class="dropdown">
-<button class="profile-button" id="profileButton">Account Options</button>
-<div class="dropdown-content" id="profileDropdown">
-<a href="#" id="resetPassword">Reset Password</a>
-<a href="#" id="deleteAccount">Delete Account</a>
-<a href="#" id="openNotifications">Download Calendar</a>
-</div>
-</div>
-  <button id="notesBtn" class="sidebar-btn">Notes</button>
-  <button id="addSupplementBtn" class="sidebar-btn">Add New Supplement</button>
-  <img id="icon" src="./assets/logo-icon.svg" alt="logo" class="banner-logo">
-</aside>
-</div><div aria-live="polite" class="status-pill" id="app-status" role="status"></div>
-</div>
-<main>
-<!-- 🔐 Auth Section -->
-<section id="authContainer">
-<section id="authIntro" aria-label="Welcome">
-  <div class="logo-wrap">
-    <img id="authLogo" src="./assets/logo-combined-wordmark.svg"
-         alt="Supplement Tracker — Plan, track, and stay consistent with your daily supplements." />
+  <!-- Notes Modal (moved inside <body>) -->
+  <div id="notesModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="notesModalTitle" aria-describedby="notesModalDesc">
+    <div class="modal-content modal-notes" role="document">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <h2 id="notesModalTitle" class="modal-title">Notes</h2>
+          <p id="notesModalDesc" class="modal-subtitle">Your personal note. It autosaves as you type.</p>
+        </div>
+        <button id="closeNotesBtn" class="icon-btn close-btn" aria-label="Close notes">×</button>
+      </div>
+      <div class="modal-body">
+        <textarea id="notesTextarea" class="notes-textarea" rows="12" placeholder="Write your notes here…"></textarea>
+      </div>
+      <div class="modal-footer">
+        <span id="notesStatus" class="status-pill" role="status" aria-live="polite"></span>
+        <div class="kbd-hint" aria-hidden="true"></div>
+      </div>
+    </div>
   </div>
-  <p class="auth-desc">Ideal for busy students, educators, athletes, and anyone who wants a simple way to <br>organize routines, log intake, and keep track of supplement cycles.</p>
-</section>
-<div aria-label="Account access" class="auth-card" role="region">
-<div aria-label="Auth tabs" class="tabs" role="tablist">
-<button aria-controls="signinPane" aria-selected="true" class="tab active" data-tab="signin" id="tabSignIn" role="tab">Sign In</button>
-<button aria-controls="signupPane" aria-selected="false" class="tab" data-tab="signup" id="tabSignUp" role="tab">Create Account</button>
-</div>
-<!-- Sign In -->
-<form aria-labelledby="tabSignIn" class="tab-pane active" id="signinForm" novalidate="" role="tabpanel">
-<label for="signinEmail">Email</label>
-<input id="signinEmail" placeholder="you@example.com" required="" type="email"/>
-<label for="signinPassword">Password</label>
-<input id="signinPassword" required="" type="password"/>
-<div class="auth-row">
-<button class="btn-primary" id="signinSubmit" type="submit">Sign In</button>
-<a class="link" href="#" id="forgotPasswordLink">Forgot password?</a>
-</div>
-</form>
-<!-- Sign Up -->
-<form aria-labelledby="tabSignUp" class="tab-pane" id="signupForm" novalidate="" role="tabpanel">
-<label for="signupEmail">Email</label>
-<input id="signupEmail" placeholder="you@example.com" required="" type="email"/>
-<label for="signupPassword">Password</label>
-<input id="signupPassword" placeholder="At least 6 characters" required="" type="password"/>
-<label for="signupPassword2">Confirm password</label>
-<input id="signupPassword2" placeholder="Re-enter password" required="" type="password"/>
-<div class="muted small" id="passwordHelp">Use at least 6 characters.</div>
-<button class="btn-primary" id="signupSubmit" type="submit">Create Account</button>
-<div class="muted small">We'll send a verification email to activate your account.</div>
-</form>
-<div aria-live="polite" class="status-pill" id="auth-status" role="status"></div>
-</div>
-</section>
-<!-- ✅ Main App Content -->
-<section id="appContent">
-<div aria-labelledby="confirmDeleteTitle" aria-modal="true" class="modal hidden" id="confirmDeleteModal" role="dialog">
-<div class="modal-content">
-<h2 id="confirmDeleteTitle">Delete account?</h2>
-<p>This action permanently removes your data. Are you sure?</p>
-<div class="modal-actions">
-<button class="btn-secondary" id="confirmDeleteNo" type="button">No, cancel</button>
-<button class="btn-danger" id="confirmDeleteYes" type="button">Yes, delete</button>
-</div>
-</div>
-</div>
-<!-- ✅ Fixed: Password Confirmation Modal matches modal styles/IDs -->
-<div aria-labelledby="passwordConfirmTitle" aria-modal="true" class="modal hidden" id="passwordConfirmModal" role="dialog">
-<div class="modal-content">
-<h3 id="passwordConfirmTitle">Confirm Account Deletion</h3>
-<p>Please enter your password to confirm:</p>
-<input id="confirmPasswordInput" placeholder="Password" type="password"/>
-<div class="modal-actions">
-<button class="btn-secondary" id="passwordCancelBtn" type="button">Cancel</button>
-<button class="btn-danger" id="passwordConfirmBtn" type="button">Delete</button>
-</div>
-</div>
-</div>
-<form id="supplementForm">
-  <h1>Supplement Summary</h1>
-</form>
-<div class="summary-container" id="supplementSummaryContainer"></div>
-<div id="calendarContainer">
-<h1>Cycle Calendar</h1>
-<div class="calendar-nav">
-<button id="prevBtn">◀ Previous</button>
-<span id="currentMonthLabel"></span>
-<button id="nextBtn">Next ▶</button>
-</div>
-<div id="calendar"></div>
-</div>
-</section>
-<!-- Notifications Modal -->
-<div aria-labelledby="notificationsTitle" aria-modal="true" class="modal hidden" id="notificationsModal" role="dialog">
-<div class="modal-content"> <!-- if you currently have .noty-card, keep it AND add this class -->
-<div style="display:flex;justify-content:space-between;align-items:center;">
-<h2 id="notificationsTitle" style="margin:0;">Calendar</h2>
-<button aria-label="Close" id="notificationsCloseBtn">✕</button>
-</div>
-<div class="noty-row">
-<p>Download a calendar with “day-before” reminders for the next year.</p>
-<p class="muted">
-  Tip: create a <em>separate</em> calendar (e.g., “Supplements / Cycles”) before importing this file.
-  That way you can toggle it on/off or delete it without touching your main calendar.</p>
-<button id="notificationsIcsBtn">Download</button>
-</div>
-<div class="noty-actions">
-</div>
-</div>
-</div>
 
-<!-- Add New Supplement Modal -->
-<div id="supplementModal" class="modal hidden" role="dialog" aria-modal="true"
-     aria-labelledby="supplementModalTitle" aria-describedby="supplementModalDesc" tabindex="-1">
-  <div class="modal-backdrop" data-close-modal></div>
+  <!-- App Shell: sidebar + main -->
+  <div class="app-shell">
+    <!-- Sidebar controls moved into the app-shell -->
+    <aside id="sidebar" class="sidebar" role="navigation" aria-label="App controls">
+      <button id="logoutBtn" class="sidebar-btn">Logout</button>
 
-  <div class="modal-content" role="document">
-    <button class="modal-close" type="button" aria-label="Close" data-close-modal>×</button>
-
-    <h2 id="supplementModalTitle">Add New Supplement</h2>
-    <p id="supplementModalDesc" class="modal-desc">Fill in the details and click Save.</p>
-
-    <!-- CHANGED: unique form id -->
-    <form id="supplementModalForm">
-      <div class="form-row">
-        <label for="suppName">Name</label>
-        <input id="suppName" name="name" type="text" required />
+      <!-- Account Options dropdown -->
+      <div class="dropdown">
+        <button id="profileButton" class="profile-button">Account Options</button>
+        <div id="profileDropdown" class="dropdown-content">
+          <a href="#" id="resetPassword">Reset Password</a>
+          <a href="#" id="deleteAccount">Delete Account</a>
+          <a href="#" id="openNotifications">Download Calendar</a>
+        </div>
       </div>
 
-      <div class="form-row">
-        <label for="suppDosage">Dosage</label>
-        <input id="suppDosage" placeholder="e.g., 500mg" name="dosage" type="text" />
+      <button id="notesBtn" class="sidebar-btn">Notes</button>
+      <button id="addSupplementBtn" class="sidebar-btn">Add New Supplement</button>
+      <img id="icon" src="./assets/logo-icon.svg" alt="logo" class="banner-logo">
+    </aside>
+
+    <main class="main">
+      <!-- 🔐 Auth Section -->
+      <section id="authContainer">
+        <section id="authIntro" aria-label="Welcome">
+          <div class="logo-wrap">
+            <img id="authLogo" src="./assets/logo-combined-wordmark.svg"
+              alt="Supplement Tracker — Plan, track, and stay consistent with your daily supplements." />
+          </div>
+          <p class="auth-desc">
+            Ideal for busy students, educators, athletes, and anyone who wants a simple way to
+            <br>organize routines, log intake, and keep track of supplement cycles.
+          </p>
+        </section>
+
+        <div class="auth-card" role="region" aria-label="Account access">
+          <div class="tabs" role="tablist" aria-label="Auth tabs">
+            <button id="tabSignIn" class="tab active" role="tab" aria-controls="signinPane" aria-selected="true" data-tab="signin">Sign In</button>
+            <button id="tabSignUp" class="tab" role="tab" aria-controls="signupPane" aria-selected="false" data-tab="signup">Create Account</button>
+          </div>
+
+          <!-- Sign In -->
+          <form id="signinForm" class="tab-pane active" role="tabpanel" aria-labelledby="tabSignIn" novalidate>
+            <label for="signinEmail">Email</label>
+            <input id="signinEmail" type="email" placeholder="you@example.com" required>
+            <label for="signinPassword">Password</label>
+            <input id="signinPassword" type="password" required>
+            <div class="auth-row">
+              <button id="signinSubmit" class="btn-primary" type="submit">Sign In</button>
+              <a id="forgotPasswordLink" class="link" href="#">Forgot password?</a>
+            </div>
+          </form>
+
+          <!-- Sign Up -->
+          <form id="signupForm" class="tab-pane" role="tabpanel" aria-labelledby="tabSignUp" novalidate>
+            <label for="signupEmail">Email</label>
+            <input id="signupEmail" type="email" placeholder="you@example.com" required>
+            <label for="signupPassword">Password</label>
+            <input id="signupPassword" type="password" placeholder="At least 6 characters" required>
+            <label for="signupPassword2">Confirm password</label>
+            <input id="signupPassword2" type="password" placeholder="Re-enter password" required>
+            <div id="passwordHelp" class="muted small">Use at least 6 characters.</div>
+            <button id="signupSubmit" class="btn-primary" type="submit">Create Account</button>
+            <div class="muted small">We'll send a verification email to activate your account.</div>
+          </form>
+
+          <div id="auth-status" class="status-pill" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- ✅ Main App Content (hidden until logged-in) -->
+      <section id="appContent">
+        <h1>Supplement Summary</h1>
+
+        <!-- Card size controls (now inside appContent) -->
+        <div id="summarySizeControls" class="summary-controls" style="display:flex; gap:8px; align-items:center; margin:8px 0 12px;">
+          <span style="font-weight:600;">Card size:</span>
+          <button type="button" data-size="size-compact">Compact</button>
+          <button type="button" data-size="size-cozy">Cozy</button>
+          <button type="button" data-size="size-comfy">Comfy</button>
+        </div>
+
+        <!-- Confirm Delete Modal -->
+        <div id="confirmDeleteModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirmDeleteTitle">
+          <div class="modal-content">
+            <h2 id="confirmDeleteTitle">Delete account?</h2>
+            <p>This action permanently removes your data. Are you sure?</p>
+            <div class="modal-actions">
+              <button id="confirmDeleteNo" class="btn-secondary" type="button">No, cancel</button>
+              <button id="confirmDeleteYes" class="btn-danger" type="button">Yes, delete</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password Confirmation Modal -->
+        <div id="passwordConfirmModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="passwordConfirmTitle">
+          <div class="modal-content">
+            <h3 id="passwordConfirmTitle">Confirm Account Deletion</h3>
+            <p>Please enter your password to confirm:</p>
+            <input id="confirmPasswordInput" type="password" placeholder="Password"/>
+            <div class="modal-actions">
+              <button id="passwordCancelBtn" class="btn-secondary" type="button">Cancel</button>
+              <button id="passwordConfirmBtn" class="btn-danger" type="button">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summaries container -->
+        <div id="supplementSummaryContainer" class="summary-container"></div>
+
+        <!-- Calendar -->
+        <div id="calendarContainer">
+          <h1>Cycle Calendar</h1>
+          <div class="calendar-nav">
+            <button id="prevBtn">◀ Previous</button>
+            <span id="currentMonthLabel"></span>
+            <button id="nextBtn">Next ▶</button>
+          </div>
+          <div id="calendar"></div>
+        </div>
+      </section>
+
+      <!-- Notifications Modal -->
+      <div id="notificationsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="notificationsTitle">
+        <div class="modal-content">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <h2 id="notificationsTitle" style="margin:0;">Calendar</h2>
+            <button id="notificationsCloseBtn" aria-label="Close">✕</button>
+          </div>
+          <div class="noty-row">
+            <p>Download a calendar with “day-before” reminders for the next year.</p>
+            <p class="muted">
+              Tip: create a <em>separate</em> calendar (e.g., “Supplements / Cycles”) before importing this file.
+              That way you can toggle it on/off or delete it without touching your main calendar.
+            </p>
+            <button id="notificationsIcsBtn">Download</button>
+          </div>
+          <div class="noty-actions"></div>
+        </div>
       </div>
 
-<!-- Time of day -->
-<div class="form-row">
-  <div class="time-grid">
-    <label class="time-item">
-      <input type="checkbox" name="time" value="Morning">
-      <span>Morning</span>
-    </label>
-    <label class="time-item">
-      <input type="checkbox" name="time" value="Afternoon">
-      <span>Afternoon</span>
-    </label>
-    <label class="time-item">
-      <input type="checkbox" name="time" value="Evening">
-      <span>Evening</span>
-    </label>
-  </div>
-</div>
-<!-- Cycle toggle + Start Date -->
-<div class="form-row form-row-inline">
-  <label class="cycle-inline">
-    <input type="checkbox" id="suppCycleChk" name="cycle" value="1">
-    <span>On a cycle?</span>
-  </label>
+      <!-- Add New Supplement Modal -->
+      <div id="supplementModal" class="modal hidden" role="dialog" aria-modal="true"
+          aria-labelledby="supplementModalTitle" aria-describedby="supplementModalDesc" tabindex="-1">
+        <div class="modal-backdrop" data-close-modal></div>
 
-  <!-- keep space reserved; hide visually when off -->
-  <div id="suppCycleStartWrap" class="cycle-start is-hidden">
-    <input type="date" id="suppCycleStart" name="startDate">
-    <input type="number" id="suppDaysOn" placeholder="Days On" name="onDay">
-    <input type="number" id="suppDaysOff" placeholder="Days Off" name="offDay">
-    <span class="field-caption">Start Date</span>
-  </div>
-</div>
+        <div class="modal-content" role="document">
+          <button class="modal-close" type="button" aria-label="Close" data-close-modal>×</button>
 
+          <h2 id="supplementModalTitle">Add New Supplement</h2>
+          <p id="supplementModalDesc" class="modal-desc">Fill in the details and click Save.</p>
 
-      <!-- FOOTER: Save (left) + Cancel (right) -->
-      <div class="modal-actions modal-actions--split">
-        <button type="submit" id="saveSupplementBtn" class="btn-primary">Save</button>
-        <button type="button" id="cancelSupplementBtn" class="btn-secondary" data-close-modal>Cancel</button>
+          <form id="supplementModalForm">
+            <div class="form-row">
+              <label for="suppName">Name</label>
+              <input id="suppName" name="name" type="text" required />
+            </div>
+
+            <div class="form-row">
+              <label for="suppDosage">Dosage</label>
+              <input id="suppDosage" name="dosage" type="text" placeholder="e.g., 500mg" />
+            </div>
+
+            <!-- Time of day -->
+            <div class="form-row">
+              <div class="time-grid">
+                <label class="time-item">
+                  <input type="checkbox" name="time" value="Morning">
+                  <span>Morning</span>
+                </label>
+                <label class="time-item">
+                  <input type="checkbox" name="time" value="Afternoon">
+                  <span>Afternoon</span>
+                </label>
+                <label class="time-item">
+                  <input type="checkbox" name="time" value="Evening">
+                  <span>Evening</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Cycle toggle + Start Date -->
+            <div class="form-row form-row-inline">
+              <label class="cycle-inline">
+                <input type="checkbox" id="suppCycleChk" name="cycle" value="1">
+                <span>On a cycle?</span>
+              </label>
+
+              <div id="suppCycleStartWrap" class="cycle-start is-hidden">
+                <input type="date" id="suppCycleStart" name="startDate">
+                <input type="number" id="suppDaysOn" name="onDay" placeholder="Days On">
+                <input type="number" id="suppDaysOff" name="offDay" placeholder="Days Off">
+                <span class="field-caption">Start Date</span>
+              </div>
+            </div>
+
+            <div class="modal-actions modal-actions--split">
+              <button id="saveSupplementBtn" class="btn-primary" type="submit">Save</button>
+              <button id="cancelSupplementBtn" class="btn-secondary" type="button" data-close-modal>Cancel</button>
+            </div>
+          </form>
+        </div>
       </div>
-    </form>
-  </div>
-</div>
 
-<script>
-  // Duplicate close button support
-  document.getElementById('notificationsCloseBtnBottom')?.addEventListener('click', () => {
-    document.getElementById('notificationsCloseBtn')?.click();
-  });
-</script>
-</main>
-<script src="./js/toast.js" type="module"></script>
-<script src="./js/main.js" type="module"></script>
-<script src="./js/supplementsUI.js" type="module"></script>
-<script src="./js/notifications.js" type="module"></script>
+      <script>
+        // Duplicate close button support
+        document.getElementById('notificationsCloseBtnBottom')?.addEventListener('click', () => {
+          document.getElementById('notificationsCloseBtn')?.click();
+        });
+      </script>
+    </main>
+  </div>
+
+  <div id="app-status" class="status-pill" role="status" aria-live="polite"></div>
+
+  <script type="module" src="./js/toast.js"></script>
+  <script type="module" src="./js/main.js"></script>
+  <script type="module" src="./js/supplementsUI.js"></script>
+  <script type="module" src="./js/notifications.js"></script>
 </body>
 </html>
