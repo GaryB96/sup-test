@@ -2,6 +2,7 @@ import { showToast } from "./toast.js";
 import { login, signup, logout, deleteAccount, monitorAuthState, changePassword, resetPassword, resendVerification } from "./auth.js";
 import { renderCalendar } from "./calendar.js";
 import { fetchSupplements } from "./supplements.js";
+import { addSupplement } from "./supplements.js";
 import { EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 import { auth } from "./firebaseConfig.js";
 document.documentElement.classList.add("auth-pending");
@@ -365,7 +366,7 @@ document.addEventListener("DOMContentLoaded", () => {
       saveNotes();
     });
   }
-  // --- Month navigation ---
+
 // --- Month navigation ---
 if (prevBtn) {
   prevBtn.addEventListener("click", async () => {
@@ -381,8 +382,6 @@ if (nextBtn) {
     await refreshCalendar();
   });
 }
-
-
 })
 
   // --- Profile dropdown ---
@@ -806,5 +805,59 @@ if (cycleChk && startWrap) {
   cycleChk.addEventListener('change', sync);
   sync(); // initialize
 }
-  }
+}
+
+// === Wire Add New Supplement modal ===
+(function wireAddSupplementModal(){
+  const modal      = document.getElementById("supplementModal");
+  const modalForm  = document.getElementById("supplementModalForm"); // new id from step 1
+  if (!modal || !modalForm) return;
+
+  const closeModal = () => {
+    modal.classList.add("hidden");
+    document.body.style.overflow = "";
+  };
+
+  modalForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const uid = auth.currentUser?.uid || window.currentUser?.uid;
+    if (!uid) { console.error("Not signed in"); return; }
+
+    // Gather modal values (use your current ids/names)
+    const name   = modalForm.querySelector("#suppName")?.value ?? "";
+    const dosage = modalForm.querySelector("#suppDosage")?.value ?? "";
+
+    const times = Array.from(
+      modalForm.querySelectorAll('input[name="time"]:checked')
+    ).map(cb => cb.value);
+
+    const cycleEnabled = !!modalForm.querySelector("#suppCycleChk")?.checked;
+    const onDays  = modalForm.querySelector("#suppDaysOn")?.value ?? "";
+    const offDays = modalForm.querySelector("#suppDaysOff")?.value ?? "";
+    const start   = modalForm.querySelector("#suppCycleStart")?.value ?? "";
+
+    const data = {
+      name, dosage, times,
+      cycle: cycleEnabled ? { on: onDays, off: offDays } : null,
+      startDate: cycleEnabled ? start : null
+    };
+
+    try {
+      await addSupplement(uid, data);               // ← shared function
+      if (typeof refreshCalendar === "function") {  // calendar uses `cycle/startDate`
+        await refreshCalendar();                    // exposed globally in your app
+      }
+      // Optional toast if you use it:
+      // showInlineStatus("Supplement added.", "success");
+
+      modalForm.reset();
+      closeModal();
+    } catch (err) {
+      console.error("Add supplement failed:", err);
+      // showInlineStatus("Failed to add supplement.", "error");
+    }
+  });
+
+  // Close actions already in your HTML use [data-close-modal]; keep those.
+})();
 });

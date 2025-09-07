@@ -42,3 +42,38 @@ export async function deleteSupplement(userId, supplementId) {
 
   return await deleteDoc(doc(db, "users", userId, "supplements", supplementId));
 }
+
+// Add New Supplement MODAL //
+export async function addSupplement(uid, data) {
+  if (!uid) throw new Error("No user id");
+
+  // Normalize
+  const name = (data.name || "").trim();
+  const dosage = (data.dosage || "").trim();
+  const times = Array.isArray(data.times) ? data.times : [];
+
+  const cycleEnabled = !!(data.cycle && (data.cycle.on || data.cycle.off));
+  const cycle = cycleEnabled
+    ? {
+        on: Number(data.cycle.on) || 0,
+        off: Number(data.cycle.off) || 0,
+      }
+    : null;
+
+  const startDate = cycleEnabled && data.startDate ? String(data.startDate) : null;
+
+  const docData = {
+    name,
+    dosage,
+    times,                 // ["Morning","Afternoon","Evening"]
+    cycle,                 // null OR { on, off }
+    startDate,             // "YYYY-MM-DD" if cycle is enabled
+    color: data.color || null,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+
+  const coll = collection(db, "users", uid, "supplements");
+  await addDoc(coll, docData);
+  return docData;
+}
