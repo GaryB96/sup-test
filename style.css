@@ -46,15 +46,18 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 .hidden { display: none; }
 
 /* ===== Summary Cards ===== */
-.supplement-box { border:1px solid #ccc; background:#fff; }
-.cycle-strip { border-left:8px solid transparent; }
+.supplement-box { border:1px solid #bdbdbd; background:#fff; }
+.cycle-strip { 
+  border-style: solid;
+  border-left:8px solid transparent;
+}
 .cycle-color-1 { border-left-color:#2196F3; }
 .cycle-color-2 { border-left-color:#FF9800; }
 .cycle-color-3 { border-left-color:#9C27B0; }
 .cycle-color-4 { border-left-color:#E91E63; }
 .actions { margin-top: 10px; }
-.edit-btn { background:#4caf50; color:#fff; border:none; padding:4px 8px; margin-right:4px; cursor:pointer; border-radius:3px; }
-.delete-btn { background:#f44336; color:#fff; border:none; padding:4px 8px; cursor:pointer; border-radius:3px; }
+.edit-btn { background:#3f9242; color:#fff; border:none; padding:4px 8px; margin-right:4px; cursor:pointer; border-radius:3px; }
+.delete-btn { background:#a72f26; color:#fff; border:none; padding:4px 8px; cursor:pointer; border-radius:3px; }
 
 /* ===== Checkbox tiles ===== */
 .checkbox-tiles {
