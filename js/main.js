@@ -21,6 +21,8 @@ try { window.pickColor = window.pickColor || pickColor; } catch {}
 
 document.documentElement.classList.add("auth-pending");
 
+// One global edit/add context
+window.SUPP_MODAL_CTX = window.SUPP_MODAL_CTX || { mode: "add", id: null };
 
 // Modal State - edit vs add
 let SUPP_MODAL_CTX = { mode: "add", id: null };
@@ -849,48 +851,30 @@ form.addEventListener("submit", async (e) => {
     color
   };
 
-  // Read modal context to decide add vs edit
-  const ctx = (typeof SUPP_MODAL_CTX !== "undefined" && SUPP_MODAL_CTX) || (window.SUPP_MODAL_CTX || { mode: "add", id: null });
+    // ********* READ CONTEXT FROM WINDOW *********
+  const ctx = (window.SUPP_MODAL_CTX || { mode: "add", id: null });
 
   try {
     if (ctx.mode === "edit" && ctx.id) {
-      // UPDATE path
-      if (typeof updateSupplement === "function") {
-        await updateSupplement(uid, ctx.id, data);
-      } else {
-        throw new Error("updateSupplement(...) is not defined. Please import or implement it.");
-      }
+      await updateSupplement(uid, ctx.id, data);   // update existing doc
     } else {
-      // ADD path
-      await addSupplement(uid, data);
+      await addSupplement(uid, data);              // create new doc
     }
 
-    // Refresh the SUMMARY (which also rebuilds calendar inside)
+    // Refresh UI
     if (typeof window.refreshSuppSummary === "function") {
       await window.refreshSuppSummary();
     } else if (typeof window.refreshCalendar === "function") {
       await window.refreshCalendar();
     }
 
-    // Toast (optional)
-    try {
-      typeof showInlineStatus === "function" &&
-        showInlineStatus("Supplement saved.", "success");
-    } catch {}
-
-    // Reset + close modal
+    // Reset + close
     form.reset();
-    if (startWrap && startWrap.classList.contains("is-hidden")) {
-      startWrap.classList.add("is-hidden"); // keep cycle section hidden after reset
-    }
     closeModal();
 
-    // Reset context to default add mode
-    if (typeof SUPP_MODAL_CTX !== "undefined") {
-      SUPP_MODAL_CTX = { mode: "add", id: null };
-    } else {
-      window.SUPP_MODAL_CTX = { mode: "add", id: null };
-    }
+    // ********* RESET CONTEXT *********
+    window.SUPP_MODAL_CTX = { mode: "add", id: null };
+
   } catch (err) {
     console.error("Save failed:", err);
     try {

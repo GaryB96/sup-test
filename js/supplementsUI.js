@@ -176,7 +176,7 @@ function editSupplement(id) {
 
   // Optionally show a cancel-edit button if you have one
   if (cancelEditBtn) cancelEditBtn.classList.remove("hidden");
-}}
+}
 
 if (cancelEditBtn) {
   cancelEditBtn.addEventListener("click", () => {
