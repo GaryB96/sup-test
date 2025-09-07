@@ -546,7 +546,7 @@ if (nextBtn) {
         await login(email, password);            // monitorAuthState will flip the UI
         showInlineStatus("Signed in.", "success");  // optional
       } catch (error) {
-        showInlineStatus("Login failed: " + (error?.message || ""), "error");
+        showInlineStatus("Login failed: incorrect email or password");
         console.error("Login error:", error);
       }
     });
