@@ -164,29 +164,11 @@
 </div>
 </div>
 <form id="supplementForm">
-<input id="nameInput" placeholder="Supplement name" required=""/>
-<input id="dosageInput" placeholder="Dosage (e.g., 500mg)" required=""/>
-<!-- Unified checkbox group: desktop = 4 tiles across, mobile = stacked -->
-<div class="checkbox-tiles">
-<label class="check-item"><input name="time" type="checkbox" value="Morning"/> <span>Morning</span></label>
-<label class="check-item"><input name="time" type="checkbox" value="Afternoon"/> <span>Afternoon</span></label>
-<label class="check-item"><input name="time" type="checkbox" value="Evening"/> <span>Evening</span></label>
-<label class="check-item"><input id="cycleCheckbox" name="cycle" type="checkbox" value="1"/> <span>On a cycle</span></label>
-</div>
-<div class="hidden" id="cycleDetails">
-<input id="onDaysInput" placeholder="Days on" type="number"/>
-<input id="offDaysInput" placeholder="Days off" type="number"/>
-
-<div class="cycle-start-row">
-<label class="cycle-start-label" for="cycleStartInput">Start Date</label>
-<input id="cycleStartInput" type="date"/>
-</div>
-</div>
-<button type="submit">Add Supplement</button>
+  <h1>Supplement Summary</h1>
 </form>
 <div class="summary-container" id="supplementSummaryContainer"></div>
 <div id="calendarContainer">
-<h2>Cycle Calendar</h2>
+<h1>Cycle Calendar</h1>
 <div class="calendar-nav">
 <button id="prevBtn">◀ Previous</button>
 <span id="currentMonthLabel"></span>

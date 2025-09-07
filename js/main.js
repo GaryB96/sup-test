@@ -4,7 +4,21 @@ import { renderCalendar } from "./calendar.js";
 import { fetchSupplements, addSupplement } from "./supplements.js";
 import { EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 import { auth } from "./firebaseConfig.js";
+import { updateSupplement } from "./supplements.js";
+
 document.documentElement.classList.add("auth-pending");
+
+// Deterministic color picker so a supplement keeps a stable color
+function pickColor(seed) {
+  const palette = ["#2196F3", "#FF9800", "#9C27B0", "#E91E63"];
+  if (!seed) return palette[Math.floor(Math.random() * palette.length)];
+  let sum = 0;
+  for (let i = 0; i < seed.length; i++) sum = (sum + seed.charCodeAt(i)) % 9973;
+  return palette[sum % palette.length];
+}
+
+// Modal State - edit vs add
+let SUPP_MODAL_CTX = { mode: "add", id: null };
 
 // Inline status helper (avoids browser alert banners)
 // Inline status helper (avoids browser alert banners)
@@ -796,64 +810,136 @@ document.addEventListener("DOMContentLoaded", () => {
     sync();
   }
 
-  // ---------- Submit (writes to Firestore and refreshes UI) ----------
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+// ---------- Submit (writes to Firestore and refreshes UI) ----------
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    const uid = auth?.currentUser?.uid || window.currentUser?.uid;
-    if (!uid) {
-      try { typeof showInlineStatus === "function" && showInlineStatus("Please sign in first.", "error"); } catch {}
-      return;
+  const uid = auth?.currentUser?.uid || window.currentUser?.uid;
+  if (!uid) {
+    try { typeof showInlineStatus === "function" && showInlineStatus("Please sign in first.", "error"); } catch {}
+    return;
+  }
+
+  // Collect values from the modal
+  const name   = form.querySelector("#suppName")?.value?.trim() || "";
+  const dosage = form.querySelector("#suppDosage")?.value?.trim() || "";
+
+  const times = Array.from(form.querySelectorAll('input[name="time"]:checked'))
+    .map(cb => cb.value); // e.g., ["Morning","Evening"]
+
+  const onCycle   = !!form.querySelector("#suppCycleChk")?.checked;
+  const startDate = onCycle ? (form.querySelector("#suppCycleStart")?.value || null) : null;
+  const daysOn    = onCycle ? (form.querySelector("#suppDaysOn")?.value || "") : "";
+  const daysOff   = onCycle ? (form.querySelector("#suppDaysOff")?.value || "") : "";
+
+  // Ensure color (important for summary + calendar)
+  let color = onCycle ? pickColor(name) : "#cccccc";
+
+  const data = {
+    name,
+    dosage,
+    times,
+    cycle: onCycle ? { on: daysOn, off: daysOff } : null,
+    startDate,
+    color
+  };
+
+  // Read modal context to decide add vs edit
+  const ctx = (typeof SUPP_MODAL_CTX !== "undefined" && SUPP_MODAL_CTX) || (window.SUPP_MODAL_CTX || { mode: "add", id: null });
+
+  try {
+    if (ctx.mode === "edit" && ctx.id) {
+      // UPDATE path
+      if (typeof updateSupplement === "function") {
+        await updateSupplement(uid, ctx.id, data);
+      } else {
+        throw new Error("updateSupplement(...) is not defined. Please import or implement it.");
+      }
+    } else {
+      // ADD path
+      await addSupplement(uid, data);
     }
 
-    // Collect values from the modal
-    const name   = form.querySelector("#suppName")?.value?.trim() || "";
-    const dosage = form.querySelector("#suppDosage")?.value?.trim() || "";
+    // Refresh the SUMMARY (which also rebuilds calendar inside)
+    if (typeof window.refreshSuppSummary === "function") {
+      await window.refreshSuppSummary();
+    } else if (typeof window.refreshCalendar === "function") {
+      await window.refreshCalendar();
+    }
 
-    const times = Array.from(form.querySelectorAll('input[name="time"]:checked'))
-      .map(cb => cb.value); // e.g., ["Morning","Evening"]
-
-    const onCycle   = !!form.querySelector("#suppCycleChk")?.checked;
-    const startDate = onCycle ? (form.querySelector("#suppCycleStart")?.value || null) : null;
-    const daysOn    = onCycle ? (form.querySelector("#suppDaysOn")?.value || "") : "";
-    const daysOff   = onCycle ? (form.querySelector("#suppDaysOff")?.value || "") : "";
-
-    const data = {
-      name,
-      dosage,            // keep as string unless you want Number()
-      times,             // []
-      cycle: onCycle ? { on: daysOn, off: daysOff } : null,
-      startDate          // "YYYY-MM-DD" or null
-    };
-
+    // Toast (optional)
     try {
-  await addSupplement(uid, data);  // write to Firestore
+      typeof showInlineStatus === "function" &&
+        showInlineStatus("Supplement saved.", "success");
+    } catch {}
 
-  // Refresh the SUMMARY (which also rebuilds calendar inside)
-  if (typeof window.refreshSuppSummary === "function") {
-    await window.refreshSuppSummary();
-  } else if (typeof window.refreshCalendar === "function") {
-    await window.refreshCalendar();
+    // Reset + close modal
+    form.reset();
+    if (startWrap && startWrap.classList.contains("is-hidden")) {
+      startWrap.classList.add("is-hidden"); // keep cycle section hidden after reset
+    }
+    closeModal();
+
+    // Reset context to default add mode
+    if (typeof SUPP_MODAL_CTX !== "undefined") {
+      SUPP_MODAL_CTX = { mode: "add", id: null };
+    } else {
+      window.SUPP_MODAL_CTX = { mode: "add", id: null };
+    }
+  } catch (err) {
+    console.error("Save failed:", err);
+    try {
+      typeof showInlineStatus === "function" &&
+        showInlineStatus(err?.message || "Failed to save supplement.", "error");
+    } catch {}
   }
-
-  // Toast (optional)
-  try {
-    typeof showInlineStatus === "function" &&
-      showInlineStatus("Supplement saved.", "success");
-  } catch {}
-
-  // Reset + close modal
-  form.reset();
-  if (startWrap && startWrap.classList.contains("is-hidden")) {
-    startWrap.classList.add("is-hidden"); // keep cycle section hidden after reset
-  }
-  closeModal();
-} catch (err) {
-  console.error("Add supplement failed:", err);
-  try {
-    typeof showInlineStatus === "function" &&
-      showInlineStatus(err?.message || "Failed to save supplement.", "error");
-  } catch {}
-}
 });
+
+function getModalValues() {
+  const name = document.querySelector("#supp-name").value.trim();
+  const dosage = document.querySelector("#supp-dosage").value.trim();
+  const times = getTimesUI(); // <-- read from your chips/times control
+
+  const onCycle = document.querySelector("#cycle-toggle").checked;
+  const startDate = (document.querySelector("#supp-start-date").value || "").trim();
+
+  let cycle = null;
+  if (onCycle) {
+    const on = parseInt(document.querySelector("#cycle-days-on").value, 10) || 0;
+    const off = parseInt(document.querySelector("#cycle-days-off").value, 10) || 0;
+    cycle = { on, off };
+  }
+
+  const colorInput = document.querySelector("#supp-color");
+  const color = colorInput ? (colorInput.value || "").trim() : null;
+
+  return { name, dosage, times, cycle, startDate, color };
+}
+
+document.addEventListener("click", async (e) => {
+  const editBtn = e.target.closest(".btn-edit-supp");
+  if (!editBtn) return;
+
+  const id = editBtn.dataset.id;
+  if (!id) return;
+
+  // Get the item from your in-memory store OR fetch it.
+  // Prefer your existing list in memory to avoid 2nd read:
+  const supp = getSupplementById(id); // implement or use your store
+
+  if (!supp) return;
+  // Enter edit mode and prefill
+  SUPP_MODAL_CTX = { mode: "edit", id };
+  setModalValues({
+    name: supp.name,
+    dosage: supp.dosage,
+    times: supp.times ?? (supp.time ? [supp.time] : []), // back-compat
+    cycle: supp.cycle || null,
+    startDate: supp.startDate || "",
+    color: supp.color || pickColor?.(supp.name) || "#cccccc"
+  });
+
+  openSupplementModal(); // your existing function to show the modal
+});
+
 });

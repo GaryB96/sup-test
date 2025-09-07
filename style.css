@@ -8,13 +8,10 @@ body {
 main { margin-top: 60px; }
 
 h1 {
-  text-align: center;
-  font-size: 2.5em;
-  color: #4caf50;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-  margin-bottom: 30px;
-  font-weight: 700;
-  letter-spacing: 1px;
+  text-align: left;
+  font-size: 30px;
+  color: #000000;
+  text-shadow: 1px 1px 2px #22c55e;
 }
 
 form { margin-bottom: 20px; }
@@ -474,9 +471,9 @@ body:not(.logged-in) #accountActions { display: none; }
 
 /* === Highlight current day === */
 .day.today {
-  outline: 2px solid #1976d2;
+  outline: 2px solid #028819;
   outline-offset: -2px;
-  background: rgba(25, 118, 210, 0.08);
+  background: rgba(13, 139, 23, 0.151);
 }
 .day.today .day-number {
   font-weight: 700;
