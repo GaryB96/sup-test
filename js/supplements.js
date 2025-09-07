@@ -18,22 +18,6 @@ export async function fetchSupplements(userId) {
   }));
 }
 
-// Add a new supplement (make sure supplement includes colorClass and date)
-export async function addSupplement(userId, supplement) {
-  if (!userId || !supplement) {
-    throw new Error("Missing userId or supplement data");
-  }
-
-  return await addDoc(collection(db, "users", userId, "supplements"), {
-    name: supplement.name,
-    dosage: supplement.dosage,
-    time: supplement.time,
-    startDate: supplement.startDate || "",         // ✅ NEW
-    cycle: supplement.cycle || { on: 0, off: 0 },  // ✅ NEW
-    color: supplement.color || "#cccccc"           // ✅ NEW
-  });
-}
-
 // Delete a supplement by ID
 export async function deleteSupplement(userId, supplementId) {
   if (!userId || !supplementId) {
