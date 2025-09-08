@@ -952,7 +952,7 @@ body.logged-in main { margin-left: 220px; }
 
 /* Optional: rotate chevron on collapse */
 .sidebar .sidebar-tab .sidebar-tab-icon{ transition: transform 1.2s; }
-.sidebar[data-collapsed="false"] .sidebar-tab .sidebar-tab-icon{ transform: rotate(180deg); }
+.sidebar[data-collapsed="true"] .sidebar-tab .sidebar-tab-icon{ transform: rotate(180deg); }
 
 /* Phone tweaks: keep tab *inside* so it's guaranteed visible */
 @media (max-width: 600px){
