@@ -964,6 +964,12 @@ body.logged-in main { margin-left: 220px; }
     --sidebar-tab-width: 20px;          /* bigger target for touch */
     --sidebar-tab-height: 25px;
   }
+  .summary-container.size-compact {
+  --card-min: 100px;
+  --card-gap: 6px;
+  --card-pad: 5px;
+  --card-font: 11px;
+}
 }
 
 .sidebar { transform: translateX(0); transition: transform 1.28s ease; }
