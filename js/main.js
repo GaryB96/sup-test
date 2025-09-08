@@ -457,20 +457,21 @@ if (nextBtn) {
   // --- Auth state → show/hide app && render calendar ---
 
   monitorAuthState(async user => {
-    if (user) {
+    // Re-query DOM elements inside this scope to avoid ReferenceError
+    const calendarEl = document.getElementById("calendar");
+    const labelEl = document.getElementById("currentMonthLabel");
+if (user) {
       document.body.classList.add("logged-in");
       currentUser = user;
       setNotesButtonVisibility(true);
       const event = new CustomEvent("user-authenticated", { detail: user });
       window.dispatchEvent(event);
 
-      await refreshCalendar();
-    
       setNotesButtonVisibility(true);
-} else {
+    } else {
       document.body.classList.remove("logged-in");
-      calendarEl.innerHTML = "";
-      labelEl.textContent = "";
+      if (calendarEl) calendarEl.innerHTML = "";
+      if (labelEl) labelEl.textContent = "";
       
       setNotesButtonVisibility(false);
     }
@@ -952,27 +953,35 @@ document.addEventListener("DOMContentLoaded", () => {
     tab.setAttribute("aria-expanded", "true");
     const span = document.createElement("span");
     span.className = "sidebar-tab-icon";
-    span.textContent = "❯"; // pointer; rotates on collapse
+    span.textContent = "❮";
     tab.appendChild(span);
     sidebar.insertBefore(tab, sidebar.firstChild);
   }
 
-  // Restore last state
+  const setIcon = (collapsed) => {
+    const ico = tab.querySelector(".sidebar-tab-icon");
+    if (!ico) return;
+    ico.textContent = collapsed ? "❯" : "❮";
+  };
+
+  const applyCollapsed = (collapsed) => {
+    sidebar.setAttribute("data-collapsed", String(collapsed));
+    document.body.classList.toggle("sidebar-collapsed", collapsed);
+    tab.setAttribute("aria-expanded", String(!collapsed));
+    setIcon(collapsed);
+  };
+
+  // Restore last state or default
   const saved = localStorage.getItem("sidebar-collapsed");
   if (saved === "true" || saved === "false") {
-    sidebar.setAttribute("data-collapsed", saved);
-    tab.setAttribute("aria-expanded", saved === "true" ? "false" : "true");
+    applyCollapsed(saved === "true");
   } else {
-    // default expanded
-    sidebar.setAttribute("data-collapsed", "false");
-    tab.setAttribute("aria-expanded", "true");
+    applyCollapsed(false); // default expanded
   }
 
   tab.addEventListener("click", () => {
-    const isCollapsed = sidebar.getAttribute("data-collapsed") === "true";
-    const next = !isCollapsed;
-    sidebar.setAttribute("data-collapsed", String(next));
-    tab.setAttribute("aria-expanded", next ? "false" : "true");
+    const next = sidebar.getAttribute("data-collapsed") !== "true";
+    applyCollapsed(next);
     localStorage.setItem("sidebar-collapsed", String(next));
   });
 });

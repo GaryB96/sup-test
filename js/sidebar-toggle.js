@@ -1,4 +1,4 @@
-// Sidebar collapse/expand logic
+// Sidebar collapse/expand logic (kept separate from main.js)
 (function(){
   const sidebar = document.getElementById('sidebar');
   const tab = document.getElementById('sidebarTab');
@@ -12,10 +12,10 @@
     tab.setAttribute('aria-expanded', String(!collapsed));
   }
 
-  // Initialize: auto-collapse on small screens
+  // Initialize (collapse on very small screens)
   const initial = sidebar.getAttribute('data-collapsed');
   if (initial === null){
-    const mq = window.matchMedia('(max-width: 500px)');
+    const mq = window.matchMedia('(max-width: 600px)');
     setCollapsed(mq.matches);
   } else {
     setCollapsed(initial === 'true');
