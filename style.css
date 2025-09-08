@@ -29,6 +29,10 @@ form input, form select {
 }
 form input:focus, form select:focus { border-color: #4caf50; outline: none; }
 
+:root {
+  --supp-accent-default: #cccccc
+}
+
 form button[type="submit"] {
   display: block;
   margin: 20px auto;
@@ -46,15 +50,26 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 .hidden { display: none; }
 
 /* ===== Summary Cards ===== */
-.supplement-box { border:1px solid #bdbdbd; background:#fff; }
+.supplement-box { 
+  border:1px solid #cccccc; 
+  background:#fff; 
+  border-bottom: 6px solid var(--summary-bottom-default, rgb(204, 204, 204));
+}
 .cycle-strip { 
   border-style: solid;
-  border-left:8px solid transparent;
+  border-left:5px solid var(--accent, #cccccc);
 }
 .cycle-color-1 { border-left-color:#2196F3; }
 .cycle-color-2 { border-left-color:#FF9800; }
 .cycle-color-3 { border-left-color:#9C27B0; }
-.cycle-color-4 { border-left-color:#E91E63; }
+.cycle-color-4 { border-left-color:#1ee92f; }
+
+/* match colors for each cycle color */
+.supplement-box:has(.cycle-strip.cycle-color-1) { border-bottom-color: #2196F3; }
+.supplement-box:has(.cycle-strip.cycle-color-2) { border-bottom-color: #FF9800; }
+.supplement-box:has(.cycle-strip.cycle-color-3) { border-bottom-color: #9C27B0; }
+.supplement-box:has(.cycle-strip.cycle-color-4) { border-bottom-color: #1ee92f; }
+
 .actions { margin-top: 10px; }
 .edit-btn { background:#3f9242; color:#fff; border:none; padding:4px 8px; margin-right:4px; cursor:pointer; border-radius:3px; }
 .delete-btn { background:#a72f26; color:#fff; border:none; padding:4px 8px; cursor:pointer; border-radius:3px; }
@@ -154,10 +169,10 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
   white-space: nowrap;
   word-break: break-word;
 }
-.cycle-color-1 { background-color: #2196F3; }
-.cycle-color-2 { background-color: #FF9800; }
-.cycle-color-3 { background-color: #9C27B0; }
-.cycle-color-4 { background-color: #E91E63; }
+.cycle-color-1 { border-left-color:#2196F3; }
+.cycle-color-2 { border-left-color:#FF9800; }
+.cycle-color-3 { border-left-color:#9C27B0; }
+.cycle-color-4 { border-left-color:#1ee92f; }
 
 @media (max-width: 600px) {
   .weekday-row, .days-grid { grid-template-columns: repeat(7, minmax(40px, 1fr)); }

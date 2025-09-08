@@ -119,7 +119,7 @@ if (form) {
 }
 
 function getRandomColor() {
-  const colors = ["#2196F3", "#FF9800", "#9C27B0", "#E91E63"];
+  const colors = ["#2196F3", "#FF9800", "#9C27B0", "#1ee92f"];
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
@@ -280,7 +280,13 @@ function renderSupplements() {
   const buildBox = (supplement, labelForTime) => {
     const box = document.createElement("div");
     box.className = "supplement-box cycle-strip";
-    box.style.borderLeftColor = (supplement && supplement.color) || "#cccccc";
+    const __defaultAccent = (getComputedStyle(document.documentElement)
+  .getPropertyValue("--supp-accent-default").trim()) || "#cccccc";
+const __accent = (supplement && supplement.color) ? supplement.color : __defaultAccent;
+box.style.borderLeftColor = __accent;
+// Bottom strip: match left if on a cycle; otherwise use the same default
+box.style.borderBottom = `6px solid ${ (supplement && supplement.cycle) ? __accent : __defaultAccent }`;
+
     const nameRow = document.createElement("div");
     const strong = document.createElement("strong");
     strong.textContent = (supplement && supplement.name) ? supplement.name : "";
