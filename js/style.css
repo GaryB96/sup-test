@@ -930,8 +930,8 @@ body.logged-in main { margin-left: 220px; }
 /* The top-right tab */
 .sidebar .sidebar-tab{
   position: absolute;
-  top: 16px;
-  right: -36px;
+  top: 8px;
+  right: 0;
   width: var(--sidebar-tab-width);
   height: var(--sidebar-tab-height);
   display: inline-flex;

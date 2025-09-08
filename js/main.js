@@ -5,24 +5,9 @@ import { fetchSupplements, addSupplement } from "./supplements.js";
 import { EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 import { auth } from "./firebaseConfig.js";
 import { updateSupplement } from "./supplements.js";
-// ===== Color helper for supplements (stable per-name) =====
-function pickColor(seed) {
-  const palette = ["#2196F3", "#FF9800", "#9C27B0", "#E91E63", "#4CAF50", "#F44336", "#3F51B5", "#009688"];
-  if (!seed) return palette[Math.floor(Math.random() * palette.length)];
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = ((hash << 5) - hash + seed.charCodeAt(i)) >>> 0;
-  }
-  return palette[hash % palette.length];
-}
-// Also expose globally in case other files expect window.pickColor
-try { window.pickColor = window.pickColor || pickColor; } catch {}
-// ===== End color helper =====
 
 document.documentElement.classList.add("auth-pending");
 
-// One global edit/add context
-window.SUPP_MODAL_CTX = window.SUPP_MODAL_CTX || { mode: "add", id: null };
 
 // Modal State - edit vs add
 let SUPP_MODAL_CTX = { mode: "add", id: null };
@@ -546,7 +531,7 @@ if (nextBtn) {
         await login(email, password);            // monitorAuthState will flip the UI
         showInlineStatus("Signed in.", "success");  // optional
       } catch (error) {
-        showInlineStatus("Login failed: incorrect email or password");
+        showInlineStatus("Login failed: " + (error?.message || ""), "error");
         console.error("Login error:", error);
       }
     });
@@ -851,30 +836,48 @@ form.addEventListener("submit", async (e) => {
     color
   };
 
-    // ********* READ CONTEXT FROM WINDOW *********
-  const ctx = (window.SUPP_MODAL_CTX || { mode: "add", id: null });
+  // Read modal context to decide add vs edit
+  const ctx = (typeof SUPP_MODAL_CTX !== "undefined" && SUPP_MODAL_CTX) || (window.SUPP_MODAL_CTX || { mode: "add", id: null });
 
   try {
     if (ctx.mode === "edit" && ctx.id) {
-      await updateSupplement(uid, ctx.id, data);   // update existing doc
+      // UPDATE path
+      if (typeof updateSupplement === "function") {
+        await updateSupplement(uid, ctx.id, data);
+      } else {
+        throw new Error("updateSupplement(...) is not defined. Please import or implement it.");
+      }
     } else {
-      await addSupplement(uid, data);              // create new doc
+      // ADD path
+      await addSupplement(uid, data);
     }
 
-    // Refresh UI
+    // Refresh the SUMMARY (which also rebuilds calendar inside)
     if (typeof window.refreshSuppSummary === "function") {
       await window.refreshSuppSummary();
     } else if (typeof window.refreshCalendar === "function") {
       await window.refreshCalendar();
     }
 
-    // Reset + close
+    // Toast (optional)
+    try {
+      typeof showInlineStatus === "function" &&
+        showInlineStatus("Supplement saved.", "success");
+    } catch {}
+
+    // Reset + close modal
     form.reset();
+    if (startWrap && startWrap.classList.contains("is-hidden")) {
+      startWrap.classList.add("is-hidden"); // keep cycle section hidden after reset
+    }
     closeModal();
 
-    // ********* RESET CONTEXT *********
-    window.SUPP_MODAL_CTX = { mode: "add", id: null };
-
+    // Reset context to default add mode
+    if (typeof SUPP_MODAL_CTX !== "undefined") {
+      SUPP_MODAL_CTX = { mode: "add", id: null };
+    } else {
+      window.SUPP_MODAL_CTX = { mode: "add", id: null };
+    }
   } catch (err) {
     console.error("Save failed:", err);
     try {
@@ -932,4 +935,44 @@ document.addEventListener("click", async (e) => {
   openSupplementModal(); // your existing function to show the modal
 });
 
+});
+
+// === Sidebar peek tab init ===
+document.addEventListener("DOMContentLoaded", () => {
+  const sidebar = document.querySelector(".sidebar");
+  if (!sidebar) return;
+
+  // Ensure a tab exists or create one
+  let tab = sidebar.querySelector(".sidebar-tab");
+  if (!tab) {
+    tab = document.createElement("button");
+    tab.className = "sidebar-tab";
+    tab.type = "button";
+    tab.setAttribute("aria-controls", "sidebar");
+    tab.setAttribute("aria-expanded", "true");
+    const span = document.createElement("span");
+    span.className = "sidebar-tab-icon";
+    span.textContent = "❯"; // pointer; rotates on collapse
+    tab.appendChild(span);
+    sidebar.insertBefore(tab, sidebar.firstChild);
+  }
+
+  // Restore last state
+  const saved = localStorage.getItem("sidebar-collapsed");
+  if (saved === "true" || saved === "false") {
+    sidebar.setAttribute("data-collapsed", saved);
+    tab.setAttribute("aria-expanded", saved === "true" ? "false" : "true");
+  } else {
+    // default expanded
+    sidebar.setAttribute("data-collapsed", "false");
+    tab.setAttribute("aria-expanded", "true");
+  }
+
+  tab.addEventListener("click", () => {
+    const isCollapsed = sidebar.getAttribute("data-collapsed") === "true";
+    const next = !isCollapsed;
+    sidebar.setAttribute("data-collapsed", String(next));
+    tab.setAttribute("aria-expanded", next ? "false" : "true");
+    localStorage.setItem("sidebar-collapsed", String(next));
+  });
 });
