@@ -12,10 +12,10 @@
     tab.setAttribute('aria-expanded', String(!collapsed));
   }
 
-  // Initialize
+  // Initialize: auto-collapse on small screens
   const initial = sidebar.getAttribute('data-collapsed');
   if (initial === null){
-    const mq = window.matchMedia('(max-width: 600px)');
+    const mq = window.matchMedia('(max-width: 500px)');
     setCollapsed(mq.matches);
   } else {
     setCollapsed(initial === 'true');
