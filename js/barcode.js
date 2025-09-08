@@ -1,12 +1,19 @@
+// Open the native camera picker on mobile and decode common barcodes (UPC/EAN/etc.)
+// using the built-in Barcode Detection API where available (Chrome/Android).
 (() => {
-  function ready(fn){ document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); }
+  function onReady(fn) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn, { once: true });
+    } else {
+      fn();
+    }
+  }
 
-  ready(() => {
-    // Support either an id or your custom attribute version
-    const btn = document.getElementById('barcodeBtn') || document.querySelector('button[is="barcode"]');
+  onReady(() => {
+    const btn = document.getElementById('barcodeBtn');
     if (!btn) return;
 
-    // Hidden camera input to invoke the native camera on mobile
+    // Hidden input to trigger the native camera on mobile
     const cameraInput = document.createElement('input');
     cameraInput.type = 'file';
     cameraInput.accept = 'image/*';
@@ -16,37 +23,61 @@
 
     btn.addEventListener('click', () => cameraInput.click());
 
-    cameraInput.addEventListener('change', async (e) => {
-      const file = e.target.files && e.target.files[0];
+    cameraInput.addEventListener('change', async () => {
+      const file = cameraInput.files && cameraInput.files[0];
       if (!file) return;
 
       try {
-        const bmp = await createImageBitmap(file);
-
-        let code = null;
-        if ('BarcodeDetector' in window) {
-          const detector = new window.BarcodeDetector({
-            formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']
-          });
-          const results = await detector.detect(bmp);
-          if (results && results.length) code = results[0].rawValue || results[0].rawValue;
+        // Quick capability check up front
+        if (!('BarcodeDetector' in window)) {
+          alert('Barcode scanning is not supported on this browser. (Works on Chrome/Android.)');
+          return;
         }
 
-        // TODO: optional fallback — if you later include ZXing, try that here when code is still null.
+        // Try to create an ImageBitmap. If very large, request a downscaled bitmap
+        // to improve speed & detection reliability.
+        const maxW = 1600; // simple cap to avoid huge camera images
+        let bmp;
+        try {
+          bmp = await createImageBitmap(file, { resizeWidth: maxW, resizeQuality: 'high' });
+        } catch {
+          // Fallback if resize options aren’t supported
+          bmp = await createImageBitmap(file);
+        }
 
-        if (code) {
-          // For now, just show it; replace this with your lookup flow later.
-          alert(`Scanned: ${code}`);
-          // e.g., dispatch a custom event your app can listen for:
-          // document.dispatchEvent(new CustomEvent('barcode:scanned', { detail: { code } }));
+        const detector = new window.BarcodeDetector({
+          formats: [
+            'ean_13','ean_8',
+            'upc_a','upc_e',
+            'code_128','code_39',
+            'qr_code'
+          ]
+        });
+
+        const results = await detector.detect(bmp);
+
+        if (results && results.length) {
+          // Prefer retail codes if multiple are present
+          const preferred = results.find(r =>
+            ['ean_13','upc_a','upc_e','ean_8'].includes((r.format || r.formatName || '').toLowerCase())
+          ) || results[0];
+
+          const code = (preferred.rawValue || '').trim();
+          if (code) {
+            alert(`Scanned: ${code}`);
+            // Example: dispatch a custom event your app can consume
+            // document.dispatchEvent(new CustomEvent('barcode:scanned', { detail: { code, format: preferred.format } }));
+          } else {
+            alert('A barcode was detected, but no value was read. Please try again with better lighting.');
+          }
         } else {
-          alert('No barcode detected. Try a clearer photo with the code centered and well-lit.');
+          alert('No barcode detected. Try a clearer, well-lit shot with the code filling the frame.');
         }
       } catch (err) {
-        console.error(err);
+        console.error('Barcode scan error:', err);
         alert('Could not read the image. Please try again.');
       } finally {
-        // Allow re-selecting the same file if needed
+        // Allow selecting the same file again
         cameraInput.value = '';
       }
     });
