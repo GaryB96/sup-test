@@ -916,7 +916,7 @@ body.logged-in main { margin-left: 220px; }
 }
 
 /* Ensure the sidebar sits above content and can be collapsed via transform */
-#sidebar { transform: translateX(0); transition: transform .28s ease; }
+#sidebar { transform: translateX(0); transition: transform 1.28s ease; }
 #sidebar[data-collapsed="true"] {
   transform: translateX(calc(-100% + var(--sidebar-tab-width, 25px)));
 }
@@ -948,11 +948,11 @@ body.logged-in main { margin-left: 220px; }
 }
 
 /* When collapsed, bring the tab back flush with the sidebar edge */
-#sidebar[data-collapsed="true"] .sidebar-tab { transform: translateX(0); }
+#sidebar[data-collapsed="true"] .sidebar-tab { transform: translateX(100%); }
 
 /* Optional: rotate chevron on collapse */
 .sidebar .sidebar-tab .sidebar-tab-icon{ transition: transform 1.2s; }
-.sidebar[data-collapsed="true"] .sidebar-tab .sidebar-tab-icon{ transform: rotate(180deg); }
+.sidebar[data-collapsed="false"] .sidebar-tab .sidebar-tab-icon{ transform: rotate(180deg); }
 
 /* Phone tweaks: keep tab *inside* so it's guaranteed visible */
 @media (max-width: 600px){
@@ -966,7 +966,7 @@ body.logged-in main { margin-left: 220px; }
   }
 }
 
-.sidebar { transform: translateX(0); transition: transform .28s ease; }
+.sidebar { transform: translateX(0); transition: transform 1.28s ease; }
 .sidebar[data-collapsed="true"] {
   transform: translateX(calc(-100% + var(--sidebar-tab-width, 25px)));
 }
@@ -975,15 +975,32 @@ body.logged-in main { margin-left: 220px; }
 /* main shifts only to the tab width when collapsed */
 body.sidebar-collapsed main {
   margin-left: calc(var(--sidebar-tab-width, 25px) + 10px);
-  transition: margin-left .28s ease;
+  transition: margin-left 1.28s ease;
 }
 
 body.sidebar-collapsed main {
   margin-left: calc(var(--sidebar-tab-width, 25px) + 10px);
-  transition: margin-left .28s ease;
+  transition: margin-left 1.28s ease;
 }
 
 /* --- Hard guarantee: collapse via body class too (higher specificity) --- */
 body.sidebar-collapsed #sidebar {
   transform: translateX(calc(-100% + var(--sidebar-tab-width, 25px)));
 }
+
+/* Always animate margin-left */
+main {
+  margin-left: 0;
+  transition: margin-left 1.2s ease; /* animate both directions */
+}
+
+/* When collapsed, push content over a bit */
+body.sidebar-collapsed main {
+  margin-left: calc(var(--sidebar-tab-width, 25px) + 10px);
+}
+
+/* (Optional) sync the sidebar’s speed so they move together */
+#sidebar {
+  transition: transform 1.2s ease;
+}
+

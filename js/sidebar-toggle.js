@@ -19,10 +19,6 @@
     if (!sidebar) return;
     sidebar.setAttribute('data-collapsed', String(collapsed));
     document.body.classList.toggle('sidebar-collapsed', collapsed);
-    // Only change text if tab uses text chevrons
-    if (iconEl && !iconEl.dataset.lockText) {
-      iconEl.textContent = collapsed ? '❯' : '❮';
-    }
     if (tab) tab.setAttribute('aria-expanded', String(!collapsed));
     try { localStorage.setItem(STORAGE_KEY, String(collapsed)); } catch {}
   }
