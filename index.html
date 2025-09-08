@@ -84,6 +84,9 @@
   <div class="app-shell">
     <!-- Sidebar controls moved into the app-shell -->
     <aside id="sidebar" class="sidebar" role="navigation" aria-label="App controls">
+      <button class="sidebar-tab" id="sidebarTab" aria-label="Toggle sidebar" aria-expanded="true">
+        <span class="sidebar-tab-icon">❮</span>
+      </button>
       <button id="logoutBtn" class="sidebar-btn">Logout</button>
 
       <!-- Account Options dropdown -->
@@ -299,5 +302,7 @@
   <script type="module" src="./js/main.js"></script>
   <script type="module" src="./js/supplementsUI.js"></script>
   <script type="module" src="./js/notifications.js"></script>
+  <script type="module" src="./js/sidebar-toggle.js"></script>
+
 </body>
 </html>
