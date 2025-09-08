@@ -1,6 +1,6 @@
 // js/barcode.js
-// Scan with BarcodeDetector (where supported), then open a modal and try to populate fields
-// from Open Food Facts (free). If no data is found, inputs remain empty.
+// Scan with BarcodeDetector (where supported), open a modal, try Open Food Facts autofill,
+// and (Option A) show handy Search links to Health Canada LNHPD + Google if data is missing.
 (() => {
   function onReady(fn) {
     if (document.readyState === 'loading') {
@@ -33,10 +33,14 @@
   padding: 8px 10px; background: #f6f7f8; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
 }
-#barcodeModal .bm-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+#barcodeModal .bm-actions { display: flex; gap: 10px; justify-content: space-between; align-items: center; margin-top: 14px; flex-wrap: wrap; }
 #barcodeModal .bm-btn { border: 0; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; }
 #barcodeModal .bm-btn.primary { background: #111827; color: #fff; }
 #barcodeModal .bm-btn.secondary { background: #e5e7eb; color: #111827; }
+#barcodeModal .bm-links { display: flex; gap: 8px; flex-wrap: wrap; }
+#barcodeModal .bm-link {
+  display: inline-block; text-decoration: none; padding: 8px 10px; border-radius: 8px; background: #f3f4f6; color: #111827; font-size: 13px;
+}
       `;
       document.head.appendChild(style);
     }
@@ -83,8 +87,15 @@
         </div>
 
         <div class="bm-actions">
-          <button type="button" class="bm-btn secondary" id="bm_closeBtn">Close</button>
-          <button type="button" class="bm-btn primary" id="bm_saveBtn">Save</button>
+          <div class="bm-links">
+            <a id="bm_link_off"   class="bm-link" target="_blank" rel="noopener">Open Food Facts</a>
+            <a id="bm_link_hc"    class="bm-link" target="_blank" rel="noopener">Search Health Canada</a>
+            <a id="bm_link_ggl"   class="bm-link" target="_blank" rel="noopener">Google</a>
+          </div>
+          <div>
+            <button type="button" class="bm-btn secondary" id="bm_closeBtn">Close</button>
+            <button type="button" class="bm-btn primary"   id="bm_saveBtn">Save</button>
+          </div>
         </div>
       </div>
     `;
@@ -111,11 +122,11 @@
     // Save handler – dispatch a custom event your app can catch
     modal.querySelector('#bm_saveBtn').addEventListener('click', () => {
       const detail = {
-        code: modal.querySelector('#bm_codeValue').textContent || '',
-        name: (modal.querySelector('#bm_name').value || '').trim(),
-        brand: (modal.querySelector('#bm_brand').value || '').trim(),
-        serving: (modal.querySelector('#bm_serving').value || '').trim(),
-        servingsPerContainer: (modal.querySelector('#bm_servings').value || '').trim(),
+        code: document.getElementById('bm_codeValue').textContent || '',
+        name: (document.getElementById('bm_name').value || '').trim(),
+        brand: (document.getElementById('bm_brand').value || '').trim(),
+        serving: (document.getElementById('bm_serving').value || '').trim(),
+        servingsPerContainer: (document.getElementById('bm_servings').value || '').trim(),
       };
       document.dispatchEvent(new CustomEvent('barcode:save', { detail }));
       overlay.click(); // close
@@ -127,8 +138,32 @@
     if (el) el.textContent = msg || '';
   }
 
+  // Build helpful search links (no fetch; just URLs in new tabs)
+  function setSearchLinks({ code, name, brand }) {
+    const off   = document.getElementById('bm_link_off');
+    const hc    = document.getElementById('bm_link_hc');
+    const ggl   = document.getElementById('bm_link_ggl');
+
+    const qName = (name && name.trim()) ? name.trim() : '';
+    const qBase = qName || code || '';
+    const encQ  = encodeURIComponent(qBase);
+
+    if (off) off.href = code ? `https://world.openfoodfacts.org/product/${encodeURIComponent(code)}` : 'https://world.openfoodfacts.org/';
+    // Health Canada LNHPD doesn’t have a simple JSON API; use a Google site search
+    // Restrict to the official LNHPD host path:
+    const hcQuery = `site:health-products.canada.ca/lnhpd-bdpsnh ${qBase}`;
+    if (hc) hc.href = `https://www.google.com/search?q=${encodeURIComponent(hcQuery)}`;
+
+    // General Google search fallback (prefer name if present)
+    if (ggl) {
+      let g = qName;
+      if (brand) g = `${brand} ${g}`.trim();
+      if (!g) g = code || '';
+      ggl.href = `https://www.google.com/search?q=${encodeURIComponent(g)}`;
+    }
+  }
+
   async function fetchProductInfoFromOFF(code, { timeoutMs = 6000 } = {}) {
-    // Open Food Facts v2 product endpoint (free)
     const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`;
     const ac = new AbortController();
     const to = setTimeout(() => ac.abort(), timeoutMs);
@@ -136,11 +171,9 @@
       const res = await fetch(url, { signal: ac.signal, headers: { 'Accept': 'application/json' } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-
       const p = data && data.product ? data.product : null;
       if (!p) return null;
 
-      // Map fields with sensible fallbacks
       const name   = (p.product_name || '').trim();
       const brand  = (p.brands || '').split(',')[0]?.trim() || '';
       const dose   = (p.serving_size || (p.nutriments && p.nutriments.serving_size) || '').trim();
@@ -157,27 +190,29 @@
   }
 
   function populateModalFields({ code, name = '', brand = '', dose = '', serves = '' } = {}) {
-    ensureModal();
     document.getElementById('bm_codeValue').textContent = code || '—';
     document.getElementById('bm_name').value = name;
     document.getElementById('bm_brand').value = brand;
     document.getElementById('bm_serving').value = dose;
     document.getElementById('bm_servings').value = serves;
+    setSearchLinks({ code, name, brand });
   }
 
   async function openModalWithAutoFill(code) {
     ensureModal();
     setStatus('Looking up product info…');
-    populateModalFields({ code }); // start empty; fill when/if we get data
 
-    // Show modal now (while we look up)
+    // Show modal immediately
     const overlay = document.getElementById('barcodeOverlay');
     const modal   = document.getElementById('barcodeModal');
     overlay.style.display = 'block';
-    modal.style.display = 'flex';
+    modal.style.display   = 'flex';
     document.body.style.overflow = 'hidden';
 
-    // Try Open Food Facts
+    // Start with code only
+    populateModalFields({ code });
+
+    // Try OFF
     const info = await fetchProductInfoFromOFF(code);
     if (info) {
       populateModalFields({
@@ -187,9 +222,10 @@
         dose: info.dose,
         serves: info.serves
       });
-      setStatus(''); // clear
+      setStatus('');
     } else {
-      setStatus(''); // no data; leave fields blank
+      // Nothing found: keep fields empty but links active
+      setStatus(''); // or 'No info found. Use the links below to search.'
     }
 
     // Focus first field
@@ -220,7 +256,7 @@
           return;
         }
 
-        // Downscale very large images for speed/reliability
+        // Downscale large images for speed/reliability
         const maxW = 1600;
         let bmp;
         try {
