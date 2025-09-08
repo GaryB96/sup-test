@@ -333,7 +333,6 @@ body:not(.logged-in) #accountActions { display: none; }
    Notes Modal – refreshed UI
    =========================== */
 :root{
-  --sidebar-width: 200px;
   --modal-bg: rgba(20, 20, 25, 0.5);
   --card-bg: #ffffff;
   --text: #0f172a;
@@ -346,7 +345,6 @@ body:not(.logged-in) #accountActions { display: none; }
 
 @media (prefers-color-scheme: dark) {
   :root{
-  --sidebar-width: 200px;
     --modal-bg: rgba(10, 10, 12, 0.55);
     --card-bg: #0b1220;
     --text: #e2e8f0;
@@ -578,7 +576,7 @@ body:not(.logged-in) #accountActions { display: none; }
   position: fixed;
   top: 0;
   left: 0;
-  width: var(--sidebar-width);
+  width: 200px;
   height: 100dvh;
   background: #0b1220;
   border-right: 1px solid #22c55e;
@@ -850,10 +848,8 @@ body:not(.logged-in) #accountActions { display: none; }
 /* Utility (you already use this on .sidebar.hidden) */
 .hidden { display: none !important; }
 
-/* Push main content to the right when sidebar is visible 
-body.logged-in main { margin-left: calc(var(--sidebar-width) + 20px); }*/
-body.logged-in main { margin-left: 220px; transition: margin-left .28s ease; }
-body.sidebar-collapsed main { margin-left: calc(var(--sidebar-tab-width, 25px) + 10px); }
+/* Push main content to the right when sidebar is visible */
+body.logged-in main { margin-left: 220px; }
 
 /* === Supplement summaries: responsive grid + size presets === */
 
@@ -914,7 +910,6 @@ body.sidebar-collapsed main { margin-left: calc(var(--sidebar-tab-width, 25px) +
 
 /* === Sidebar Peek Tab & Collapse (appended) === */
 :root{
-  --sidebar-width: 200px;
   --sidebar-accent: #22c55e;             /* green accent for border/tab */
   --sidebar-tab-width: 25px;             /* visible width when collapsed */
   --sidebar-tab-height: 28px;
@@ -924,7 +919,7 @@ body.sidebar-collapsed main { margin-left: calc(var(--sidebar-tab-width, 25px) +
 /* Ensure the sidebar sits above content and can be collapsed via transform */
 .sidebar{
   will-change: transform;
-  transition: transform 1.3s ease;
+  transition: transform .28s ease;
   overflow: visible;
 }
 
@@ -956,7 +951,7 @@ body.sidebar-collapsed main { margin-left: calc(var(--sidebar-tab-width, 25px) +
 
 /* When collapsed, bring the tab back flush with the sidebar edge */
 .sidebar[data-collapsed="true"] .sidebar-tab{
-  transform: translateX(100%);
+  transform: translateX(0);
 }
 
 /* Optional: rotate chevron on collapse */
@@ -970,12 +965,12 @@ body.sidebar-collapsed main { margin-left: calc(var(--sidebar-tab-width, 25px) +
     transform: translateX(100%);           /* always inside on small screens */
   }
   :root{
-  --sidebar-width: 200px;
     --sidebar-tab-width: 20px;          /* bigger target for touch */
     --sidebar-tab-height: 25px;
   }
 }
 
-
-/* Main shift when sidebar collapsed */
-body.sidebar-collapsed main { margin-left: calc(var(--sidebar-tab-width) + 8px); transition: margin-left .28s ease; }
+body.sidebar-collapsed main {
+  margin-left: calc(var(--sidebar-tab-width, 25px) + 10px);
+  transition: margin-left .28s ease;
+}

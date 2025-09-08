@@ -4,7 +4,6 @@
   const tab = document.getElementById('sidebarTab');
   if (!sidebar || !tab) return;
 
-  // Helper to set collapsed state
   function setCollapsed(collapsed){
     sidebar.setAttribute('data-collapsed', String(collapsed));
     document.body.classList.toggle('sidebar-collapsed', collapsed);
@@ -13,9 +12,9 @@
     tab.setAttribute('aria-expanded', String(!collapsed));
   }
 
-  // Initialize from attribute or default (collapse on very small screens)
+  // Initialize
   const initial = sidebar.getAttribute('data-collapsed');
-  if (initial === null) {
+  if (initial === null){
     const mq = window.matchMedia('(max-width: 600px)');
     setCollapsed(mq.matches);
   } else {
