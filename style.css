@@ -622,7 +622,7 @@ body:not(.logged-in) #accountActions { display: none; }
 #sidebar .banner-logo {
   position: absolute;
   bottom: 10%;
-  left: -10%;
+  left: -4%;
   height: auto;
   display: block;
   max-width: 80%;
@@ -911,7 +911,7 @@ body.logged-in main { margin-left: 220px; }
 /* === Sidebar Peek Tab & Collapse (appended) === */
 :root{
   --sidebar-accent: #22c55e;             /* green accent for border/tab */
-  --sidebar-tab-width: 36px;             /* visible width when collapsed */
+  --sidebar-tab-width: 25px;             /* visible width when collapsed */
   --sidebar-tab-height: 28px;
   --sidebar-tab-overhang: 0px;           /* not used with transform method */
 }
@@ -919,7 +919,8 @@ body.logged-in main { margin-left: 220px; }
 /* Ensure the sidebar sits above content and can be collapsed via transform */
 .sidebar{
   will-change: transform;
-  transition: transform .2s ease;
+  transition: transform 1.3s ease;
+  overflow: visible;
 }
 
 /* Collapse: slide sidebar left, leaving tab width visible */
@@ -927,11 +928,11 @@ body.logged-in main { margin-left: 220px; }
   transform: translateX(calc(-100% + var(--sidebar-tab-width)));
 }
 
-/* The top-right tab */
+/* TAB: sit at the right *edge* of the sidebar */
 .sidebar .sidebar-tab{
   position: absolute;
-  top: 16px;
-  right: -36px;
+  top: clamp(8px, 2vh, 16px);
+  right: 0;                             /* ← no negative offsets */
   width: var(--sidebar-tab-width);
   height: var(--sidebar-tab-height);
   display: inline-flex;
@@ -944,14 +945,27 @@ body.logged-in main { margin-left: 220px; }
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
   cursor: pointer;
   z-index: 1000;
+  /* When expanded, nudge the tab OUTSIDE the sidebar by its width */
+  transform: translateX(100%);
 }
 
-.sidebar .sidebar-tab .sidebar-tab-icon{
-  display: inline-block;
-  transition: transform .2s ease;
+/* When collapsed, bring the tab back flush with the sidebar edge */
+.sidebar[data-collapsed="true"] .sidebar-tab{
+  transform: translateX(100%);
 }
 
-/* Rotate icon when collapsed */
-.sidebar[data-collapsed="true"] .sidebar-tab .sidebar-tab-icon{
-  transform: rotate(180deg);
+/* Optional: rotate chevron on collapse */
+.sidebar .sidebar-tab .sidebar-tab-icon{ transition: transform 1.2s; }
+.sidebar[data-collapsed="true"] .sidebar-tab .sidebar-tab-icon{ transform: rotate(180deg); }
+
+/* Phone tweaks: keep tab *inside* so it's guaranteed visible */
+@media (max-width: 600px){
+  .sidebar .sidebar-tab{
+    right: 0;
+    transform: translateX(0);           /* always inside on small screens */
+  }
+  :root{
+    --sidebar-tab-width: 40px;          /* bigger target for touch */
+    --sidebar-tab-height: 32px;
+  }
 }
