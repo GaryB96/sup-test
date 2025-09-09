@@ -18,33 +18,6 @@
     if (!document.getElementById('barcode-modal-styles')) {
       const style = document.createElement('style');
       style.id = 'barcode-modal-styles';
-      style.textContent = `
-#barcodeOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; z-index: 9999; }
-#barcodeModal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 10000; }
-#barcodeModal .bm-card {
-  background: #fff; width: min(92vw, 420px); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.25);
-  padding: 18px; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-}
-#barcodeModal h2 { margin: 0 0 8px; font-size: 18px; }
-#barcodeModal .bm-sub { color: #555; font-size: 12px; margin-bottom: 12px; min-height: 16px; }
-#barcodeModal .bm-row { display: grid; grid-template-columns: 110px 1fr; gap: 10px; align-items: center; margin: 8px 0; }
-#barcodeModal label { font-size: 12px; color: #333; }
-#barcodeModal input[type="text"] {
-  width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;
-}
-#barcodeModal .bm-code {
-  padding: 8px 10px; background: #f6f7f8; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
-}
-#barcodeModal .bm-actions { display: flex; gap: 10px; justify-content: space-between; align-items: center; margin-top: 14px; flex-wrap: wrap; }
-#barcodeModal .bm-btn { border: 0; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-#barcodeModal .bm-btn.primary { background: #111827; color: #fff; }
-#barcodeModal .bm-btn.secondary { background: #e5e7eb; color: #111827; }
-#barcodeModal .bm-links { display: flex; gap: 8px; flex-wrap: wrap; }
-#barcodeModal .bm-link {
-  display: inline-block; text-decoration: none; padding: 8px 10px; border-radius: 8px; background: #f3f4f6; color: #111827; font-size: 13px;
-}
-      `;
       document.head.appendChild(style);
     }
 
@@ -56,53 +29,6 @@
     modal.id = 'barcodeModal';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
-    modal.innerHTML = `
-      <div class="bm-card" role="document">
-        <h2>Scan result</h2>
-        <div class="bm-sub" id="bm_status"></div>
-
-        <div class="bm-row">
-          <label>Barcode</label>
-          <div class="bm-code">
-            <span id="bm_codeValue">—</span>
-            <button type="button" class="bm-btn secondary" id="bm_copyBtn">Copy</button>
-          </div>
-        </div>
-
-        <div class="bm-row">
-          <label for="bm_name">Product name</label>
-          <input id="bm_name" type="text" value="">
-        </div>
-
-        <div class="bm-row">
-          <label for="bm_brand">Brand</label>
-          <input id="bm_brand" type="text" value="">
-        </div>
-
-        <div class="bm-row">
-          <label for="bm_serving">Serving size / dose</label>
-          <input id="bm_serving" type="text" value="">
-        </div>
-
-        <div class="bm-row">
-          <label for="bm_servings">Servings per container</label>
-          <input id="bm_servings" type="text" value="">
-        </div>
-
-        <div class="bm-actions">
-          <div class="bm-links">
-            <a id="bm_link_off"   class="bm-link" target="_blank" rel="noopener">Open Food Facts</a>
-            <a id="bm_link_hc"    class="bm-link" target="_blank" rel="noopener">Search Health Canada</a>
-            <a id="bm_link_ggl"   class="bm-link" target="_blank" rel="noopener">Google</a>
-          </div>
-          <div>
-            <button type="button" class="bm-btn secondary" id="bm_closeBtn">Close</button>
-            <button type="button" class="bm-btn primary"   id="bm_saveBtn">Save</button>
-          </div>
-        </div>
-      </div>
-    `;
-
     document.body.appendChild(overlay);
     document.body.appendChild(modal);
   }
