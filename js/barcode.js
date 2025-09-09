@@ -375,16 +375,16 @@ async function makeBitmapFromFile(file, maxW = 1600) {
           alert('Barcode scanning is not supported on this browser. (Works on Chrome/Android; iOS needs fallback.)');
           return;
         }
-if (!bmp) {
-  alert('Could not read the image (unsupported format). Please try again with a standard photo.');
-  return;
-}
-// 1) Build a bitmap robustly
-let bmp;
+
+        let bmp;
 try {
   bmp = await makeBitmapFromFile(file, 1600);
 } catch (e) {
   console.error('Bitmap build threw:', e);
+}
+        if (!bmp) {
+  alert('Could not read the image (unsupported format). Please try again with a standard photo.');
+  return;
 }
 if (!bmp) {
   alert('Could not read the image (format/reader issue). Please try again with a JPEG/PNG photo.');
