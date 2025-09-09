@@ -11,10 +11,25 @@
     margin: auto;
 }
 
+:root{
+  --modal-bg: rgba(20, 20, 25, 0.5);
+  --card-bg: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --ring: #3b82f6;
+  --shadow: 0 10px 30px rgba(2, 6, 23, 0.15);
+  --radius: 16px;
+}
+
 /* Card */
 #barcodeModal .bm-card {
-  background: #fff; width: min(92vw, 420px); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.25);
-  padding: 18px; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #fff; 
+  width: min(92vw, 420px); 
+  border-radius: 12px; 
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  padding: 18px; 
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
 #barcodeModal h2 { margin: 0 0 8px; font-size: 18px; }
