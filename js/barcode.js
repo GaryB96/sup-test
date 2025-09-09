@@ -1,5 +1,6 @@
-// Scan with BarcodeDetector (where supported), open a modal, try Open Food Facts autofill,
-// and (Option A) show handy Search links to Health Canada LNHPD + Google if data is missing.
+
+// Barcode scanning with Chrome BarcodeDetector (when available) + robust ZXing fallback for iPhone/Safari.
+// Also includes HEIC guard and JPEG/PNG preference.
 (() => {
   function onReady(fn) {
     if (document.readyState === 'loading') {
@@ -7,162 +8,77 @@
     } else { fn(); }
   }
 
-  // --- Modal UI (injected once) ---
-  function ensureModal() {
-  let overlay = document.getElementById('barcodeOverlay');
-  let modal   = document.getElementById('barcodeModal');
-
-  // If not present in DOM, create it (keeps backward compatibility)
-  if (!overlay || !modal) {
-    // Inject styles only if not already present (if you're using barcodeStyle.css, you'll already have styles)
-    if (!document.getElementById('barcode-modal-styles')) {
-      const style = document.createElement('style');
-      style.id = 'barcode-modal-styles';
-      document.head.appendChild(style);
-    }
-
-    overlay = document.createElement('div');
-    overlay.id = 'barcodeOverlay';
-    overlay.setAttribute('aria-hidden', 'true');
-
-    modal = document.createElement('div');
-    modal.id = 'barcodeModal';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
-    document.body.appendChild(overlay);
-    document.body.appendChild(modal);
-  }
-
-  // Wire once
-  if (!modal.dataset.wired) {
-    const hide = () => {
-      overlay.style.display = 'none';
-      modal.style.display = 'none';
-      document.body.style.overflow = '';
-    };
-    overlay.addEventListener('click', hide);
-    modal.querySelector('#bm_closeBtn')?.addEventListener('click', hide);
-    modal.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(); });
-
-    // Copy handler
-    modal.querySelector('#bm_copyBtn')?.addEventListener('click', async () => {
-      const codeText = modal.querySelector('#bm_codeValue')?.textContent || '';
-      try { await navigator.clipboard.writeText(codeText); } catch {}
-    });
-
-    // Save handler – dispatch a custom event your app can catch
-    modal.querySelector('#bm_saveBtn')?.addEventListener('click', () => {
-      const detail = {
-        code: document.getElementById('bm_codeValue').textContent || '',
-        name: (document.getElementById('bm_name').value || '').trim(),
-        brand: (document.getElementById('bm_brand').value || '').trim(),
-        serving: (document.getElementById('bm_serving').value || '').trim(),
-        servingsPerContainer: (document.getElementById('bm_servings').value || '').trim(),
-      };
-      document.dispatchEvent(new CustomEvent('barcode:save', { detail }));
-      overlay.click(); // close
-    });
-
-    modal.dataset.wired = '1';
-  }
-}
-
+  // --- Minimal modal utils (assumes HTML lives in index.html) ---
   function setStatus(msg) {
     const el = document.getElementById('bm_status');
     if (el) el.textContent = msg || '';
   }
+  function populateModalFields({ code, name = '', brand = '', dose = '', serves = '' } = {}) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    const codeEl = document.getElementById('bm_codeValue');
+    if (codeEl) codeEl.textContent = code || '—';
+    set('bm_name', name); set('bm_brand', brand); set('bm_serving', dose); set('bm_servings', serves);
+  }
+  function ensureModal() {
+    const overlay = document.getElementById('barcodeOverlay');
+    const modal   = document.getElementById('barcodeModal');
+    if (!overlay || !modal) return;
 
-  // Build helpful search links (no fetch; just URLs in new tabs)
-  function setSearchLinks({ code, name, brand }) {
-    const off   = document.getElementById('bm_link_off');
-    const hc    = document.getElementById('bm_link_hc');
-    const ggl   = document.getElementById('bm_link_ggl');
+    if (!modal.dataset.wired) {
+      const hide = () => {
+        overlay.style.display = 'none';
+        modal.style.display   = 'none';
+        document.body.style.overflow = '';
+      };
+      overlay.addEventListener('click', hide);
+      modal.querySelector('#bm_closeBtn')?.addEventListener('click', hide);
+      modal.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(); });
 
-    const qName = (name && name.trim()) ? name.trim() : '';
-    const qBase = qName || code || '';
-    const encQ  = encodeURIComponent(qBase);
+      modal.querySelector('#bm_copyBtn')?.addEventListener('click', async () => {
+        const codeText = document.getElementById('bm_codeValue')?.textContent || '';
+        try { await navigator.clipboard.writeText(codeText); } catch {}
+      });
 
-    if (off) off.href = code ? `https://world.openfoodfacts.org/product/${encodeURIComponent(code)}` : 'https://world.openfoodfacts.org/';
-    // Health Canada LNHPD doesn’t have a simple JSON API; use a Google site search
-    // Restrict to the official LNHPD host path:
-    const hcQuery = `site:health-products.canada.ca/lnhpd-bdpsnh ${qBase}`;
-    if (hc) hc.href = `https://www.google.com/search?q=${encodeURIComponent(hcQuery)}`;
+      modal.querySelector('#bm_saveBtn')?.addEventListener('click', () => {
+        const detail = {
+          code: document.getElementById('bm_codeValue')?.textContent || '',
+          name: (document.getElementById('bm_name')?.value || '').trim(),
+          brand: (document.getElementById('bm_brand')?.value || '').trim(),
+          serving: (document.getElementById('bm_serving')?.value || '').trim(),
+          servingsPerContainer: (document.getElementById('bm_servings')?.value || '').trim(),
+        };
+        document.dispatchEvent(new CustomEvent('barcode:save', { detail }));
+        overlay.click();
+      });
 
-    // General Google search fallback (prefer name if present)
-    if (ggl) {
-      let g = qName;
-      if (brand) g = `${brand} ${g}`.trim();
-      if (!g) g = code || '';
-      ggl.href = `https://www.google.com/search?q=${encodeURIComponent(g)}`;
+      modal.dataset.wired = '1';
     }
   }
+  window.openBarcodeModal = () => {
+    ensureModal();
+    const overlay = document.getElementById('barcodeOverlay');
+    const modal   = document.getElementById('barcodeModal');
+    if (!overlay || !modal) return;
+    overlay.style.display = 'block';
+    modal.style.display   = 'flex';
+    document.body.style.overflow = 'hidden';
+    document.getElementById('bm_name')?.focus();
+  };
 
-  // --- Health Canada LNHPD fetch (free API) ---
-// Query by brand and/or product name; if neither is available yet, try the raw barcode via `search=`.
-async function fetchProductInfoFromHC({ name = '', brand = '', code = '' }, { timeoutMs = 8000 } = {}) {
-  const base = 'https://health-products.canada.ca/api/natural-licences/';
-  const q = (brand || name || code || '').trim();
-  if (!q) return null;
-
-  const urls = [
-    `${base}?lang=en&type=json&search=${encodeURIComponent(q)}`,
-    `${base}?lang=en&type=json&brandname=${encodeURIComponent(q)}`,
-    `${base}?lang=en&type=json&productname=${encodeURIComponent(q)}`
-  ];
-
-  const ac = new AbortController();
-  const to = setTimeout(() => ac.abort(), timeoutMs);
-
-  try {
-    for (const url of urls) {
-      try {
-        const res = await fetch(url, { signal: ac.signal, headers: { 'Accept': 'application/json' } });
+  // --- External lookups (kept simple for this patch) ---
+  async function fetchProductInfoFromOFF(code, { timeoutMs = 6000 } = {}) {
+    const candidates = [code];
+    if (/^\d{12}$/.test(code)) candidates.push('0' + code); // UPC-A -> EAN-13
+    const ac = new AbortController();
+    const to = setTimeout(() => ac.abort(), timeoutMs);
+    try {
+      for (const c of candidates) {
+        const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(c)}.json`, {
+          signal: ac.signal, headers: { 'Accept': 'application/json' }
+        });
         if (!res.ok) continue;
         const data = await res.json();
-        const first = Array.isArray(data) ? data[0] : (data && data.results ? data.results[0] : null);
-        if (!first) continue;
-
-        // Pull likely fields; schema can vary across endpoints
-        const getFirst = (obj, keys) => {
-          for (const k of keys) {
-            if (obj && obj[k] != null && String(obj[k]).trim() !== '') return String(obj[k]).trim();
-          }
-          return '';
-        };
-
-        const mapped = {
-          name:   getFirst(first, ['product_name_en', 'product_name', 'licence_name_en', 'licence_name', 'name']),
-          brand:  getFirst(first, ['brand_name_en', 'brand_name', 'brandname', 'brand']),
-          dose:   getFirst(first, ['recommended_dose', 'dose', 'posology', 'serving_size']),
-          serves: getFirst(first, ['servings_per_container', 'servings', 'net_content', 'unit_count'])
-        };
-
-        if (mapped.name || mapped.brand || mapped.dose || mapped.serves) return mapped;
-      } catch {
-        // try next url
-      }
-    }
-    return null;
-  } finally {
-    clearTimeout(to);
-  }
-}
-
-
-async function fetchProductInfoFromOFF(code, { timeoutMs = 6000 } = {}) {
-  const candidates = [code];
-  if (/^\d{12}$/.test(code)) candidates.push('0' + code);
-
-  const ac = new AbortController();
-  const to = setTimeout(() => ac.abort(), timeoutMs);
-  try {
-    for (const c of candidates) {
-      const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(c)}.json`;
-      try {
-        const res = await fetch(url, { signal: ac.signal, headers: { 'Accept': 'application/json' } });
-        if (!res.ok) continue;
-        const data = await res.json();
-        const p = data && data.product ? data.product : null;
+        const p = data && data.product;
         if (!p) continue;
         const name   = (p.product_name || '').trim();
         const brand  = (p.brands || '').split(',')[0]?.trim() || '';
@@ -170,129 +86,156 @@ async function fetchProductInfoFromOFF(code, { timeoutMs = 6000 } = {}) {
         const serves = (p.number_of_servings != null ? String(p.number_of_servings)
                         : (p.servings != null ? String(p.servings) : '')).trim();
         if (name || brand || dose || serves) return { name, brand, dose, serves };
-      } catch (e) {
-        // try next candidate
       }
+      return null;
+    } catch (e) {
+      console.warn('OFF lookup issue:', e);
+      return null;
+    } finally { clearTimeout(to); }
+  }
+
+  async function openModalWithAutoFill(code, fileForOCR = null) {
+    ensureModal();
+    const overlay = document.getElementById('barcodeOverlay');
+    const modal   = document.getElementById('barcodeModal');
+    if (!overlay || !modal) return;
+    overlay.style.display = 'block';
+    modal.style.display   = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    setStatus('Looking up product info…');
+    populateModalFields({ code });
+
+    const off = await fetchProductInfoFromOFF(code);
+    if (off) populateModalFields({ code, name: off.name, brand: off.brand, dose: off.dose, serves: off.serves });
+    setStatus('');
+  }
+
+  // --- Image helpers ---
+  async function makeBitmapFromFile(file, maxW = 1600) {
+    try { return await createImageBitmap(file, { resizeWidth: maxW, resizeQuality: 'high' }); } catch {}
+    try { return await createImageBitmap(file); } catch {}
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = url;
+      });
+      const scale = img.width > maxW ? (maxW / img.width) : 1;
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d', { willReadFrequently: true }).drawImage(img, 0, 0, w, h);
+      if ('createImageBitmap' in window) { try { return await createImageBitmap(canvas); } catch {} }
+      return canvas;
+    } finally { URL.revokeObjectURL(url); }
+  }
+
+  // --- ZXing robust fallback ---
+  async function decodeWithZXingRobust(file) {
+    if (!(window.ZXing && ZXing.BrowserMultiFormatReader)) {
+      console.warn('ZXing not available');
+      return '';
     }
-    return null;
-  } finally {
-    clearTimeout(to);
-  }
-}
 
-
-
-  function populateModalFields({ code, name = '', brand = '', dose = '', serves = '' } = {}) {
-    document.getElementById('bm_codeValue').textContent = code || '—';
-    document.getElementById('bm_name').value = name;
-    document.getElementById('bm_brand').value = brand;
-    document.getElementById('bm_serving').value = dose;
-    document.getElementById('bm_servings').value = serves;
-    setSearchLinks({ code, name, brand });
-  }
-
-  async function openModalWithAutoFill(code) {
-  ensureModal();
-  setStatus('Looking up product info…');
-
-  const overlay = document.getElementById('barcodeOverlay');
-  const modal   = document.getElementById('barcodeModal');
-  overlay.style.display = 'block';
-  modal.style.display   = 'flex';
-  document.body.style.overflow = 'hidden';
-
-  // Start with barcode only
-  populateModalFields({ code });
-
-  // 1) Try Health Canada first (may succeed if their search matches code text)
-  let best = await fetchProductInfoFromHC({ code });
-  if (best) {
-    populateModalFields({
-      code,
-      name:   best.name,
-      brand:  best.brand,
-      dose:   best.dose,
-      serves: best.serves
-    });
-  }
-
-  // 2) Try Open Food Facts next (often provides name/brand when HC-by-code didn’t)
-  const off = await fetchProductInfoFromOFF(code);
-  if (off) {
-    // Only fill fields that are still empty so we don’t clobber HC results
-    const curr = {
-      name:   document.getElementById('bm_name').value.trim(),
-      brand:  document.getElementById('bm_brand').value.trim(),
-      dose:   document.getElementById('bm_serving').value.trim(),
-      serves: document.getElementById('bm_servings').value.trim(),
-    };
-    populateModalFields({
-      code,
-      name:   curr.name   || off.name   || '',
-      brand:  curr.brand  || off.brand  || '',
-      dose:   curr.dose   || off.dose   || '',
-      serves: curr.serves || off.serves || ''
-    });
-
-    // 3) If HC didn’t give dose/servings, but OFF provided name/brand, re-try HC with better query
-    if ((!curr.dose && !curr.serves) && (off.name || off.brand)) {
-      const hc2 = await fetchProductInfoFromHC({ name: off.name || '', brand: off.brand || '' });
-      if (hc2) {
-        const nowDose   = document.getElementById('bm_serving').value.trim();
-        const nowServes = document.getElementById('bm_servings').value.trim();
-        if (!nowDose   && hc2.dose)   document.getElementById('bm_serving').value  = hc2.dose;
-        if (!nowServes && hc2.serves) document.getElementById('bm_servings').value = hc2.serves;
-      }
+    // Load to <img>
+    const url = URL.createObjectURL(file);
+    let img;
+    try {
+      img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = url;
+      });
+    } catch (e) {
+      console.warn('Image load failed:', e);
+      URL.revokeObjectURL(url);
+      return '';
     }
-  }
-
-  // Done
-  setStatus('');
-  // Wire HC manual fetch button (in case the user edits name/brand and tries again)
-  
-  modal.querySelector('#bm_name').focus();
-}
-
-// Try multiple ways to get a bitmap-like source the detector can read.
-async function makeBitmapFromFile(file, maxW = 1600) {
-  // 1) Fast path: ImageBitmap with resize (where supported)
-  try {
-    return await createImageBitmap(file, { resizeWidth: maxW, resizeQuality: 'high' });
-  } catch (e) { /* continue */ }
-  // 2) ImageBitmap without resize
-  try {
-    return await createImageBitmap(file);
-  } catch (e) { /* continue */ }
-
-  // 3) Fallback: load via <img>, downscale on <canvas>, then create ImageBitmap from canvas
-  const url = URL.createObjectURL(file);
-  try {
-    const img = await new Promise((resolve, reject) => {
-      const i = new Image();
-      i.onload = () => resolve(i);
-      i.onerror = reject;
-      i.src = url;
-    });
-
-    const scale = img.width > maxW ? (maxW / img.width) : 1;
-    const w = Math.max(1, Math.round(img.width * scale));
-    const h = Math.max(1, Math.round(img.height * scale));
-
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    ctx.drawImage(img, 0, 0, w, h);
-
-    if ('createImageBitmap' in window) {
-      try { return await createImageBitmap(canvas); } catch (e) { /* fall through */ }
-    }
-    // Some implementations accept HTMLCanvasElement directly as an ImageBitmapSource
-    return canvas;
-  } finally {
     URL.revokeObjectURL(url);
+
+    const maxW = 2048;
+    const makeCanvas = (w, h) => {
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      return c;
+    };
+
+    const drawVariant = (angleDeg = 0, crop = 'full') => {
+      // Compute base size
+      const scale = img.width > maxW ? maxW / img.width : 1;
+      const baseW = Math.max(1, Math.round(img.width * scale));
+      const baseH = Math.max(1, Math.round(img.height * scale));
+
+      // Crop rect
+      let sx = 0, sy = 0, sw = img.width, sh = img.height;
+      if (crop === 'center') {
+        const cw = Math.round(img.width * 0.8);
+        const ch = Math.round(img.height * 0.8);
+        sx = Math.round((img.width - cw) / 2);
+        sy = Math.round((img.height - ch) / 2);
+        sw = cw; sh = ch;
+      }
+
+      // Target size after scale
+      const tw = Math.max(1, Math.round(sw * scale));
+      const th = Math.max(1, Math.round(sh * scale));
+
+      // Rotate canvas if needed
+      const rad = angleDeg * Math.PI / 180;
+      const rot90 = angleDeg % 180 !== 0;
+      const outW = rot90 ? th : tw;
+      const outH = rot90 ? tw : th;
+      const canvas = makeCanvas(outW, outH);
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.save();
+      // Move center and rotate
+      ctx.translate(outW / 2, outH / 2);
+      ctx.rotate(rad);
+      // Draw so that rotated image is centered
+      ctx.drawImage(img, sx, sy, sw, sh, -tw / 2, -th / 2, tw, th);
+      ctx.restore();
+      return canvas.toDataURL('image/jpeg', 0.92);
+    };
+
+    // ZXing reader with hints
+    const hints = new Map();
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+      ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.UPC_A,
+      ZXing.BarcodeFormat.EAN_8,  ZXing.BarcodeFormat.UPC_E,
+      ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39
+    ]);
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+    const reader = new ZXing.BrowserMultiFormatReader(hints);
+
+    const variants = [
+      { a: 0,   c: 'full'   },
+      { a: 0,   c: 'center' },
+      { a: 90,  c: 'full'   },
+      { a: 270, c: 'full'   },
+      { a: 180, c: 'full'   },
+    ];
+
+    for (const v of variants) {
+      try {
+        const dataUrl = drawVariant(v.a, v.c);
+        const res = await reader.decodeFromImageUrl(dataUrl);
+        const text = res && (res.text || res.getText?.());
+        if (text && String(text).trim()) {
+          reader.reset();
+          return String(text).trim();
+        }
+      } catch (e) {
+        // continue with next variant
+      }
+    }
+    reader.reset();
+    return '';
   }
-}
 
   // --- Scanner (photo → decode) ---
   onReady(() => {
@@ -301,55 +244,14 @@ async function makeBitmapFromFile(file, maxW = 1600) {
 
     const cameraInput = document.createElement('input');
     cameraInput.type = 'file';
-    cameraInput.accept = 'image/jpeg,image/png';
+    cameraInput.accept = 'image/jpeg,image/png'; // prefer JPEG/PNG (iOS HEIC can break canvas/ZXing)
     cameraInput.capture = 'environment';
     cameraInput.style.display = 'none';
     document.body.appendChild(cameraInput);
 
     btn.addEventListener('click', () => cameraInput.click());
 
-    
-    // iPhone/Safari fallback: decode with ZXing (re-encodes to JPEG for robustness)
-    async function decodeFileWithZXing(file) {
-      if (!(window.ZXing && ZXing.BrowserMultiFormatReader)) {
-        throw new Error('ZXing not loaded');
-      }
-      // Load the image from a blob URL
-      const url = URL.createObjectURL(file);
-      try {
-        const img = await new Promise((resolve, reject) => {
-          const i = new Image();
-          i.onload = () => resolve(i);
-          i.onerror = reject;
-          i.src = url;
-        });
-
-        // Downscale & re-encode as JPEG
-        const maxW = 1600;
-        const scale = img.width > maxW ? maxW / img.width : 1;
-        const w = Math.max(1, Math.round(img.width * scale));
-        const h = Math.max(1, Math.round(img.height * scale));
-
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d', { willReadFrequently: true }).drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-
-        // Decode with ZXing
-        const hints = new Map();
-        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-          ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.UPC_A,
-          ZXing.BarcodeFormat.EAN_8,  ZXing.BarcodeFormat.UPC_E,
-          ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39
-        ]);
-        const reader = new ZXing.BrowserMultiFormatReader(hints);
-        const result = await reader.decodeFromImageUrl(dataUrl);
-        return (result && (result.text || result.getText?.())) || '';
-      } finally {
-        URL.revokeObjectURL(url);
-      }
-    }
-cameraInput.addEventListener('change', async () => {
+    cameraInput.addEventListener('change', async () => {
       const file = cameraInput.files && cameraInput.files[0];
       if (!file) return;
 
@@ -373,26 +275,19 @@ cameraInput.addEventListener('change', async () => {
                 formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']
               });
               const res = await det.detect(bmp);
-              if (res && res.length) {
-                code = String(res[0].rawValue || '').trim();
-              }
+              if (res && res.length) code = String(res[0].rawValue || '').trim();
             }
-          } catch (_) {
-            // fall through to ZXing
-          }
+          } catch (_) { /* fall back to ZXing */ }
         }
 
         // iPhone/Safari fallback (or if BD found nothing)
         if (!code) {
-          try {
-            code = await decodeFileWithZXing(file);
-          } catch (e) {
-            console.warn('ZXing not available or failed:', e);
-          }
+          setStatus('Scanning photo…');
+          code = await decodeWithZXingRobust(file);
         }
 
         if (code) {
-          await openModalWithAutoFill(code);
+          await openModalWithAutoFill(code, file);
         } else {
           alert('No barcode detected. Try a closer, well-lit shot filling the frame.');
         }
@@ -400,6 +295,7 @@ cameraInput.addEventListener('change', async () => {
         console.error('Scan error:', err);
         alert('Could not read the image. Please try again.');
       } finally {
+        setStatus('');
         cameraInput.value = ''; // allow re-selecting the same photo
       }
     });
