@@ -333,7 +333,7 @@ async function makeBitmapFromFile(file, maxW = 1600) {
 
     const cameraInput = document.createElement('input');
     cameraInput.type = 'file';
-    cameraInput.accept = 'image/*';
+    cameraInput.accept = 'image/jpeg,image/png';
     cameraInput.capture = 'environment';
     cameraInput.style.display = 'none';
     document.body.appendChild(cameraInput);
