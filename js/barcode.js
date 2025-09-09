@@ -344,5 +344,5 @@ async function decodeWithZXingRobust(file) {
   reader.reset();
   return '';
 }
+});
 
-)();
