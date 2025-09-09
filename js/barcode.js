@@ -248,247 +248,101 @@
   }
 
   // ---------- ZXing robust fallback (iPhone) ----------
-  async function decodeWithZXingRobust(file) {
-    if (!(window.ZXing && ZXing.BrowserMultiFormatReader)) {
-      console.warn('ZXing not available');
-      return '';
-    }
-    // Load to <img>
-    const url = URL.createObjectURL(file);
-    let img;
-    try {
-      img = await new Promise((resolve, reject) => {
-        const i = new Image();
-        i.onload = () => resolve(i);
-        i.onerror = reject;
-        i.src = url;
-      });
-    } catch (e) {
-      console.warn('Image load failed:', e);
-      URL.revokeObjectURL(url);
-      return '';
-    }
-    URL.revokeObjectURL(url);
-
-    const maxW = 2048;
-    const makeCanvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
-
-    const drawVariant = (angleDeg = 0, crop = 'full') => {
-      const scale = img.width > maxW ? maxW / img.width : 1;
-      const baseW = Math.max(1, Math.round(img.width * scale));
-      const baseH = Math.max(1, Math.round(img.height * scale));
-
-      let sx = 0, sy = 0, sw = img.width, sh = img.height;
-      if (crop === 'center') {
-        const cw = Math.round(img.width * 0.8);
-        const ch = Math.round(img.height * 0.8);
-        sx = Math.round((img.width - cw) / 2);
-        sy = Math.round((img.height - ch) / 2);
-        sw = cw; sh = ch;
-      }
-
-      const tw = Math.max(1, Math.round(sw * scale));
-      const th = Math.max(1, Math.round(sh * scale));
-
-      const rad = angleDeg * Math.PI / 180;
-      const rot90 = angleDeg % 180 !== 0;
-      const outW = rot90 ? th : tw;
-      const outH = rot90 ? tw : th;
-      const canvas = makeCanvas(outW, outH);
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      ctx.save();
-      ctx.translate(outW / 2, outH / 2);
-      ctx.rotate(rad);
-      ctx.drawImage(img, sx, sy, sw, sh, -tw / 2, -th / 2, tw, th);
-      ctx.restore();
-      return canvas.toDataURL('image/jpeg', 0.92);
-    };
-
-    const hints = new Map();
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-      ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.UPC_A,
-      ZXing.BarcodeFormat.EAN_8,  ZXing.BarcodeFormat.UPC_E,
-      ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39
-    ]);
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    const reader = new ZXing.BrowserMultiFormatReader(hints);
-
-    const variants = [
-      { a: 0,   c: 'full'   },
-      { a: 0,   c: 'center' },
-      { a: 90,  c: 'full'   },
-      { a: 270, c: 'full'   },
-      { a: 180, c: 'full'   },
-    ];
-
-    for (const v of variants) {
-      try {
-        const dataUrl = drawVariant(v.a, v.c);
-        const res = await reader.decodeFromImageUrl(dataUrl);
-        const text = res && (res.text || res.getText?.());
-        if (text && String(text).trim()) {
-          reader.reset();
-          return String(text).trim();
-        }
-      } catch (e) {
-        // continue
-      }
-    }
-    reader.reset();
+  
+async function decodeWithZXingRobust(file) {
+  if (!(window.ZXing && ZXing.BrowserMultiFormatReader)) {
+    console.warn('ZXing not available');
     return '';
   }
 
-  // ---------- Autofill flow ----------
-  function getCurrentFieldValues() {
-    return {
-      name:   document.getElementById('bm_name')?.value?.trim() || '',
-      brand:  document.getElementById('bm_brand')?.value?.trim() || '',
-      dose:   document.getElementById('bm_serving')?.value?.trim() || '',
-      serves: document.getElementById('bm_servings')?.value?.trim() || '',
-    };
-  }
-  function anyFilled(curr) { return !!(curr.name || curr.brand || curr.dose || curr.serves); }
-
-  async function openModalWithAutoFill(code, fileForOCR = null) {
-    ensureModal();
-    const overlay = document.getElementById('barcodeOverlay');
-    const modal   = document.getElementById('barcodeModal');
-    if (!overlay || !modal) return;
-    overlay.style.display = 'block';
-    modal.style.display   = 'flex';
-    document.body.style.overflow = 'hidden';
-
-    setStatus('Looking up product info…');
-    populateModalFields({ code });
-
-    // Try OFF first (barcode-based)
-    const off = await fetchProductInfoFromOFF(code);
-    if (off) {
-      const curr = getCurrentFieldValues();
-      populateModalFields({
-        code,
-        name:   curr.name   || off.name   || '',
-        brand:  curr.brand  || off.brand  || '',
-        dose:   curr.dose   || off.dose   || '',
-        serves: curr.serves || off.serves || ''
-      });
-    }
-
-    // Try Health Canada with whatever we have now
-    const curr1 = getCurrentFieldValues();
-    if (curr1.name || curr1.brand || code) {
-      const hc = await fetchProductInfoFromHC({ name: curr1.name, brand: curr1.brand, code });
-      if (hc) {
-        const now = getCurrentFieldValues();
-        populateModalFields({
-          code,
-          name:   now.name   || hc.name   || '',
-          brand:  now.brand  || hc.brand  || '',
-          dose:   now.dose   || hc.dose   || '',
-          serves: now.serves || hc.serves || ''
-        });
-      }
-    }
-
-    // Optional OCR if still empty and Tesseract present
-    const curr2 = getCurrentFieldValues();
-    if (!anyFilled(curr2) && fileForOCR && window.Tesseract && window.Tesseract.recognize) {
-      try {
-        setStatus('Reading label text…');
-        const ocr = await ocrFrontLabel(fileForOCR);
-        if (ocr) {
-          const merged = {
-            code,
-            name:   curr2.name   || ocr.name  || '',
-            brand:  curr2.brand  || ocr.brand || '',
-            dose:   curr2.dose   || ocr.dose  || '',
-            serves: curr2.serves || ''
-          };
-          populateModalFields(merged);
-          if (ocr.npn || ocr.din || ocr.name || ocr.brand) {
-            const hc2 = await fetchProductInfoFromHC({
-              name:  ocr.name || '',
-              brand: ocr.brand || '',
-              code:  ocr.npn || ocr.din || ''
-            });
-            if (hc2) {
-              const nowDose   = document.getElementById('bm_serving')?.value?.trim();
-              const nowServes = document.getElementById('bm_servings')?.value?.trim();
-              if (!nowDose   && hc2.dose)   document.getElementById('bm_serving').value  = hc2.dose;
-              if (!nowServes && hc2.serves) document.getElementById('bm_servings').value = hc2.serves;
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('OCR failed:', e);
-      }
-    }
-
-    setStatus('');
-    modal.querySelector('#bm_name')?.focus();
-  }
-
-  // ---------- Scanner (photo → decode) ----------
-  onReady(() => {
-    const btn = document.getElementById('barcodeBtn');
-    if (!btn) return;
-
-    const cameraInput = document.createElement('input');
-    cameraInput.type = 'file';
-    cameraInput.accept = 'image/jpeg,image/png'; // prefer JPEG/PNG (iOS HEIC can break canvas/ZXing)
-    cameraInput.capture = 'environment';
-    cameraInput.style.display = 'none';
-    document.body.appendChild(cameraInput);
-
-    btn.addEventListener('click', () => cameraInput.click());
-
-    cameraInput.addEventListener('change', async () => {
-      const file = cameraInput.files && cameraInput.files[0];
-      if (!file) return;
-
-      // HEIC/HEIF guard (common on iPhone)
-      const t = (file.type || '').toLowerCase();
-      if (t.includes('heic') || t.includes('heif')) {
-        alert('This photo is HEIC. Please retake as JPEG (Settings ▸ Camera ▸ Formats ▸ Most Compatible) or try again.');
-        cameraInput.value = '';
-        return;
-      }
-
-      try {
-        let code = '';
-
-        // Try native BarcodeDetector first (Android/desktop Chrome)
-        if ('BarcodeDetector' in window) {
-          try {
-            const bmp = await makeBitmapFromFile(file, 1600);
-            if (bmp) {
-              const det = new window.BarcodeDetector({
-                formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']
-              });
-              const res = await det.detect(bmp);
-              if (res && res.length) code = String(res[0].rawValue || '').trim();
-            }
-          } catch (_) { /* fall back to ZXing */ }
-        }
-
-        // iPhone/Safari fallback (or if BD found nothing)
-        if (!code) {
-          setStatus('Scanning photo…');
-          code = await decodeWithZXingRobust(file);
-        }
-
-        if (code) {
-          await openModalWithAutoFill(code, file);
-        } else {
-          alert('No barcode detected. Try a closer, well-lit shot filling the frame.');
-        }
-      } catch (err) {
-        console.error('Scan error:', err);
-        alert('Could not read the image. Please try again.');
-      } finally {
-        setStatus('');
-        cameraInput.value = ''; // allow re-selecting the same photo
-      }
-    });
+  // Read the image as a data URL (avoids CSP img-src blob: requirement on iOS)
+  const dataUrlOriginal = await new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onerror = () => reject(new Error('File read failed'));
+    fr.onload = () => resolve(fr.result);
+    fr.readAsDataURL(file);
   });
-})();
+
+  // Load it into an <img>
+  let img;
+  try {
+    img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = dataUrlOriginal;
+    });
+  } catch (e) {
+    console.warn('Image load failed:', e);
+    return '';
+  }
+
+  const maxW = 2048;
+  const makeCanvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+
+  const drawVariant = (angleDeg = 0, crop = 'full') => {
+    const scale = img.width > maxW ? maxW / img.width : 1;
+    const baseW = Math.max(1, Math.round(img.width * scale));
+    const baseH = Math.max(1, Math.round(img.height * scale));
+
+    let sx = 0, sy = 0, sw = img.width, sh = img.height;
+    if (crop === 'center') {
+      const cw = Math.round(img.width * 0.8);
+      const ch = Math.round(img.height * 0.8);
+      sx = Math.round((img.width - cw) / 2);
+      sy = Math.round((img.height - ch) / 2);
+      sw = cw; sh = ch;
+    }
+
+    const tw = Math.max(1, Math.round(sw * scale));
+    const th = Math.max(1, Math.round(sh * scale));
+
+    const rad = angleDeg * Math.PI / 180;
+    const rot90 = angleDeg % 180 !== 0;
+    const outW = rot90 ? th : tw;
+    const outH = rot90 ? tw : th;
+    const canvas = makeCanvas(outW, outH);
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.save();
+    ctx.translate(outW / 2, outH / 2);
+    ctx.rotate(rad);
+    ctx.drawImage(img, sx, sy, sw, sh, -tw / 2, -th / 2, tw, th);
+    ctx.restore();
+    return canvas.toDataURL('image/jpeg', 0.92);
+  };
+
+  const hints = new Map();
+  hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+    ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.UPC_A,
+    ZXing.BarcodeFormat.EAN_8,  ZXing.BarcodeFormat.UPC_E,
+    ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39
+  ]);
+  hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+  const reader = new ZXing.BrowserMultiFormatReader(hints);
+
+  const variants = [
+    { a: 0,   c: 'full'   },
+    { a: 0,   c: 'center' },
+    { a: 90,  c: 'full'   },
+    { a: 270, c: 'full'   },
+    { a: 180, c: 'full'   },
+  ];
+
+  for (const v of variants) {
+    try {
+      const dataUrl = drawVariant(v.a, v.c);
+      const res = await reader.decodeFromImageUrl(dataUrl);
+      const text = res && (res.text || res.getText?.());
+      if (text && String(text).trim()) {
+        reader.reset();
+        return String(text).trim();
+      }
+    } catch (e) {
+      // continue
+    }
+  }
+  reader.reset();
+  return '';
+}
+
+)();
