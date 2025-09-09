@@ -214,6 +214,32 @@ async function fetchProductInfoFromHC({ name = '', brand = '', code = '' }, { ti
 }
 
 
+async function fetchProductInfoFromOFF(code, { timeoutMs = 6000 } = {}) {
+  const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`;
+  const ac = new AbortController();
+  const to = setTimeout(() => ac.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: ac.signal, headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const p = data && data.product ? data.product : null;
+    if (!p) return null;
+    const name   = (p.product_name || '').trim();
+    const brand  = (p.brands || '').split(',')[0]?.trim() || '';
+    const dose   = (p.serving_size || (p.nutriments && p.nutriments.serving_size) || '').trim();
+    const serves = (p.number_of_servings != null ? String(p.number_of_servings)
+                    : (p.servings != null ? String(p.servings) : '')).trim();
+    return { name, brand, dose, serves };
+  } catch (err) {
+    console.warn('OFF lookup failed or blocked:', err);
+    return null;
+  } finally {
+    clearTimeout(to);
+  }
+}
+
+
+
   function populateModalFields({ code, name = '', brand = '', dose = '', serves = '' } = {}) {
     document.getElementById('bm_codeValue').textContent = code || '—';
     document.getElementById('bm_name').value = name;
@@ -281,7 +307,7 @@ async function fetchProductInfoFromHC({ name = '', brand = '', code = '' }, { ti
   // Done
   setStatus('');
   // Wire HC manual fetch button (in case the user edits name/brand and tries again)
-  hookHealthCanadaFetch();
+  
   modal.querySelector('#bm_name').focus();
 }
 
@@ -349,14 +375,25 @@ async function makeBitmapFromFile(file, maxW = 1600) {
           alert('Barcode scanning is not supported on this browser. (Works on Chrome/Android; iOS needs fallback.)');
           return;
         }
-
-        // Downscale large images for speed/reliability
-// Build a bitmap (robust across large images / formats)
-const bmp = await makeBitmapFromFile(file, 1600);
 if (!bmp) {
   alert('Could not read the image (unsupported format). Please try again with a standard photo.');
   return;
 }
+// 1) Build a bitmap robustly
+let bmp;
+try {
+  bmp = await makeBitmapFromFile(file, 1600);
+} catch (e) {
+  console.error('Bitmap build threw:', e);
+}
+if (!bmp) {
+  alert('Could not read the image (format/reader issue). Please try again with a JPEG/PNG photo.');
+  cameraInput.value = '';
+  return;
+}
+
+// 2) Run the detector
+
 
         const detector = new window.BarcodeDetector({
           formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']
