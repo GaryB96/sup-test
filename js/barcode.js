@@ -162,31 +162,57 @@
     }
   }
 
-  async function fetchProductInfoFromOFF(code, { timeoutMs = 6000 } = {}) {
-    const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`;
-    const ac = new AbortController();
-    const to = setTimeout(() => ac.abort(), timeoutMs);
-    try {
-      const res = await fetch(url, { signal: ac.signal, headers: { 'Accept': 'application/json' } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const p = data && data.product ? data.product : null;
-      if (!p) return null;
+  // --- Health Canada LNHPD fetch (free API) ---
+// Query by brand and/or product name; if neither is available yet, try the raw barcode via `search=`.
+async function fetchProductInfoFromHC({ name = '', brand = '', code = '' }, { timeoutMs = 8000 } = {}) {
+  const base = 'https://health-products.canada.ca/api/natural-licences/';
+  const q = (brand || name || code || '').trim();
+  if (!q) return null;
 
-      const name   = (p.product_name || '').trim();
-      const brand  = (p.brands || '').split(',')[0]?.trim() || '';
-      const dose   = (p.serving_size || (p.nutriments && p.nutriments.serving_size) || '').trim();
-      const serves = (p.number_of_servings != null ? String(p.number_of_servings)
-                      : (p.servings != null ? String(p.servings) : '')).trim();
+  const urls = [
+    `${base}?lang=en&type=json&search=${encodeURIComponent(q)}`,
+    `${base}?lang=en&type=json&brandname=${encodeURIComponent(q)}`,
+    `${base}?lang=en&type=json&productname=${encodeURIComponent(q)}`
+  ];
 
-      return { name, brand, dose, serves };
-    } catch (err) {
-      console.warn('OFF lookup failed or blocked:', err);
-      return null;
-    } finally {
-      clearTimeout(to);
+  const ac = new AbortController();
+  const to = setTimeout(() => ac.abort(), timeoutMs);
+
+  try {
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { signal: ac.signal, headers: { 'Accept': 'application/json' } });
+        if (!res.ok) continue;
+        const data = await res.json();
+        const first = Array.isArray(data) ? data[0] : (data && data.results ? data.results[0] : null);
+        if (!first) continue;
+
+        // Pull likely fields; schema can vary across endpoints
+        const getFirst = (obj, keys) => {
+          for (const k of keys) {
+            if (obj && obj[k] != null && String(obj[k]).trim() !== '') return String(obj[k]).trim();
+          }
+          return '';
+        };
+
+        const mapped = {
+          name:   getFirst(first, ['product_name_en', 'product_name', 'licence_name_en', 'licence_name', 'name']),
+          brand:  getFirst(first, ['brand_name_en', 'brand_name', 'brandname', 'brand']),
+          dose:   getFirst(first, ['recommended_dose', 'dose', 'posology', 'serving_size']),
+          serves: getFirst(first, ['servings_per_container', 'servings', 'net_content', 'unit_count'])
+        };
+
+        if (mapped.name || mapped.brand || mapped.dose || mapped.serves) return mapped;
+      } catch {
+        // try next url
+      }
     }
+    return null;
+  } finally {
+    clearTimeout(to);
   }
+}
+
 
   function populateModalFields({ code, name = '', brand = '', dose = '', serves = '' } = {}) {
     document.getElementById('bm_codeValue').textContent = code || '—';
@@ -198,38 +224,66 @@
   }
 
   async function openModalWithAutoFill(code) {
-    ensureModal();
-    setStatus('Looking up product info…');
+  ensureModal();
+  setStatus('Looking up product info…');
 
-    // Show modal immediately
-    const overlay = document.getElementById('barcodeOverlay');
-    const modal   = document.getElementById('barcodeModal');
-    overlay.style.display = 'block';
-    modal.style.display   = 'flex';
-    document.body.style.overflow = 'hidden';
+  const overlay = document.getElementById('barcodeOverlay');
+  const modal   = document.getElementById('barcodeModal');
+  overlay.style.display = 'block';
+  modal.style.display   = 'flex';
+  document.body.style.overflow = 'hidden';
 
-    // Start with code only
-    populateModalFields({ code });
+  // Start with barcode only
+  populateModalFields({ code });
 
-    // Try OFF
-    const info = await fetchProductInfoFromOFF(code);
-    if (info) {
-      populateModalFields({
-        code,
-        name: info.name,
-        brand: info.brand,
-        dose: info.dose,
-        serves: info.serves
-      });
-      setStatus('');
-    } else {
-      // Nothing found: keep fields empty but links active
-      setStatus(''); // or 'No info found. Use the links below to search.'
-    }
-
-    // Focus first field
-    modal.querySelector('#bm_name').focus();
+  // 1) Try Health Canada first (may succeed if their search matches code text)
+  let best = await fetchProductInfoFromHC({ code });
+  if (best) {
+    populateModalFields({
+      code,
+      name:   best.name,
+      brand:  best.brand,
+      dose:   best.dose,
+      serves: best.serves
+    });
   }
+
+  // 2) Try Open Food Facts next (often provides name/brand when HC-by-code didn’t)
+  const off = await fetchProductInfoFromOFF(code);
+  if (off) {
+    // Only fill fields that are still empty so we don’t clobber HC results
+    const curr = {
+      name:   document.getElementById('bm_name').value.trim(),
+      brand:  document.getElementById('bm_brand').value.trim(),
+      dose:   document.getElementById('bm_serving').value.trim(),
+      serves: document.getElementById('bm_servings').value.trim(),
+    };
+    populateModalFields({
+      code,
+      name:   curr.name   || off.name   || '',
+      brand:  curr.brand  || off.brand  || '',
+      dose:   curr.dose   || off.dose   || '',
+      serves: curr.serves || off.serves || ''
+    });
+
+    // 3) If HC didn’t give dose/servings, but OFF provided name/brand, re-try HC with better query
+    if ((!curr.dose && !curr.serves) && (off.name || off.brand)) {
+      const hc2 = await fetchProductInfoFromHC({ name: off.name || '', brand: off.brand || '' });
+      if (hc2) {
+        const nowDose   = document.getElementById('bm_serving').value.trim();
+        const nowServes = document.getElementById('bm_servings').value.trim();
+        if (!nowDose   && hc2.dose)   document.getElementById('bm_serving').value  = hc2.dose;
+        if (!nowServes && hc2.serves) document.getElementById('bm_servings').value = hc2.serves;
+      }
+    }
+  }
+
+  // Done
+  setStatus('');
+  // Wire HC manual fetch button (in case the user edits name/brand and tries again)
+  hookHealthCanadaFetch();
+  modal.querySelector('#bm_name').focus();
+}
 
   // --- Scanner (photo → decode) ---
   onReady(() => {
