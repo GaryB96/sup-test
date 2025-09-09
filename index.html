@@ -5,7 +5,7 @@
     default-src 'self';
     script-src 'self' https://www.gstatic.com 'unsafe-inline';
     style-src 'self' 'unsafe-inline';
-    connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://world.openfoodfacts.org https://health-products.canada.ca;
+    connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://world.openfoodfacts.org https://health-products.canada.ca https://cdn.jsdelivr.net;
     img-src 'self' data:;
     font-src 'self';
     object-src 'none';
@@ -103,6 +103,9 @@
       <button id="notesBtn" class="sidebar-btn">Notes</button>
       <button id="addSupplementBtn" class="sidebar-btn">Add New Supplement</button>
       <button id="barcodeBtn" class="sidebar-btn">Barcode Scanner</button>
+
+      <button onclick="openBarcodeModal()">Open modal (dev)</button>
+
       <img id="icon" src="./assets/logo-icon.svg" alt="logo" class="banner-logo">
     </aside>
 
