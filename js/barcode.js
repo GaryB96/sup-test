@@ -285,6 +285,47 @@ async function fetchProductInfoFromHC({ name = '', brand = '', code = '' }, { ti
   modal.querySelector('#bm_name').focus();
 }
 
+// Try multiple ways to get a bitmap-like source the detector can read.
+async function makeBitmapFromFile(file, maxW = 1600) {
+  // 1) Fast path: ImageBitmap with resize (where supported)
+  try {
+    return await createImageBitmap(file, { resizeWidth: maxW, resizeQuality: 'high' });
+  } catch (e) { /* continue */ }
+  // 2) ImageBitmap without resize
+  try {
+    return await createImageBitmap(file);
+  } catch (e) { /* continue */ }
+
+  // 3) Fallback: load via <img>, downscale on <canvas>, then create ImageBitmap from canvas
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = url;
+    });
+
+    const scale = img.width > maxW ? (maxW / img.width) : 1;
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, w, h);
+
+    if ('createImageBitmap' in window) {
+      try { return await createImageBitmap(canvas); } catch (e) { /* fall through */ }
+    }
+    // Some implementations accept HTMLCanvasElement directly as an ImageBitmapSource
+    return canvas;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
   // --- Scanner (photo → decode) ---
   onReady(() => {
     const btn = document.getElementById('barcodeBtn');
@@ -310,13 +351,12 @@ async function fetchProductInfoFromHC({ name = '', brand = '', code = '' }, { ti
         }
 
         // Downscale large images for speed/reliability
-        const maxW = 1600;
-        let bmp;
-        try {
-          bmp = await createImageBitmap(file, { resizeWidth: maxW, resizeQuality: 'high' });
-        } catch {
-          bmp = await createImageBitmap(file);
-        }
+// Build a bitmap (robust across large images / formats)
+const bmp = await makeBitmapFromFile(file, 1600);
+if (!bmp) {
+  alert('Could not read the image (unsupported format). Please try again with a standard photo.');
+  return;
+}
 
         const detector = new window.BarcodeDetector({
           formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']
