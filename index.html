@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 
-  <meta http-equiv="Content-Security-Policy" content="
+<meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
   script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com 'unsafe-inline';
   style-src  'self' 'unsafe-inline';
@@ -15,17 +15,20 @@
     https://www.googleapis.com
     https://apis.google.com
     https://www.gstatic.com
+    https://cdn.jsdelivr.net
     https://world.openfoodfacts.org
     https://health-products.canada.ca
     https://*.googleapis.com
     https://*.gstatic.com
-    blob: data: ws: wss:;
+    blob: data: ws: wss: http://127.0.0.1:3001 ws://127.0.0.1:3001;
   frame-src  'self' https://supplement-tracker-bec8a.firebaseapp.com https://accounts.google.com;
+  worker-src 'self' blob:;
   object-src 'none';
   base-uri   'self';
   form-action 'self';
   upgrade-insecure-requests;
 ">
+
 
 
 <!--   <meta http-equiv="Content-Security-Policy" content="
