@@ -415,6 +415,12 @@ function ensureModal() {
 
 cameraInput.addEventListener('change', async () => {
   const file = cameraInput.files && cameraInput.files[0];
+  const t = (file.type || '').toLowerCase();
+if (t.includes('heic') || t.includes('heif')) {
+  alert('This photo is HEIC. Please retake as JPEG (Settings ▸ Camera ▸ Formats ▸ Most Compatible) or try again.');
+  cameraInput.value = '';
+  return;
+}
   if (!file) return;
 
   try {
