@@ -1,3 +1,58 @@
+// --- Added: mild grayscale/contrast pre-process
+function preprocessFor1D(ctx, w, h) {
+  try {
+    const img = ctx.getImageData(0, 0, w, h);
+    const data = img.data;
+    // grayscale + slight contrast stretch
+    let min=255, max=0;
+    for (let i=0;i<data.length;i+=4){
+      const y = (data[i]*0.2126 + data[i+1]*0.7152 + data[i+2]*0.0722);
+      if (y<min) min=y;
+      if (y>max) max=y;
+    }
+    const range = Math.max(1, max - min);
+    for (let i=0;i<data.length;i+=4){
+      const y = (data[i]*0.2126 + data[i+1]*0.7152 + data[i+2]*0.0722);
+      let v = (y - min) * (255 / range);
+      data[i] = data[i+1] = data[i+2] = v;
+    }
+    ctx.putImageData(img, 0, 0);
+  } catch(_) {}
+}
+
+// --- Added: robust HEIC/Live Photo guard
+function isProblematicHeic(file) {
+  const name = (file && file.name || '').toLowerCase();
+  const type = (file && file.type || '').toLowerCase();
+  const extHeic = name.endsWith('.heic') || name.endsWith('.heif');
+  const typeHeic = type.includes('heic') || type.includes('heif') || type.includes('quicktime') || type.includes('heic-sequence');
+  const emptyType = !type; // Some iOS cases present empty MIME
+  return extHeic || typeHeic || emptyType;
+}
+
+// --- Added: safer detector factory
+async function makeBarcodeDetector() {
+  try {
+    if (!('BarcodeDetector' in window)) return null;
+    // Try to get supported formats if available
+    let supported = null;
+    try {
+      if (typeof BarcodeDetector.getSupportedFormats === 'function') {
+        supported = await BarcodeDetector.getSupportedFormats();
+      }
+    } catch (_) {}
+    const desired = ['qr_code','ean_13','ean_8','upc_e','code_128','code_39','itf','pdf417'];
+    const formats = supported ? desired.filter(f => supported.includes(f)) : ['qr_code','ean_13','ean_8','upc_e','code_128','code_39'];
+    try {
+      return await makeBarcodeDetector();
+    } catch (e) {
+      return null;
+    }
+  } catch (e) {
+    return null;
+  }
+}
+
 
 // barcode.js — full version with iPhone ZXing fallback (Safari-friendly), HC/OFF lookups, optional OCR, and dev helper
 (function () {
@@ -328,7 +383,7 @@
       return '';
     }
 
-    var maxW = 2048;
+    var maxW = 1280;
     function makeCanvas(w, h) {
       var c = document.createElement('canvas');
       c.width = w; c.height = h;
@@ -532,9 +587,7 @@
           try {
             var bmp = await makeBitmapFromFile(file, 1600);
             if (bmp) {
-              var det = new window.BarcodeDetector({
-                formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']
-              });
+              var det = await makeBarcodeDetector();
               var res = await det.detect(bmp);
               if (res && res.length && res[0] && res[0].rawValue) code = String(res[0].rawValue || '').trim();
             }
