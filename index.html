@@ -1,7 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="
+
+  <meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com 'unsafe-inline';
+  style-src  'self' 'unsafe-inline';
+  img-src    'self' data: blob:;
+  font-src   'self';
+  connect-src 'self'
+    https://firestore.googleapis.com
+    https://identitytoolkit.googleapis.com
+    https://securetoken.googleapis.com
+    https://www.googleapis.com
+    https://apis.google.com
+    https://www.gstatic.com
+    https://world.openfoodfacts.org
+    https://health-products.canada.ca
+    https://*.googleapis.com
+    https://*.gstatic.com
+    blob: data: ws: wss:;
+  frame-src  'self' https://supplement-tracker-bec8a.firebaseapp.com https://accounts.google.com;
+  object-src 'none';
+  base-uri   'self';
+  form-action 'self';
+  upgrade-insecure-requests;
+">
+
+
+<!--   <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
   script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com 'unsafe-inline';
   frame-src 'self' https://supplement-tracker-bec8a.firebaseapp.com%;
@@ -13,7 +40,7 @@
   base-uri 'self';
   form-action 'self';
   upgrade-insecure-requests;
-">
+">  -->
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
