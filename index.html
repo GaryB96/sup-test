@@ -1,33 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self' 'unsafe-inline';
-    style-src 'self' 'unsafe-inline';
-    connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com https://world.openfoodfacts.org https://health-products.canada.ca ws://127.0.0.1:3001 https://www.gstatic.com;
-    img-src 'self' data:;
-    font-src 'self';
-    object-src 'none';
-    base-uri 'self';
-    form-action 'self';
-    frame-ancestors 'none';
-    upgrade-insecure-requests;
-  ">
-
-<!--  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self';
-    style-src 'self' 'unsafe-inline';
-    connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com https://world.openfoodfacts.org https://health-products.canada.ca ws://127.0.0.1:3001;
-    img-src 'self' data:;
-    font-src 'self';
-    object-src 'none';
-    base-uri 'self';
-    form-action 'self';
-    frame-ancestors 'none';
-    upgrade-insecure-requests;
-  ">  -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com 'unsafe-inline';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data:;
+  connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://world.openfoodfacts.org https://health-products.canada.ca ws://127.0.0.1:3001;
+  font-src 'self';
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+  upgrade-insecure-requests;
+">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
