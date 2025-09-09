@@ -1,4 +1,3 @@
-// js/barcode.js
 // Scan with BarcodeDetector (where supported), open a modal, try Open Food Facts autofill,
 // and (Option A) show handy Search links to Health Canada LNHPD + Google if data is missing.
 (() => {
