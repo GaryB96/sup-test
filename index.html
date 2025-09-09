@@ -3,17 +3,17 @@
 <head>
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net 'unsafe-inline';
+  script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com 'unsafe-inline';
   style-src 'self' 'unsafe-inline';
-  connect-src 'self' https://firestore.googleapis.com https://....org https://health-products.canada.ca https://cdn.jsdelivr.net;
   img-src 'self' data:;
+  connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://world.openfoodfacts.org https://health-products.canada.ca ws://127.0.0.1:3001;
   font-src 'self';
   object-src 'none';
   base-uri 'self';
   form-action 'self';
-  frame-ancestors 'none';
   upgrade-insecure-requests;
 ">
+
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
