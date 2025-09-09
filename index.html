@@ -18,8 +18,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="icon" href="data:," />
   <title>Supplement Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
   <link rel="stylesheet" href="style.css?v=9">
   <link rel="stylesheet" href="notifications.css"/>
+  <link rel="stylesheet" href="barcodeStyle.css">
   <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
@@ -59,8 +61,56 @@
   </style>
 </head>
 
-<body>
+<div id="barcodeOverlay" aria-hidden="true"></div>
 
+<div id="barcodeModal" role="dialog" aria-modal="true">
+  <div class="bm-card" role="document">
+    <h2>Scan result</h2>
+    <div class="bm-sub" id="bm_status"></div>
+
+    <div class="bm-row">
+      <label>Barcode</label>
+      <div class="bm-code">
+        <span id="bm_codeValue">—</span>
+        <button type="button" class="bm-btn secondary" id="bm_copyBtn">Copy</button>
+      </div>
+    </div>
+
+    <div class="bm-row">
+      <label for="bm_name">Product name</label>
+      <input id="bm_name" type="text" value="">
+    </div>
+
+    <div class="bm-row">
+      <label for="bm_brand">Brand</label>
+      <input id="bm_brand" type="text" value="">
+    </div>
+
+    <div class="bm-row">
+      <label for="bm_serving">Serving size / dose</label>
+      <input id="bm_serving" type="text" value="">
+    </div>
+
+    <div class="bm-row">
+      <label for="bm_servings">Servings per container</label>
+      <input id="bm_servings" type="text" value="">
+    </div>
+
+    <div class="bm-actions">
+      <div class="bm-links">
+        <a id="bm_link_off" class="bm-link" target="_blank" rel="noopener">Open Food Facts</a>
+        <a id="bm_link_hc"  class="bm-link" target="_blank" rel="noopener">Search Health Canada</a>
+        <a id="bm_link_ggl" class="bm-link" target="_blank" rel="noopener">Google</a>
+      </div>
+      <div>
+        <button type="button" class="bm-btn secondary" id="bm_closeBtn">Close</button>
+        <button type="button" class="bm-btn primary"   id="bm_saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<body>
   <!-- Notes Modal (moved inside <body>) -->
   <div id="notesModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="notesModalTitle" aria-describedby="notesModalDesc">
     <div class="modal-content modal-notes" role="document">
@@ -104,7 +154,7 @@
       <button id="addSupplementBtn" class="sidebar-btn">Add New Supplement</button>
       <button id="barcodeBtn" class="sidebar-btn">Barcode Scanner</button>
 
-      <button onclick="openBarcodeModal()">Open modal (dev)</button>
+      <button id="devBtn" class="sidebar-btn" onclick="openBarcodeModal()">Open modal (dev)</button>
 
       <img id="icon" src="./assets/logo-icon.svg" alt="logo" class="banner-logo">
     </aside>
@@ -300,9 +350,7 @@
       </script>
     </main>
   </div>
-
   <div id="app-status" class="status-pill" role="status" aria-live="polite"></div>
-
   <script type="module" src="./js/toast.js"></script>
   <script type="module" src="./js/main.js"></script>
   <script type="module" src="./js/supplementsUI.js"></script>

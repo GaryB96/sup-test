@@ -9,118 +9,35 @@
   }
 
   // --- Modal UI (injected once) ---
-  function ensureModal() {
-    if (document.getElementById('barcodeModal')) return;
+function ensureModal() {
+  const overlay = document.getElementById('barcodeOverlay');
+  const modal   = document.getElementById('barcodeModal');
+  if (!overlay || !modal) { 
+    console.warn('barcode modal not found in DOM.');
+    return; 
+  }
 
-    if (!document.getElementById('barcode-modal-styles')) {
-      const style = document.createElement('style');
-      style.id = 'barcode-modal-styles';
-      style.textContent = `
-#barcodeOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; z-index: 9999; }
-#barcodeModal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 10000; }
-#barcodeModal .bm-card {
-  background: #fff; width: min(92vw, 420px); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.25);
-  padding: 18px; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-}
-#barcodeModal h2 { margin: 0 0 8px; font-size: 18px; }
-#barcodeModal .bm-sub { color: #555; font-size: 12px; margin-bottom: 12px; min-height: 16px; }
-#barcodeModal .bm-row { display: grid; grid-template-columns: 110px 1fr; gap: 10px; align-items: center; margin: 8px 0; }
-#barcodeModal label { font-size: 12px; color: #333; }
-#barcodeModal input[type="text"] {
-  width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;
-}
-#barcodeModal .bm-code {
-  padding: 8px 10px; background: #f6f7f8; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
-}
-#barcodeModal .bm-actions { display: flex; gap: 10px; justify-content: space-between; align-items: center; margin-top: 14px; flex-wrap: wrap; }
-#barcodeModal .bm-btn { border: 0; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-#barcodeModal .bm-btn.primary { background: #111827; color: #fff; }
-#barcodeModal .bm-btn.secondary { background: #e5e7eb; color: #111827; }
-#barcodeModal .bm-links { display: flex; gap: 8px; flex-wrap: wrap; }
-#barcodeModal .bm-link {
-  display: inline-block; text-decoration: none; padding: 8px 10px; border-radius: 8px; background: #f3f4f6; color: #111827; font-size: 13px;
-}
-      `;
-      document.head.appendChild(style);
-    }
-
-    const overlay = document.createElement('div');
-    overlay.id = 'barcodeOverlay';
-    overlay.setAttribute('aria-hidden', 'true');
-
-    const modal = document.createElement('div');
-    modal.id = 'barcodeModal';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
-    modal.innerHTML = `
-      <div class="bm-card" role="document">
-        <h2>Scan result</h2>
-        <div class="bm-sub" id="bm_status"></div>
-
-        <div class="bm-row">
-          <label>Barcode</label>
-          <div class="bm-code">
-            <span id="bm_codeValue">—</span>
-            <button type="button" class="bm-btn secondary" id="bm_copyBtn">Copy</button>
-          </div>
-        </div>
-
-        <div class="bm-row">
-          <label for="bm_name">Product name</label>
-          <input id="bm_name" type="text" value="">
-        </div>
-
-        <div class="bm-row">
-          <label for="bm_brand">Brand</label>
-          <input id="bm_brand" type="text" value="">
-        </div>
-
-        <div class="bm-row">
-          <label for="bm_serving">Serving size / dose</label>
-          <input id="bm_serving" type="text" value="">
-        </div>
-
-        <div class="bm-row">
-          <label for="bm_servings">Servings per container</label>
-          <input id="bm_servings" type="text" value="">
-        </div>
-
-        <div class="bm-actions">
-          <div class="bm-links">
-            <a id="bm_link_off"   class="bm-link" target="_blank" rel="noopener">Open Food Facts</a>
-            <a id="bm_link_hc"    class="bm-link" target="_blank" rel="noopener">Search Health Canada</a>
-            <a id="bm_link_ggl"   class="bm-link" target="_blank" rel="noopener">Google</a>
-          </div>
-          <div>
-            <button type="button" class="bm-btn secondary" id="bm_closeBtn">Close</button>
-            <button type="button" class="bm-btn primary"   id="bm_saveBtn">Save</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-    document.body.appendChild(modal);
-
-    // Close handlers
+  // Wire once
+  if (!modal.dataset.wired) {
     const hide = () => {
       overlay.style.display = 'none';
-      modal.style.display = 'none';
+      modal.style.display   = 'none';
       document.body.style.overflow = '';
     };
+
+    // Close handlers
     overlay.addEventListener('click', hide);
-    modal.querySelector('#bm_closeBtn').addEventListener('click', hide);
+    modal.querySelector('#bm_closeBtn')?.addEventListener('click', hide);
     modal.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(); });
 
     // Copy handler
-    modal.querySelector('#bm_copyBtn').addEventListener('click', async () => {
-      const codeText = modal.querySelector('#bm_codeValue').textContent || '';
+    modal.querySelector('#bm_copyBtn')?.addEventListener('click', async () => {
+      const codeText = modal.querySelector('#bm_codeValue')?.textContent || '';
       try { await navigator.clipboard.writeText(codeText); } catch {}
     });
 
-    // Save handler – dispatch a custom event your app can catch
-    modal.querySelector('#bm_saveBtn').addEventListener('click', () => {
+    // Save handler (fires a CustomEvent your app can listen for)
+    modal.querySelector('#bm_saveBtn')?.addEventListener('click', () => {
       const detail = {
         code: document.getElementById('bm_codeValue').textContent || '',
         name: (document.getElementById('bm_name').value || '').trim(),
@@ -131,7 +48,10 @@
       document.dispatchEvent(new CustomEvent('barcode:save', { detail }));
       overlay.click(); // close
     });
+
+    modal.dataset.wired = '1';
   }
+}
 
   function setStatus(msg) {
     const el = document.getElementById('bm_status');
@@ -282,6 +202,33 @@
       c.getContext('2d').drawImage(bmp, 0, 0);
       return c;
     })();
+
+    async function decodeFileWithZXing(file) {
+  if (!(window.ZXing && ZXing.BrowserMultiFormatReader)) {
+    throw new Error('ZXing not loaded');
+  }
+
+  // Hint ZXing toward 1D retail codes for better reliability
+  const hints = new Map();
+  hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+    ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.UPC_A,
+    ZXing.BarcodeFormat.EAN_8,  ZXing.BarcodeFormat.UPC_E,
+    ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39
+  ]);
+
+  const reader = new ZXing.BrowserMultiFormatReader(hints);
+  const url = URL.createObjectURL(file);
+  try {
+    const result = await reader.decodeFromImageUrl(url);
+    return (result && (result.text || result.getText?.())) || '';
+  } catch (e) {
+    console.warn('ZXing decode failed:', e);
+    return '';
+  } finally {
+    URL.revokeObjectURL(url);
+    reader.reset();
+  }
+}
 
     // Simple contrast bump
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -457,7 +404,6 @@
   onReady(() => {
     const btn = document.getElementById('barcodeBtn');
     if (!btn) return;
-
     const cameraInput = document.createElement('input');
     cameraInput.type = 'file';
     cameraInput.accept = 'image/jpeg,image/png';
@@ -467,55 +413,61 @@
 
     btn.addEventListener('click', () => cameraInput.click());
 
-    cameraInput.addEventListener('change', async () => {
-      const file = cameraInput.files && cameraInput.files[0];
-      if (!file) return;
+cameraInput.addEventListener('change', async () => {
+  const file = cameraInput.files && cameraInput.files[0];
+  if (!file) return;
 
+  try {
+    let code = '';
+
+    // Try native BarcodeDetector first (Android/desktop Chrome)
+    if ('BarcodeDetector' in window) {
       try {
-        if (!('BarcodeDetector' in window)) {
-          alert('Barcode scanning is not supported on this browser. (Works on Chrome/Android; iOS needs fallback.)');
-          return;
-        }
-
-        // 1) Build a bitmap robustly
-        let bmp;
-        try {
-          bmp = await makeBitmapFromFile(file, 1600);
-        } catch (e) {
-          console.error('Bitmap build threw:', e);
-        }
-        if (!bmp) {
-          alert('Could not read the image (format/reader issue). Please try again with a JPEG/PNG photo.');
-          cameraInput.value = '';
-          return;
-        }
-
-        // 2) Run the detector
-        const detector = new window.BarcodeDetector({
-          formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']
-        });
-
-        const results = await detector.detect(bmp);
-        if (results && results.length) {
-          const preferred = results.find(r =>
-            ['ean_13','upc_a','upc_e','ean_8'].includes((r.format || '').toLowerCase())
-          ) || results[0];
-
-          const code = (preferred.rawValue || '').trim();
-          if (code) {
-            await openModalWithAutoFill(code, file);
-          } else {
-            alert('A barcode was detected, but no value was read. Please try again with better lighting.');
+        const bmp = await makeBitmapFromFile(file, 1600);
+        if (bmp) {
+          const det = new window.BarcodeDetector({
+            formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']
+          });
+          const res = await det.detect(bmp);
+          if (res && res.length) {
+            code = String(res[0].rawValue || '').trim();
           }
-        } else {
-          alert('No barcode detected. Try a clearer, well-lit shot filling the frame.');
         }
-      } catch (err) {
-        console.error('Barcode scan error:', err);
-        alert('Could not read the image. Please try again.');
-      } finally {
-        cameraInput.value = ''; // allow re-selecting the same file
+      } catch (_) {
+        // fall back to ZXing
       }
-    });
-  });
+    }
+
+    // iPhone/Safari fallback (or if BD found nothing)
+    if (!code) {
+      code = await decodeFileWithZXing(file);
+    }
+
+    if (code) {
+      await openModalWithAutoFill(code, file);
+    } else {
+      alert('No barcode detected. Try a closer, well-lit shot filling the frame.');
+    }
+  } catch (err) {
+    console.error('Scan error:', err);
+    alert('Could not read the image. Please try again.');
+  } finally {
+    cameraInput.value = ''; // allow re-selecting the same photo
+  }
+});
+});
+
+  // Open the modal without scanning (global for inline onclick)
+window.openBarcodeModal = () => {
+  ensureModal();
+  const overlay = document.getElementById('barcodeOverlay');
+  const modal   = document.getElementById('barcodeModal');
+  overlay.style.display = 'block';
+  modal.style.display   = 'flex';
+  document.body.style.overflow = 'hidden';
+  setStatus(''); // optional
+  modal.querySelector('#bm_name')?.focus();
+};
+
+
 })();
