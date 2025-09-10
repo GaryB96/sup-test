@@ -553,7 +553,98 @@ async function makeBarcodeDetector() {
     if (nameEl && nameEl.focus) nameEl.focus();
   }
 
-  // ---------- Scanner (photo → decode) ----------
+  
+  // ---------- NEW: Autofill Supplement Modal instead of barcode modal ----------
+  function getSupplementFieldValues() {
+    return {
+      name:   (document.getElementById('suppName')    && document.getElementById('suppName').value    || '').trim(),
+      brand:  (document.getElementById('suppBrand')   && document.getElementById('suppBrand').value   || '').trim(),
+      dose:   (document.getElementById('suppDosage')  && document.getElementById('suppDosage').value  || '').trim(),
+      serves: (document.getElementById('suppServings')&& document.getElementById('suppServings').value|| '').trim()
+    };
+  }
+  function populateSupplementFields(obj) {
+    obj = obj || {};
+    var name   = obj.name   || '';
+    var brand  = obj.brand  || '';
+    var dose   = obj.dose   || '';
+    var serves = obj.serves || '';
+
+    var el;
+    el = document.getElementById('suppName');      if (el && name)   el.value = name;
+    el = document.getElementById('suppBrand');     if (el && brand)  el.value = brand;
+    el = document.getElementById('suppDosage');    if (el && dose)   el.value = dose;
+    el = document.getElementById('suppServings');  if (el && serves) el.value = serves;
+  }
+
+  async function fillSupplementFromBarcode(code, fileForOCR) {
+    // Start with barcode-only info
+    populateSupplementFields({}); // ensure fields exist
+
+    // OFF (barcode-based)
+    var off = await fetchProductInfoFromOFF(code);
+    if (off) {
+      var curr = getSupplementFieldValues();
+      populateSupplementFields({
+        name:   curr.name   || off.name   || '',
+        brand:  curr.brand  || off.brand  || '',
+        dose:   curr.dose   || off.dose   || '',
+        serves: curr.serves || off.serves || ''
+      });
+    }
+
+    // Health Canada with what we have
+    var curr1 = getSupplementFieldValues();
+    if (curr1.name || curr1.brand || code) {
+      var hc = await fetchProductInfoFromHC({ name: curr1.name, brand: curr1.brand, code: code });
+      if (hc) {
+        var now = getSupplementFieldValues();
+        populateSupplementFields({
+          name:   now.name   || hc.name   || '',
+          brand:  now.brand  || hc.brand  || '',
+          dose:   now.dose   || hc.dose   || '',
+          serves: now.serves || hc.serves || ''
+        });
+      }
+    }
+
+    // Optional OCR if nothing yet and a file is available
+    var curr2 = getSupplementFieldValues();
+    if (!(curr2.name || curr2.brand || curr2.dose || curr2.serves) && fileForOCR && window.Tesseract && window.Tesseract.recognize) {
+      try {
+        var ocr = await ocrFrontLabel(fileForOCR);
+        if (ocr) {
+          var merged = {
+            name:   curr2.name   || ocr.name  || '',
+            brand:  curr2.brand  || ocr.brand || '',
+            dose:   curr2.dose   || ocr.dose  || '',
+            serves: curr2.serves || ''
+          };
+          populateSupplementFields(merged);
+          if (ocr.npn || ocr.din || ocr.name || ocr.brand) {
+            var hc2 = await fetchProductInfoFromHC({
+              name:  ocr.name || '',
+              brand: ocr.brand || '',
+              code:  ocr.npn || ocr.din || ''
+            });
+            if (hc2) {
+              var dEl = document.getElementById('suppDosage');
+              var sEl = document.getElementById('suppServings');
+              if (dEl && !dEl.value && hc2.dose) dEl.value = hc2.dose;
+              if (sEl && !sEl.value && hc2.serves) sEl.value = hc2.serves;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('OCR failed:', e);
+      }
+    }
+
+    // focus the name field for quick edit
+    var nm = document.getElementById('suppName');
+    if (nm && nm.focus) nm.focus();
+  }
+// ---------- Scanner (photo → decode) ----------
   onReady(function () {
     var btn = document.getElementById('barcodeBtn');
     if (!btn) return;
@@ -601,7 +692,7 @@ async function makeBarcodeDetector() {
         }
 
         if (code) {
-          await openModalWithAutoFill(code, file);
+          await fillSupplementFromBarcode(code, file);
         } else {
           alert('No barcode detected. Try a closer, well-lit shot filling the frame (make the code fill most of the image).');
         }
