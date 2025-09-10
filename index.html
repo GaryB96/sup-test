@@ -307,6 +307,12 @@
           <p id="supplementModalDesc" class="modal-desc">Fill in the details and click Save.</p>
           <button id="barcodeBtn" class="supplement-barcodeBtn">Barcode Scanner</button>
           <form id="supplementModalForm">
+
+            <div class="form-row">
+              <label for="suppBrand">Brand</label>
+              <input id="suppBrand" name="brand" type="text" />
+            </div>
+
             <div class="form-row">
               <label for="suppName">Name</label>
               <input id="suppName" name="name" type="text" required />
@@ -315,6 +321,11 @@
             <div class="form-row">
               <label for="suppDosage">Dosage</label>
               <input id="suppDosage" name="dosage" type="text" placeholder="e.g., 500mg" />
+            </div>
+
+            <div class="form-row">
+              <label for="suppServings">Servings per container</label>
+              <input id="suppServings" name="servings" type="number" min="1" placeholder="e.g., 60" />
             </div>
 
             <!-- Time of day -->
