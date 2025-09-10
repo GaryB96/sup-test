@@ -1073,6 +1073,7 @@ body.sidebar-collapsed main {
     max-width: none;
     max-height: none;
     border-radius: 0;       /* edge-to-edge look */
+    box-sizing: border-box;
     /* Respect iPhone safe areas (notch/home indicator) */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
