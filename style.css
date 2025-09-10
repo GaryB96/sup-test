@@ -1111,3 +1111,12 @@ body.sidebar-collapsed main {
     min-width: 0;
   }
 }
+
+#barcodeMobileNote {
+  font-size: 0.85em;
+  color: #666;
+  margin-left: 8px;
+}
+.hidden {
+  display: none !important;
+}

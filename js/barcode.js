@@ -780,4 +780,19 @@ async function makeBarcodeDetector() {
       }
     });
   });
+  (function showMobileNote() {
+  var note = document.getElementById("barcodeMobileNote");
+  if (!note) return;
+
+  // Simple mobile detection (viewport + UA)
+  var isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) 
+                 || (window.innerWidth < 768);
+
+  if (isMobile) {
+    note.classList.add("hidden");
+  } else {
+    note.classList.remove("hidden");
+  }
+})();
+
 })();
