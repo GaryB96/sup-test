@@ -55,8 +55,6 @@ async function makeBarcodeDetector() {
   }
 }
 
-
-
 // barcode.js — full version with iPhone ZXing fallback (Safari-friendly), HC/OFF lookups, optional OCR, and dev helper
 (function () {
   // ---------- utils ----------
@@ -113,55 +111,6 @@ async function makeBarcodeDetector() {
 
     setSearchLinks({ code: code, name: name, brand: brand });
   }
-
-  // ---------- ensure modal ----------
-  function ensureModal() {
-    var overlay = document.getElementById('barcodeOverlay');
-    var modal   = document.getElementById('barcodeModal');
-    if (!overlay || !modal) {
-      console.warn('barcode modal not found in DOM.');
-      return;
-    }
-    if (!modal.getAttribute('data-wired')) {
-      var hide = function () {
-        overlay.style.display = 'none';
-        modal.style.display   = 'none';
-        document.body.style.overflow = '';
-      };
-      overlay.addEventListener('click', hide);
-      var closeBtn = modal.querySelector('#bm_closeBtn');
-      if (closeBtn) closeBtn.addEventListener('click', hide);
-      modal.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
-
-      var copyBtn = modal.querySelector('#bm_copyBtn');
-      if (copyBtn) copyBtn.addEventListener('click', function () {
-        var codeText = (document.getElementById('bm_codeValue') && document.getElementById('bm_codeValue').textContent) || '';
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(codeText).catch(function () {});
-        }
-      });
-
-      var saveBtn = modal.querySelector('#bm_saveBtn');
-      if (saveBtn) saveBtn.addEventListener('click', function () {
-        var detail = {
-          code: (document.getElementById('bm_codeValue') && document.getElementById('bm_codeValue').textContent) || '',
-          name: ((document.getElementById('bm_name') && document.getElementById('bm_name').value) || '').trim(),
-          brand: ((document.getElementById('bm_brand') && document.getElementById('bm_brand').value) || '').trim(),
-          serving: ((document.getElementById('bm_serving') && document.getElementById('bm_serving').value) || '').trim(),
-          servingsPerContainer: ((document.getElementById('bm_servings') && document.getElementById('bm_servings').value) || '').trim()
-        };
-        document.dispatchEvent(new CustomEvent('barcode:save', { detail: detail }));
-        overlay.click();
-      });
-
-      modal.setAttribute('data-wired', '1');
-    }
-  }
-
-  // Global dev helper
-  window.openBarcodeModal = function (code, seed) {
-    code = code || '012345678905';
-    seed = seed || {};
     ensureModal();
     var overlay = document.getElementById('barcodeOverlay');
     var modal   = document.getElementById('barcodeModal');
@@ -179,7 +128,7 @@ async function makeBarcodeDetector() {
     setStatus('');
     var nameEl = document.getElementById('bm_name');
     if (nameEl && nameEl.focus) nameEl.focus();
-  };
+  });
 
   // ---------- External lookups ----------
   async function fetchProductInfoFromHC(args, opts) {
@@ -331,8 +280,8 @@ async function makeBarcodeDetector() {
   // ---------- Image helpers ----------
   async function makeBitmapFromFile(file, maxW) {
     maxW = maxW || 1600;
-    try { return await createImageBitmap(file, { resizeWidth: maxW, resizeQuality: 'high' }); } catch (e1) {}
-    try { return await createImageBitmap(file); } catch (e2) {}
+    try { return await createImageBitmap(file, { imageOrientation: 'from-image', resizeWidth: maxW, resizeQuality: 'high' }); } catch (e1) {}
+    try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e2) {}
     // Fallback via <img> + canvas
     var dataUrl = await readFileAsDataURL(file);
     var img = await loadImage(dataUrl);
@@ -462,33 +411,19 @@ async function makeBarcodeDetector() {
     return '';
   }
 
-  // ---------- Autofill flow ----------
-  function getCurrentFieldValues() {
-    var out = {
-      name:   (document.getElementById('bm_name') && document.getElementById('bm_name').value || '').trim(),
-      brand:  (document.getElementById('bm_brand') && document.getElementById('bm_brand').value || '').trim(),
-      dose:   (document.getElementById('bm_serving') && document.getElementById('bm_serving').value || '').trim(),
-      serves: (document.getElementById('bm_servings') && document.getElementById('bm_servings').value || '').trim()
-    };
-    return out;
-  }
-  function anyFilled(curr) {
-    return !!(curr.name || curr.brand || curr.dose || curr.serves);
-  }
-
-  // ---------- Autofill flow ----------
-  function getCurrentFieldValues() {
-    var out = {
-      name:   (document.getElementById('bm_name') && document.getElementById('bm_name').value || '').trim(),
-      brand:  (document.getElementById('bm_brand') && document.getElementById('bm_brand').value || '').trim(),
-      dose:   (document.getElementById('bm_serving') && document.getElementById('bm_serving').value || '').trim(),
-      serves: (document.getElementById('bm_servings') && document.getElementById('bm_servings').value || '').trim()
-    };
-    return out;
-  }
-  function anyFilled(curr) {
-    return !!(curr.name || curr.brand || curr.dose || curr.serves);
-  }
+// ---------- Autofill flow ----------
+function getCurrentFieldValues() {
+  var out = {
+    name:   (document.getElementById('bm_name') && document.getElementById('bm_name').value || '').trim(),
+    brand:  (document.getElementById('bm_brand') && document.getElementById('bm_brand').value || '').trim(),
+    dose:   (document.getElementById('bm_serving') && document.getElementById('bm_serving').value || '').trim(),
+    serves: (document.getElementById('bm_servings') && document.getElementById('bm_servings').value || '').trim()
+  };
+  return out;
+}
+function anyFilled(curr) {
+  return !!(curr.name || curr.brand || curr.dose || curr.serves);
+}
 
   // Replace legacy barcode modal path with direct supplement autofill
   async function openModalWithAutoFill(code, fileForOCR) {
@@ -519,9 +454,8 @@ async function makeBarcodeDetector() {
         var file = cameraInput.files && cameraInput.files[0];
         if (!file) return;
 
-        var t = (file.type || '').toLowerCase();
-        if (t.includes('heic') || t.includes('heif')) {
-          alert('This image format is not supported on some devices. Please set Camera format to JPEG/Most Compatible, or choose a different photo.');
+        if (isProblematicHeic(file)) {
+          alert('This image format (HEIC/Live Photo) may not decode reliably. Please switch your Camera format to "Most Compatible" (JPEG) or retake the photo with that setting.');
           cameraInput.value = '';
           return;
         }
@@ -597,7 +531,3 @@ window.openBarcodeModal = function (code, seed) {
     serves: seed?.serves || ''
   });
 };
-
-// (legacy scanner removed)
-;
-})();
