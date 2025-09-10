@@ -57,6 +57,8 @@ async function makeBarcodeDetector() {
 
 // barcode.js — full version with iPhone ZXing fallback (Safari-friendly), HC/OFF lookups, optional OCR, and dev helper
 (function () {
+  const FORCE_ZXING = true; // set true to force ZXing path for diagnostics
+  const SCAN_DEBUG = true;
   // ---------- utils ----------
   function onReady(fn) {
     if (document.readyState === 'loading') {
@@ -150,7 +152,9 @@ async function makeBarcodeDetector() {
     ];
 
     var ac = new AbortController();
-    var to = setTimeout(function () { ac.abort(); }, timeoutMs);
+    var to = setTimeout(function () {
+  const FORCE_ZXING = true; // set true to force ZXing path for diagnostics
+  const SCAN_DEBUG = true; ac.abort(); }, timeoutMs);
     try {
       for (var i = 0; i < urls.length; i++) {
         var url = urls[i];
@@ -188,7 +192,9 @@ async function makeBarcodeDetector() {
     if (/^\d{12}$/.test(code || '')) candidates.push('0' + code); // UPC-A -> EAN-13
 
     var ac = new AbortController();
-    var to = setTimeout(function () { ac.abort(); }, timeoutMs);
+    var to = setTimeout(function () {
+  const FORCE_ZXING = true; // set true to force ZXing path for diagnostics
+  const SCAN_DEBUG = true; ac.abort(); }, timeoutMs);
     try {
       for (var i = 0; i < candidates.length; i++) {
         var c = candidates[i];
@@ -495,7 +501,7 @@ function anyFilled(curr) {
 
         try {
           var code = '';
-          if ('BarcodeDetector' in window) {
+          if (!FORCE_ZXING && 'BarcodeDetector' in window) { console.debug('[scan] trying native BarcodeDetector');
             try {
               var bmp = await makeBitmapFromFile(file, 1600);
               if (bmp) {
@@ -506,7 +512,11 @@ function anyFilled(curr) {
             } catch (e) {}
           }
           if (!code) {
+            console.debug('[scan] falling back to ZXing');
             setStatus('Scanning photo…');
+            if (!(window.ZXing && ZXing.BrowserMultiFormatReader)) {
+              console.error('[scan] ZXing not loaded before barcode.js. Please include @zxing/browser script tag before this file.');
+            }
             code = await decodeWithZXingRobust(file);
           }
           if (code) {
