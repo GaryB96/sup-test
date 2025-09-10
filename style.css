@@ -643,7 +643,6 @@ body:not(.logged-in) #accountActions { display: none; }
 }
 
 /* Panel */
-@media (min-width: 600px){
 .modal .modal-content {
   position: relative;
   z-index: 1;
@@ -657,7 +656,6 @@ body:not(.logged-in) #accountActions { display: none; }
   padding: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   color: #fff;
-}
 }
 
 /* Close button */
@@ -1069,7 +1067,7 @@ body.sidebar-collapsed main {
   #supplementModal{ padding: 0; }
 
   #supplementModal .modal-content{
-    width: 100%;
+    width: 100vw;
     height: 100vh;          /* fallback */
     height: 100dvh;         /* dynamic viewport height on mobile */
     max-width: none;
