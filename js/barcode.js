@@ -796,7 +796,4 @@ async function makeBarcodeDetector() {
   } else {
     note.classList.remove("hidden");
   }
-})();
-
-
-})();
+})})})();
