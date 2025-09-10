@@ -594,6 +594,12 @@ body:not(.logged-in) #accountActions { display: none; }
   gap: 10px;
   z-index: 900;
 }
+
+.sidebar,
+.sidebar * {
+  box-sizing: border-box;
+}
+
 .sidebar.hidden { display: none; }
 
 .sidebar-btn,
@@ -1105,4 +1111,3 @@ body.sidebar-collapsed main {
     min-width: 0;
   }
 }
-
