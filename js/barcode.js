@@ -644,6 +644,81 @@ async function makeBarcodeDetector() {
     var nm = document.getElementById('suppName');
     if (nm && nm.focus) nm.focus();
   }
+
+  // Ensure scanner button works even if modal content is re-rendered or on Android DOM quirks
+  (function ensureScannerBinding(){
+    var bound = false;
+    function bind() {
+      if (bound) return;
+      var btn = document.getElementById('barcodeBtn');
+      if (!btn) return;
+      bound = true;
+
+      var cameraInput = document.createElement('input');
+      cameraInput.type = 'file';
+      cameraInput.accept = 'image/*';
+      cameraInput.capture = 'environment';
+      cameraInput.style.display = 'none';
+      document.body.appendChild(cameraInput);
+
+      btn.addEventListener('click', function () { cameraInput.click(); });
+
+      cameraInput.addEventListener('change', async function () {
+        var file = cameraInput.files && cameraInput.files[0];
+        if (!file) return;
+
+        var t = (file.type || '').toLowerCase();
+        if (t.includes('heic') || t.includes('heif')) {
+          alert('This image format is not supported on some Android devices. Please open Camera settings and set format to JPEG/Most Compatible, or choose a different photo.');
+          cameraInput.value = '';
+          return;
+        }
+
+        try {
+          var code = '';
+          if ('BarcodeDetector' in window) {
+            try {
+              var bmp = await makeBitmapFromFile(file, 1600);
+              if (bmp) {
+                var det = await makeBarcodeDetector();
+                var res = await det.detect(bmp);
+                if (res && res.length && res[0] && res[0].rawValue) code = String(res[0].rawValue || '').trim();
+              }
+            } catch (e) {}
+          }
+          if (!code) {
+            setStatus('Scanning photo…');
+            code = await decodeWithZXingRobust(file);
+          }
+          if (code) {
+            await fillSupplementFromBarcode(code, file);
+          } else {
+            alert('No barcode detected. Try a closer, well-lit shot filling the frame.');
+          }
+        } catch (err) {
+          console.error('Scan error:', err);
+          alert('Could not read the image. Please try again.');
+        } finally {
+          setStatus('');
+          cameraInput.value = '';
+        }
+      });
+    }
+
+    // Try to bind now…
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      bind();
+    } else {
+      document.addEventListener('DOMContentLoaded', bind);
+    }
+
+    // …and observe for late insertions (defensive for Android/webview)
+    var mo = new MutationObserver(function() {
+      if (!bound) bind();
+    });
+    mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+  })();
+
 // ---------- Scanner (photo → decode) ----------
   onReady(function () {
     var btn = document.getElementById('barcodeBtn');
@@ -651,7 +726,7 @@ async function makeBarcodeDetector() {
 
     var cameraInput = document.createElement('input');
     cameraInput.type = 'file';
-    cameraInput.accept = 'image/jpeg,image/png'; // prefer JPEG/PNG
+    cameraInput.accept = 'image/*'; // prefer JPEG/PNG
     cameraInput.capture = 'environment';
     cameraInput.style.display = 'none';
     document.body.appendChild(cameraInput);
