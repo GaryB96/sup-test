@@ -1072,13 +1072,18 @@ body.sidebar-collapsed main {
 @media (max-width: 600px){
   #supplementModal{ padding: 0; }
 
-  #supplementModal .modal-content{
-    /* Centered card that fits the viewport without overflow */
-    box-sizing: border-box;
-    width: clamp(280px, 92vw, 560px);
-    margin: 8vh auto 0;       /* centers horizontally */
-    max-height: 85vh;
-    overflow: auto;
+#supplementModal .modal-content{
+  width: 100%;
+  height: 100dvh;      /* replaces max-height */
+  margin: 0;
+  border-radius: 0;
+  overflow: hidden;    /* then scroll the .modal-body instead */
+}
+#supplementModal .modal-body{
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
     /* keep your visual theme — these are already defined above;
        include them here ONLY if you don't have them in the desktop block */
