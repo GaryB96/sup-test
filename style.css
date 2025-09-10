@@ -776,46 +776,18 @@ body:not(.logged-in) #accountActions { display: none; }
     gap: 10px;
   }
 }
-/* Inline layout for cycle row */
-#supplementModal .form-row-inline {
-  display: flex;
-  grid-template-columns: auto 120px;
-  flex-direction: row;
-  align-items: center;
-  column-gap: 1px;
-  margin-left: 10px;
-  margin-top: 10px;
-}
+
 
 /* Checkbox on the left */
 #supplementModal .cycle-inline {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-right: 20px;  /* push date picker to the right side */
+  margin-right: 8px;  /* push date picker to the right side */
   font-size: 13px;
   min-width: 0px;
   white-space: nowrap;
 }
-
-/* Start date chunk on the right */
-#supplementModal .cycle-start {
-  display: grid;
-  grid-template-columns: 160px 100px 100px;
-  grid-template-rows: auto auto;
-  align-items: start;
-  gap: 20px;
-  margin-top: 15px;
-  min-width: 0;
-  row-gap: 0px;
-  height: 56px;
-  min-height: 56;
-}
-
-/* Position each child without changing your HTML */
-#supplementModal .cycle-start input[type="date"]     { grid-column: 1; grid-row: 1; width: 100%; box-sizing: border-box; }
-#supplementModal .cycle-start #suppDaysOn            { grid-column: 2; grid-row: 1; width: 100%; box-sizing: border-box; }
-#supplementModal .cycle-start #suppDaysOff           { grid-column: 3; grid-row: 1; width: 100%; box-sizing: border-box; }
 
 /* Uniform checkbox size in the modal (16x16) */
 #supplementModal input[type="checkbox"],
@@ -837,7 +809,7 @@ body:not(.logged-in) #accountActions { display: none; }
 #supplementModal .field-caption {
   font-size: 12px;
   color: #cbd5e1;
-  margin-left: 10px;
+  margin-left: 2px;
 }
 
 /* Date input respects its column width */
@@ -1025,3 +997,70 @@ body.sidebar-collapsed main {
   transition: transform 1.2s ease;
 }
 
+/* Supplement Modal: label on its own line, date input below it */
+#supplementModal .form-row-inline{
+  display: grid;
+  grid-template-columns: max-content auto;  /* label column fits its text, second column takes the rest */
+  grid-template-areas:
+    "startLabel startLabel"
+    "startDate  startDate"
+    "cycleLabel daysWrap";
+  column-gap: 8px;
+  row-gap: 10px;
+  align-items: center;
+}
+
+#supplementModal .cycle-inline,
+#supplementModal #suppCycleStartWrap{
+  margin-left: 0;            /* kill any stray left margin */
+  justify-self: start;       /* don't stretch to the far edge */
+}
+
+/* map elements to areas (keep your existing selectors/IDs) */
+#supplementModal .form-row-inline .field-caption { grid-area: startLabel; }
+#supplementModal .form-row-inline #suppCycleStart { grid-area: startDate; max-width: 240px;}
+#supplementModal .form-row-inline .cycle-inline { grid-area: cycleLabel; }
+#supplementModal .form-row-inline #suppCycleStartWrap { grid-area: daysWrap; }
+
+/* mobile: stack everything cleanly */
+@media (max-width: 480px){
+  #supplementModal .form-row-inline{
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "startLabel"
+      "startDate"
+      "cycleLabel"
+      "daysWrap";
+  }
+}
+
+#supplementModal #suppCycleStartWrap{
+  display: grid;           /* use grid for layout */
+  grid-auto-flow: column;   /* lay inputs left-to-right */
+  gap: 8px;                 /* tighten spacing */
+  width: auto;              /* don’t expand to full row width */
+  justify-content: start;   /* hug the label */
+  align-items: center;
+}
+
+/* keep the boxes reasonable so they don’t force horizontal scroll */
+#supplementModal #suppDaysOn,
+#supplementModal #suppDaysOff{
+  max-width: 100px;
+  width: 100px;              /* fixed works well here */
+  box-sizing: border-box;
+}
+
+/* Hidden by default */
+#supplementModal #suppCycleStartWrap { display: none; }
+
+/* Show & lay out horizontally when checked */
+#supplementModal .form-row-inline:has(#suppCycleChk:checked) #suppCycleStartWrap {
+  display: grid;
+  margin-top: 4px;
+  grid-auto-flow: column;
+  gap: 8px;
+  width: auto;
+  justify-content: start;
+  align-items: center;
+}
