@@ -1079,4 +1079,10 @@ body.sidebar-collapsed main {
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
+  #supplementModal .form-row {
+    width: 90%;
+  }
+  #supplementModal .modal-actions--split {
+    margin-right: 10px;
+  }
 }
