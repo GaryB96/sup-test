@@ -558,13 +558,12 @@ window.openBarcodeModal = function (code, seed) {
   // Forward the data to the supplement modal
   openSupplementModalFromBarcode({
     code,
-    name: seed?.name || '',
-    brand: seed?.brand || '',
-    dose: seed?.dose || '',
-    serves: seed?.serves || ''
+    name: (seed && seed.name) || '',
+    brand: (seed && seed.brand) || '',
+    dose: (seed && seed.dose) || '',
+    serves: (seed && seed.serves) || ''
   });
 };
 
 // (legacy scanner removed)
-;
 })();
