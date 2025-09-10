@@ -1064,21 +1064,22 @@ body.sidebar-collapsed main {
 }
 
 @media (max-width: 600px){
-  #supplementModal{ padding: 10; }
+  #supplementModal{ padding: 0; }
 
   #supplementModal .modal-content{
     width: 95vw;
-    height: 95vh;          /* fallback */
-    height: 95dvh;         /* dynamic viewport height on mobile */
+    height: 100vh;          /* fallback */
+    height: 100dvh;         /* dynamic viewport height on mobile */
     max-width: none;
     max-height: none;
-    border-radius: 0;       /* edge-to-edge look */
+    border-radius: 1px;       /* edge-to-edge look */
     box-sizing: border-box;
     /* Respect iPhone safe areas (notch/home indicator) */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+    margin: 0 auto;
   }
   #supplementModal .form-row {
     width: 90%;
