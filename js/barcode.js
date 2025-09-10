@@ -128,7 +128,7 @@ async function makeBarcodeDetector() {
     setStatus('');
     var nameEl = document.getElementById('bm_name');
     if (nameEl && nameEl.focus) nameEl.focus();
-  });
+  };
 
   // ---------- External lookups ----------
   async function fetchProductInfoFromHC(args, opts) {
@@ -319,62 +319,11 @@ async function makeBarcodeDetector() {
       return '';
     }
 
-    // Read file as data URL (CSP-friendly, avoids blob:)
+    // Read file as data URL (CSP-friendly)
     var dataUrl;
-    try {
-      dataUrl = await readFileAsDataURL(file);
-    } catch (e) {
-      console.warn('FileReader failed', e);
-      return '';
-    }
+    try { dataUrl = await readFileAsDataURL(file); } catch (e) { console.warn('FileReader failed', e); return ''; }
     var img;
-    try {
-      img = await loadImage(dataUrl);
-    } catch (e2) {
-      console.warn('Image load failed', e2);
-      return '';
-    }
-
-    var maxW = 1280;
-    function makeCanvas(w, h) {
-      var c = document.createElement('canvas');
-      c.width = w; c.height = h;
-      return c;
-    }
-
-    function drawVariant(angleDeg, crop) {
-      angleDeg = angleDeg || 0;
-      crop = crop || 'full';
-
-      var scale = img.width > maxW ? maxW / img.width : 1;
-      var baseW = Math.max(1, Math.round(img.width * scale));
-      var baseH = Math.max(1, Math.round(img.height * scale));
-
-      var sx = 0, sy = 0, sw = img.width, sh = img.height;
-      if (crop === 'center') {
-        var cw = Math.round(img.width * 0.8);
-        var ch = Math.round(img.height * 0.8);
-        sx = Math.round((img.width - cw) / 2);
-        sy = Math.round((img.height - ch) / 2);
-        sw = cw; sh = ch;
-      }
-
-      var tw = Math.max(1, Math.round(sw * scale));
-      var th = Math.max(1, Math.round(sh * scale));
-
-      var rad = angleDeg * Math.PI / 180;
-      var rot90 = angleDeg % 180 !== 0;
-      var outW = rot90 ? th : tw;
-      var outH = rot90 ? tw : th;
-      var canvas = makeCanvas(outW, outH);
-      var ctx = canvas.getContext('2d');
-      ctx.save();
-      ctx.translate(outW / 2, outH / 2);
-      ctx.rotate(rad);
-      ctx.drawImage(img, sx, sy, sw, sh, -tw / 2, -th / 2, tw, th);
-      ctx.restore();
-      return canvas.toDataURL('image/jpeg', 0.92);
-    }
+    try { img = await loadImage(dataUrl); } catch (e2) { console.warn('Image load failed', e2); return ''; }
 
     var hints = new Map();
     if (ZXing && ZXing.DecodeHintType && ZXing.BarcodeFormat) {
@@ -387,26 +336,110 @@ async function makeBarcodeDetector() {
     }
     var reader = new ZXing.BrowserMultiFormatReader(hints);
 
-    var variants = [
-      { a: 0,   c: 'full'   },
-      { a: 0,   c: 'center' },
-      { a: 90,  c: 'full'   },
-      { a: 270, c: 'full'   },
-      { a: 180, c: 'full'   }
-    ];
+    function makeCanvas(w, h) { var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
 
-    for (var i = 0; i < variants.length; i++) {
-      try {
-        var v = variants[i];
-        var vDataUrl = drawVariant(v.a, v.c);
-        var res = await reader.decodeFromImageUrl(vDataUrl);
-        var text = res && (res.text || (res.getText && res.getText()));
-        if (text && String(text).trim()) {
-          reader.reset();
-          return String(text).trim();
-        }
-      } catch (e3) {}
+    // First, try canvas-based decode with preprocessing and rotations
+    var maxW = 1600;
+    var scale = img.width > maxW ? maxW / img.width : 1;
+    var baseW = Math.max(1, Math.round(img.width * scale));
+    var baseH = Math.max(1, Math.round(img.height * scale));
+
+    var angles = [0, 90, 270, 180];
+    var crops  = ['full','center'];
+
+    for (var ai = 0; ai < angles.length; ai++) {
+      for (var ci = 0; ci < crops.length; ci++) {
+        try {
+          var angleDeg = angles[ai];
+          var crop = crops[ci];
+
+          // Compute crop source
+          var sx = 0, sy = 0, sw = img.width, sh = img.height;
+          if (crop === 'center') {
+            var cw = Math.round(img.width * 0.8);
+            var ch = Math.round(img.height * 0.8);
+            sx = Math.round((img.width - cw) / 2);
+            sy = Math.round((img.height - ch) / 2);
+            sw = cw; sh = ch;
+          }
+
+          // Target size
+          var tw = Math.max(1, Math.round(sw * scale));
+          var th = Math.max(1, Math.round(sh * scale));
+
+          var rad = angleDeg * Math.PI / 180;
+          var rot90 = angleDeg % 180 !== 0;
+          var outW = rot90 ? th : tw;
+          var outH = rot90 ? tw : th;
+
+          var canvas = makeCanvas(outW, outH);
+          var ctx = canvas.getContext('2d', { willReadFrequently: true });
+          ctx.save();
+          ctx.translate(outW / 2, outH / 2);
+          ctx.rotate(rad);
+          ctx.drawImage(img, sx, sy, sw, sh, -tw / 2, -th / 2, tw, th);
+          ctx.restore();
+
+          // preprocess for 1D contrast
+          preprocessFor1D(ctx, outW, outH);
+
+          // Try decode from canvas
+          try {
+            var res = await reader.decodeFromCanvas(canvas);
+            var text = res && (res.text || (res.getText && res.getText()));
+            if (text && String(text).trim()) { reader.reset(); return String(text).trim(); }
+          } catch (eDec) {}
+        } catch (loopErr) {}
+      }
     }
+
+    // As a final fallback, try image URL variants (no preprocessing)
+    try {
+      var variants = [
+        { a: 0,   c: 'full'   },
+        { a: 0,   c: 'center' },
+        { a: 90,  c: 'full'   },
+        { a: 270, c: 'full'   },
+        { a: 180, c: 'full'   }
+      ];
+
+      function drawVariantToDataURL(angleDeg, crop) {
+        var sx = 0, sy = 0, sw = img.width, sh = img.height;
+        var sc = img.width > maxW ? maxW / img.width : 1;
+        if (crop === 'center') {
+          var cw = Math.round(img.width * 0.8);
+          var ch = Math.round(img.height * 0.8);
+          sx = Math.round((img.width - cw) / 2);
+          sy = Math.round((img.height - ch) / 2);
+          sw = cw; sh = ch;
+        }
+        var tw = Math.max(1, Math.round(sw * sc));
+        var th = Math.max(1, Math.round(sh * sc));
+        var rad = angleDeg * Math.PI / 180;
+        var rot90 = angleDeg % 180 !== 0;
+        var outW = rot90 ? th : tw;
+        var outH = rot90 ? tw : th;
+        var c = makeCanvas(outW, outH);
+        var cctx = c.getContext('2d');
+        cctx.save();
+        cctx.translate(outW/2, outH/2);
+        cctx.rotate(rad);
+        cctx.drawImage(img, sx, sy, sw, sh, -tw/2, -th/2, tw, th);
+        cctx.restore();
+        return c.toDataURL('image/jpeg', 0.92);
+      }
+
+      for (var i = 0; i < variants.length; i++) {
+        try {
+          var v = variants[i];
+          var vDataUrl = drawVariantToDataURL(v.a, v.c);
+          var r2 = await reader.decodeFromImageUrl(vDataUrl);
+          var t2 = r2 && (r2.text || (r2.getText && r2.getText()));
+          if (t2 && String(t2).trim()) { reader.reset(); return String(t2).trim(); }
+        } catch (e3) {}
+      }
+    } catch (e4) {}
+
     reader.reset();
     return '';
   }
@@ -531,3 +564,7 @@ window.openBarcodeModal = function (code, seed) {
     serves: seed?.serves || ''
   });
 };
+
+// (legacy scanner removed)
+;
+})();
