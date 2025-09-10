@@ -57,6 +57,8 @@ async function makeBarcodeDetector() {
 
 // barcode.js — full version with iPhone ZXing fallback (Safari-friendly), HC/OFF lookups, optional OCR, and dev helper
 (function () {
+  var IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || ((navigator.platform === 'MacIntel') && navigator.maxTouchPoints > 1);
+  var FORCE_ZXING_ON_IOS = true;
   // ---------- utils ----------
   function onReady(fn) {
     if (document.readyState === 'loading') {
@@ -150,7 +152,9 @@ async function makeBarcodeDetector() {
     ];
 
     var ac = new AbortController();
-    var to = setTimeout(function () { ac.abort(); }, timeoutMs);
+    var to = setTimeout(function () {
+  var IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || ((navigator.platform === 'MacIntel') && navigator.maxTouchPoints > 1);
+  var FORCE_ZXING_ON_IOS = true; ac.abort(); }, timeoutMs);
     try {
       for (var i = 0; i < urls.length; i++) {
         var url = urls[i];
@@ -188,7 +192,9 @@ async function makeBarcodeDetector() {
     if (/^\d{12}$/.test(code || '')) candidates.push('0' + code); // UPC-A -> EAN-13
 
     var ac = new AbortController();
-    var to = setTimeout(function () { ac.abort(); }, timeoutMs);
+    var to = setTimeout(function () {
+  var IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || ((navigator.platform === 'MacIntel') && navigator.maxTouchPoints > 1);
+  var FORCE_ZXING_ON_IOS = true; ac.abort(); }, timeoutMs);
     try {
       for (var i = 0; i < candidates.length; i++) {
         var c = candidates[i];
@@ -216,72 +222,35 @@ async function makeBarcodeDetector() {
     } finally { clearTimeout(to); }
   }
 
-    // ---------- Bridge to the already-open Supplement modal ----------
-  // Fills fields inside #supplementModalForm (does NOT open the modal)
-  function openSupplementModalFromBarcode(payload) {
+  
+  // ---------- Bridge to the already-open Supplement modal (safe filler) ----------
+  async function fillSupplementFromBarcode(code, fileForOCR) {
     try {
       var form = document.getElementById('supplementModalForm') || document.querySelector('#supplementModal form');
       if (!form) {
         console.warn('[barcode] Supplement modal form not found; nothing to fill.');
         return;
       }
-      var brand = payload && payload.brand || '';
-      var name  = payload && payload.name  || '';
-      var dose  = payload && payload.dose  || '';
-
+      var best = { name:'', brand:'', dose:'', serves:'' };
+      try { var off = await fetchProductInfoFromOFF(code, { timeoutMs: 6000 }); if (off) best = Object.assign(best, off); } catch(_){}
+      if ((!best.name && !best.brand) && fileForOCR && window.Tesseract) {
+        try { var guess = await ocrFrontLabel(fileForOCR, { lang:'eng', maxW: 1600 }); if (guess) best = Object.assign(best, guess);} catch(_){}
+      }
+      if (!best.name && !best.brand) {
+        try { var hc = await fetchProductInfoFromHC({ name: best.name, brand: best.brand, code: code }, { timeoutMs: 8000 }); if (hc) best = Object.assign(best, hc);} catch(_){}
+      }
       var el;
-      el = form.querySelector('#suppBrand');   if (el) el.value = brand;
-      el = form.querySelector('#suppName');    if (el) el.value = name;
-      el = form.querySelector('#suppDosage');  if (el) el.value = dose;
-
-      // Optional: announce to any listeners that fields were filled
-      try {
-        document.dispatchEvent(new CustomEvent('barcode:filled', { detail: payload }));
-      } catch(_) {}
-
-      console.log('[barcode] filled supplement form from barcode:', payload);
+      el = form.querySelector('#suppBrand');   if (el) el.value = best.brand || '';
+      el = form.querySelector('#suppName');    if (el) el.value = best.name  || '';
+      el = form.querySelector('#suppDosage');  if (el) el.value = best.dose  || '';
+      el = form.querySelector('#suppServings');if (el) el.value = best.serves|| '';
+      try { document.dispatchEvent(new CustomEvent('barcode:filled', { detail: { code: code, fields: best } })); } catch(_){}
+      console.log('[barcode] filled supplement form from barcode:', code, best);
     } catch (e) {
-      console.warn('[barcode] openSupplementModalFromBarcode error:', e);
+      console.warn('[barcode] fillSupplementFromBarcode error:', e);
     }
   }
-
-  // Resolve product info and fill the (already open) supplement modal; do NOT open it.
-  async function fillSupplementFromBarcode(code, fileForOCR) {
-    var best = { name: '', brand: '', dose: '', serves: '' };
-
-    // 1) Try Open Food Facts by code
-    try {
-      var off = await fetchProductInfoFromOFF(code, { timeoutMs: 6000 });
-      if (off) best = Object.assign(best, off);
-    } catch (_) {}
-
-    // 2) If still sparse, optional OCR on the front label (if Tesseract present)
-    if ((!best.name && !best.brand) && fileForOCR && window.Tesseract) {
-      try {
-        var guess = await ocrFrontLabel(fileForOCR, { lang: 'eng', maxW: 1600 });
-        if (guess) best = Object.assign(best, guess);
-      } catch (_) {}
-    }
-
-    // 3) As a last resort, Health Canada lookup by current hints/code
-    if (!best.name && !best.brand) {
-      try {
-        var hc = await fetchProductInfoFromHC({ name: best.name, brand: best.brand, code: code }, { timeoutMs: 8000 });
-        if (hc) best = Object.assign(best, hc);
-      } catch (_) {}
-    }
-
-    // 4) Fill whatever we have into the existing modal
-    openSupplementModalFromBarcode({
-      code: code,
-      name:  best.name,
-      brand: best.brand,
-      dose:  best.dose,
-      serves: best.serves
-    });
-  }
-
-  // ---------- Optional OCR (free) ----------
+// ---------- Optional OCR (free) ----------
   function matchBest(text, regs) {
     for (var i = 0; i < regs.length; i++) {
       var r = regs[i];
@@ -318,14 +287,14 @@ async function makeBarcodeDetector() {
       // likely a canvas/ImageBitmap-like
       canvas = document.createElement('canvas');
       canvas.width = bmp.width; canvas.height = bmp.height;
-      var cctx = canvas.getContext('2d');
+      var cctx = canvas.getContext('2d', { willReadFrequently: true });
       cctx.drawImage(bmp, 0, 0);
     } else {
       // fallback assume canvas
       canvas = bmp;
     }
 
-    var ctx = canvas.getContext('2d');
+    var ctx = canvas.getContext('2d', { willReadFrequently: true });
     try {
       var imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       var factor = 1.15;
@@ -355,7 +324,7 @@ async function makeBarcodeDetector() {
     var h = Math.max(1, Math.round(img.height * scale));
     var canvas = document.createElement('canvas');
     canvas.width = w; canvas.height = h;
-    var ctx = canvas.getContext('2d');
+    var ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.drawImage(img, 0, 0, w, h);
     return canvas;
   }
@@ -410,7 +379,7 @@ async function makeBarcodeDetector() {
     var baseH = Math.max(1, Math.round(img.height * scale));
 
     var angles = [0, 90, 270, 180];
-    var crops  = ['full','center'];
+    var crops  = ['full','center','hstrip','vstrip'];
 
     for (var ai = 0; ai < angles.length; ai++) {
       for (var ci = 0; ci < crops.length; ci++) {
@@ -426,8 +395,21 @@ async function makeBarcodeDetector() {
             sx = Math.round((img.width - cw) / 2);
             sy = Math.round((img.height - ch) / 2);
             sw = cw; sh = ch;
+          } else if (crop === 'hstrip') {
+            // middle horizontal band (good for 1D barcodes)
+            var ch2 = Math.round(img.height * 0.35);
+            sx = 0;
+            sy = Math.round((img.height - ch2) / 2);
+            sw = img.width;
+            sh = ch2;
+          } else if (crop === 'vstrip') {
+            // middle vertical band (for tall/rotated codes)
+            var cw2 = Math.round(img.width * 0.35);
+            sx = Math.round((img.width - cw2) / 2);
+            sy = 0;
+            sw = cw2;
+            sh = img.height;
           }
-
           // Target size
           var tw = Math.max(1, Math.round(sw * scale));
           var th = Math.max(1, Math.round(sh * scale));
@@ -485,7 +467,7 @@ async function makeBarcodeDetector() {
         var outW = rot90 ? th : tw;
         var outH = rot90 ? tw : th;
         var c = makeCanvas(outW, outH);
-        var cctx = c.getContext('2d');
+        var cctx = c.getContext('2d', { willReadFrequently: true });
         cctx.save();
         cctx.translate(outW/2, outH/2);
         cctx.rotate(rad);
@@ -560,7 +542,7 @@ function anyFilled(curr) {
 
         try {
           var code = '';
-          if ('BarcodeDetector' in window) {
+          if (!IS_IOS && 'BarcodeDetector' in window) {
             try {
               var bmp = await makeBitmapFromFile(file, 1600);
               if (bmp) {
