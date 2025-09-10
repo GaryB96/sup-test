@@ -216,6 +216,71 @@ async function makeBarcodeDetector() {
     } finally { clearTimeout(to); }
   }
 
+    // ---------- Bridge to the already-open Supplement modal ----------
+  // Fills fields inside #supplementModalForm (does NOT open the modal)
+  function openSupplementModalFromBarcode(payload) {
+    try {
+      var form = document.getElementById('supplementModalForm') || document.querySelector('#supplementModal form');
+      if (!form) {
+        console.warn('[barcode] Supplement modal form not found; nothing to fill.');
+        return;
+      }
+      var brand = payload && payload.brand || '';
+      var name  = payload && payload.name  || '';
+      var dose  = payload && payload.dose  || '';
+
+      var el;
+      el = form.querySelector('#suppBrand');   if (el) el.value = brand;
+      el = form.querySelector('#suppName');    if (el) el.value = name;
+      el = form.querySelector('#suppDosage');  if (el) el.value = dose;
+
+      // Optional: announce to any listeners that fields were filled
+      try {
+        document.dispatchEvent(new CustomEvent('barcode:filled', { detail: payload }));
+      } catch(_) {}
+
+      console.log('[barcode] filled supplement form from barcode:', payload);
+    } catch (e) {
+      console.warn('[barcode] openSupplementModalFromBarcode error:', e);
+    }
+  }
+
+  // Resolve product info and fill the (already open) supplement modal; do NOT open it.
+  async function fillSupplementFromBarcode(code, fileForOCR) {
+    var best = { name: '', brand: '', dose: '', serves: '' };
+
+    // 1) Try Open Food Facts by code
+    try {
+      var off = await fetchProductInfoFromOFF(code, { timeoutMs: 6000 });
+      if (off) best = Object.assign(best, off);
+    } catch (_) {}
+
+    // 2) If still sparse, optional OCR on the front label (if Tesseract present)
+    if ((!best.name && !best.brand) && fileForOCR && window.Tesseract) {
+      try {
+        var guess = await ocrFrontLabel(fileForOCR, { lang: 'eng', maxW: 1600 });
+        if (guess) best = Object.assign(best, guess);
+      } catch (_) {}
+    }
+
+    // 3) As a last resort, Health Canada lookup by current hints/code
+    if (!best.name && !best.brand) {
+      try {
+        var hc = await fetchProductInfoFromHC({ name: best.name, brand: best.brand, code: code }, { timeoutMs: 8000 });
+        if (hc) best = Object.assign(best, hc);
+      } catch (_) {}
+    }
+
+    // 4) Fill whatever we have into the existing modal
+    openSupplementModalFromBarcode({
+      code: code,
+      name:  best.name,
+      brand: best.brand,
+      dose:  best.dose,
+      serves: best.serves
+    });
+  }
+
   // ---------- Optional OCR (free) ----------
   function matchBest(text, regs) {
     for (var i = 0; i < regs.length; i++) {
