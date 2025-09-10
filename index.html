@@ -381,5 +381,16 @@
   <script type="module" src="./js/supplementsUI.js"></script>
   <script type="module" src="./js/notifications.js"></script>
   <script type="module" src="./js/sidebar-toggle.js"></script>
+
+<script>
+(function showMobileNote() {
+  var note = document.getElementById("barcodeMobileNote");
+  if (!note) return;
+  var isMobileUA = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (isMobileUA) note.classList.add("hidden");
+  else note.classList.remove("hidden");
+})();
+</script>
 </body>
+
 </html>
