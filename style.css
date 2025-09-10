@@ -1073,40 +1073,36 @@ body.sidebar-collapsed main {
   #supplementModal{ padding: 0; }
 
   #supplementModal .modal-content{
-    width: 100vw;
-    height: 100vh;          /* fallback */
-    height: 100dvh;         /* dynamic viewport height on mobile */
-    max-width: none;
-    max-height: none;
-    border-radius: 1px;       /* edge-to-edge look */
+    /* Centered card that fits the viewport without overflow */
     box-sizing: border-box;
-    /* Respect iPhone safe areas (notch/home indicator) */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-    margin: 0 auto;
+    width: clamp(280px, 92vw, 560px);
+    margin: 8vh auto 0;       /* centers horizontally */
+    max-height: 85vh;
+    overflow: auto;
 
-  position: relative;
-  z-index: 1;
-  width: min(560px, 92vw);
-  max-height: 85vh;
-  overflow: auto;
-  margin: 8vh auto 0; /* centered horizontally */
-  background: #0b1220;        /* matches your sidebar theme */
-  border: 1px solid #22c55e;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  color: #fff;
+    /* keep your visual theme — these are already defined above;
+       include them here ONLY if you don't have them in the desktop block */
+    background: #0b1220;
+    border: 1px solid #22c55e;
+    border-radius: 12px;
+    padding: 20px;
+    color: #fff;
   }
-  #supplementModal .form-row {
-    width: 90%;
+
+  /* inputs shouldn’t force horizontal scroll */
+  #supplementModal input,
+  #supplementModal select,
+  #supplementModal textarea{
+    max-width: 100%;
+    margin-left: 0;   /* mobile-safe; you can keep your +3px tweak if you prefer */
+    box-sizing: border-box;
   }
-  #supplementModal .modal-actions--split {
-    margin-right: 20px;
-  }
-  #supplementModal .cycle-inline {
-    Margin-left: 10px;
+
+  /* guard against any grid/flex child widening the row */
+  #supplementModal .form-row,
+  #supplementModal .form-row-inline,
+  #supplementModal .time-grid{
+    min-width: 0;
   }
 }
+
