@@ -1065,68 +1065,31 @@ body.sidebar-collapsed main {
   opacity: 1;
 }
 
-/* Full-screen modal on phones, but do NOT change your colors */
 @media (max-width: 600px){
-  /* Backdrop fills viewport; content stretches edge-to-edge */
-  #supplementModal{
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: stretch;
-    justify-content: stretch;
-    padding: 0;
-  }
+  #supplementModal{ padding: 0; }
 
   #supplementModal .modal-content{
-    /* full-bleed container */
-    width: 100%;           /* use % to avoid Android 100vw drift */
+    width: 100%;
+    height: 100vh;          /* fallback */
+    height: 100dvh;         /* dynamic viewport height on mobile */
     max-width: none;
-    height: 100vh;         /* fallback */
-    height: 100dvh;        /* correct on mobile with dynamic toolbars */
-    margin: 0;
-    border-radius: 0;
-    overflow: hidden;      /* body scrolls; container doesn’t */
-    /* keep your existing background/border/color — do not set them here */
-  }
-
-  #supplementModal .modal-body{
-    flex: 1 1 auto;
-    min-height: 0;                 /* allow the scroller to shrink */
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    /* safe-area insets + comfy padding, without widening the box */
-    padding-top:    calc(env(safe-area-inset-top) + 12px);
-    padding-right:  calc(env(safe-area-inset-right) + 12px);
-    padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
-    padding-left:   calc(env(safe-area-inset-left) + 12px);
-  }
-
-  /* Inputs shouldn’t hang off-screen on Android */
-  #supplementModal input,
-  #supplementModal select,
-  #supplementModal textarea{
-    max-width: 100%;
-    margin-left: 0;
+    max-height: none;
+    border-radius: 1px;       /* edge-to-edge look */
     box-sizing: border-box;
+    /* Respect iPhone safe areas (notch/home indicator) */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    margin: 0 auto;
   }
-
-  /* Let grid/flex rows shrink to viewport width */
-  #supplementModal .form-row,
-  #supplementModal .form-row-inline,
-  #supplementModal .time-grid{
-    min-width: 0;
+  #supplementModal .form-row {
+    width: 90%;
+  }
+  #supplementModal .modal-actions--split {
+    margin-right: 20px;
+  }
+  #supplementModal .cycle-inline {
+    Margin-left: 10px;
   }
 }
-
-/* Prevent horizontal scroll anywhere in the modal */
-#supplementModal,
-#supplementModal .modal-content,
-#supplementModal .modal-body{
-  overflow-x: hidden;
-}
-
-/* Make padding count inside width on all devices */
-#supplementModal .modal-content{
-  box-sizing: border-box;
-}
-
