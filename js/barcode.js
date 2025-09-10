@@ -128,7 +128,7 @@ async function makeBarcodeDetector() {
     setStatus('');
     var nameEl = document.getElementById('bm_name');
     if (nameEl && nameEl.focus) nameEl.focus();
-  };
+  });
 
   // ---------- External lookups ----------
   async function fetchProductInfoFromHC(args, opts) {
@@ -564,6 +564,3 @@ window.openBarcodeModal = function (code, seed) {
     serves: (seed && seed.serves) || ''
   });
 };
-
-// (legacy scanner removed)
-})();
