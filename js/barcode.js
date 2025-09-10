@@ -554,105 +554,14 @@ async function makeBarcodeDetector() {
   }
 
   
-  // ---------- NEW: Autofill Supplement Modal instead of barcode modal ----------
-  function getSupplementFieldValues() {
-    return {
-      name:   (document.getElementById('suppName')    && document.getElementById('suppName').value    || '').trim(),
-      brand:  (document.getElementById('suppBrand')   && document.getElementById('suppBrand').value   || '').trim(),
-      dose:   (document.getElementById('suppDosage')  && document.getElementById('suppDosage').value  || '').trim(),
-      serves: (document.getElementById('suppServings')&& document.getElementById('suppServings').value|| '').trim()
-    };
-  }
-  function populateSupplementFields(obj) {
-    obj = obj || {};
-    var name   = obj.name   || '';
-    var brand  = obj.brand  || '';
-    var dose   = obj.dose   || '';
-    var serves = obj.serves || '';
-
-    var el;
-    el = document.getElementById('suppName');      if (el && name)   el.value = name;
-    el = document.getElementById('suppBrand');     if (el && brand)  el.value = brand;
-    el = document.getElementById('suppDosage');    if (el && dose)   el.value = dose;
-    el = document.getElementById('suppServings');  if (el && serves) el.value = serves;
-  }
-
-  async function fillSupplementFromBarcode(code, fileForOCR) {
-    // Start with barcode-only info
-    populateSupplementFields({}); // ensure fields exist
-
-    // OFF (barcode-based)
-    var off = await fetchProductInfoFromOFF(code);
-    if (off) {
-      var curr = getSupplementFieldValues();
-      populateSupplementFields({
-        name:   curr.name   || off.name   || '',
-        brand:  curr.brand  || off.brand  || '',
-        dose:   curr.dose   || off.dose   || '',
-        serves: curr.serves || off.serves || ''
-      });
-    }
-
-    // Health Canada with what we have
-    var curr1 = getSupplementFieldValues();
-    if (curr1.name || curr1.brand || code) {
-      var hc = await fetchProductInfoFromHC({ name: curr1.name, brand: curr1.brand, code: code });
-      if (hc) {
-        var now = getSupplementFieldValues();
-        populateSupplementFields({
-          name:   now.name   || hc.name   || '',
-          brand:  now.brand  || hc.brand  || '',
-          dose:   now.dose   || hc.dose   || '',
-          serves: now.serves || hc.serves || ''
-        });
-      }
-    }
-
-    // Optional OCR if nothing yet and a file is available
-    var curr2 = getSupplementFieldValues();
-    if (!(curr2.name || curr2.brand || curr2.dose || curr2.serves) && fileForOCR && window.Tesseract && window.Tesseract.recognize) {
-      try {
-        var ocr = await ocrFrontLabel(fileForOCR);
-        if (ocr) {
-          var merged = {
-            name:   curr2.name   || ocr.name  || '',
-            brand:  curr2.brand  || ocr.brand || '',
-            dose:   curr2.dose   || ocr.dose  || '',
-            serves: curr2.serves || ''
-          };
-          populateSupplementFields(merged);
-          if (ocr.npn || ocr.din || ocr.name || ocr.brand) {
-            var hc2 = await fetchProductInfoFromHC({
-              name:  ocr.name || '',
-              brand: ocr.brand || '',
-              code:  ocr.npn || ocr.din || ''
-            });
-            if (hc2) {
-              var dEl = document.getElementById('suppDosage');
-              var sEl = document.getElementById('suppServings');
-              if (dEl && !dEl.value && hc2.dose) dEl.value = hc2.dose;
-              if (sEl && !sEl.value && hc2.serves) sEl.value = hc2.serves;
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('OCR failed:', e);
-      }
-    }
-
-    // focus the name field for quick edit
-    var nm = document.getElementById('suppName');
-    if (nm && nm.focus) nm.focus();
-  }
-
   // Ensure scanner button works even if modal content is re-rendered or on Android DOM quirks
   (function ensureScannerBinding(){
     var bound = false;
     function bind() {
-      if (bound) return;
+      if (bound || window.__SCANNER_BOUND) return;
       var btn = document.getElementById('barcodeBtn');
       if (!btn) return;
-      bound = true;
+      bound = true; window.__SCANNER_BOUND = true;
 
       var cameraInput = document.createElement('input');
       cameraInput.type = 'file';
@@ -661,7 +570,9 @@ async function makeBarcodeDetector() {
       cameraInput.style.display = 'none';
       document.body.appendChild(cameraInput);
 
+      if (btn && btn.dataset && btn.dataset.scannerBound === '1') return;
       btn.addEventListener('click', function () { cameraInput.click(); });
+      if (btn && btn.dataset) btn.dataset.scannerBound = '1';
 
       cameraInput.addEventListener('change', async function () {
         var file = cameraInput.files && cameraInput.files[0];
@@ -669,7 +580,7 @@ async function makeBarcodeDetector() {
 
         var t = (file.type || '').toLowerCase();
         if (t.includes('heic') || t.includes('heif')) {
-          alert('This image format is not supported on some Android devices. Please open Camera settings and set format to JPEG/Most Compatible, or choose a different photo.');
+          alert('This image format is not supported on some devices. Please set Camera format to JPEG/Most Compatible, or choose a different photo.');
           cameraInput.value = '';
           return;
         }
@@ -705,22 +616,23 @@ async function makeBarcodeDetector() {
       });
     }
 
-    // Try to bind now…
+    // Bind immediately if possible
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
       bind();
     } else {
       document.addEventListener('DOMContentLoaded', bind);
     }
 
-    // …and observe for late insertions (defensive for Android/webview)
+    // Observe for late insertions
     var mo = new MutationObserver(function() {
-      if (!bound) bind();
+      if (!window.__SCANNER_BOUND) bind();
     });
     mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
   })();
 
 // ---------- Scanner (photo → decode) ----------
-  onReady(function () {
+onReady(function () {
+    if (window.__SCANNER_BOUND) return;
     var btn = document.getElementById('barcodeBtn');
     if (!btn) return;
 
@@ -780,20 +692,4 @@ async function makeBarcodeDetector() {
       }
     });
   });
-  (function showMobileNote() {
-  var note = document.getElementById("barcodeMobileNote");
-  if (!note) return;
-
-(function showMobileNote() {
-  var note = document.getElementById("barcodeMobileNote");
-  if (!note) return;
-
-  var isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) 
-                 || (window.innerWidth < 768);
-
-  if (isMobile) {
-    note.classList.add("hidden");
-  } else {
-    note.classList.remove("hidden");
-  }
-})})})();
+})();

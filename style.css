@@ -1111,28 +1111,3 @@ body.sidebar-collapsed main {
     min-width: 0;
   }
 }
-
-#barcodeMobileNote {
-  font-size: 0.85em;
-  color: #666;
-  margin-left: 8px;
-}
-
-.hidden {
-  display: none !important;
-}
-
-.barcode-row {
-  display: flex;
-  align-items: center;
-  gap: 8px; /* space between button and label */
-}
-
-#barcodeMobileNote {
-  font-size: 0.85em;
-  color: #666;
-}
-
-.hidden {
-  display: none !important;
-}
