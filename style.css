@@ -1111,24 +1111,3 @@ body.sidebar-collapsed main {
     min-width: 0;
   }
 }
-
-.barcode-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;            /* do not wrap to next line */
-}
-
-/* override any form-wide rules that force 100% width */
-.barcode-row > * {
-  width: auto !important;
-  flex: 0 0 auto;
-  white-space: nowrap;
-}
-
-#barcodeMobileNote {
-  font-size: 0.85em;
-  color: #666;
-}
-
-.hidden { display: none !important; }

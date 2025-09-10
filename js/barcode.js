@@ -473,102 +473,145 @@ async function makeBarcodeDetector() {
     return !!(curr.name || curr.brand || curr.dose || curr.serves);
   }
 
-  // ---------- Autofill flow ----------
-  function getCurrentFieldValues() {
-    var out = {
-      name:   (document.getElementById('bm_name') && document.getElementById('bm_name').value || '').trim(),
-      brand:  (document.getElementById('bm_brand') && document.getElementById('bm_brand').value || '').trim(),
-      dose:   (document.getElementById('bm_serving') && document.getElementById('bm_serving').value || '').trim(),
-      serves: (document.getElementById('bm_servings') && document.getElementById('bm_servings').value || '').trim()
-    };
-    return out;
-  }
-  function anyFilled(curr) {
-    return !!(curr.name || curr.brand || curr.dose || curr.serves);
-  }
-
-  // Replace legacy barcode modal path with direct supplement autofill
   async function openModalWithAutoFill(code, fileForOCR) {
-    return fillSupplementFromBarcode(code, fileForOCR);
-  }
+    ensureModal();
+    var overlay = document.getElementById('barcodeOverlay');
+    var modal   = document.getElementById('barcodeModal');
+    if (!overlay || !modal) return;
+    overlay.style.display = 'block';
+    modal.style.display   = 'flex';
+    document.body.style.overflow = 'hidden';
 
-  // Ensure scanner button works even if modal content is re-rendered or on Android DOM quirks
-  (function ensureScannerBinding(){
-    var bound = false;
-    function bind() {
-      if (bound || window.__SCANNER_BOUND) return;
-      var btn = document.getElementById('barcodeBtn');
-      if (!btn) return;
-      bound = true; window.__SCANNER_BOUND = true;
+    setStatus('Looking up product info…');
+    populateModalFields({ code: code });
 
-      var cameraInput = document.createElement('input');
-      cameraInput.type = 'file';
-      cameraInput.accept = 'image/*';
-      cameraInput.capture = 'environment';
-      cameraInput.style.display = 'none';
-      document.body.appendChild(cameraInput);
-
-      if (btn && btn.dataset && btn.dataset.scannerBound === '1') return;
-      btn.addEventListener('click', function () { cameraInput.click(); });
-      if (btn && btn.dataset) btn.dataset.scannerBound = '1';
-
-      cameraInput.addEventListener('change', async function () {
-        var file = cameraInput.files && cameraInput.files[0];
-        if (!file) return;
-
-        var t = (file.type || '').toLowerCase();
-        if (t.includes('heic') || t.includes('heif')) {
-          alert('This image format is not supported on some devices. Please set Camera format to JPEG/Most Compatible, or choose a different photo.');
-          cameraInput.value = '';
-          return;
-        }
-
-        try {
-          var code = '';
-          if ('BarcodeDetector' in window) {
-            try {
-              var bmp = await makeBitmapFromFile(file, 1600);
-              if (bmp) {
-                var det = await makeBarcodeDetector();
-                var res = await det.detect(bmp);
-                if (res && res.length && res[0] && res[0].rawValue) code = String(res[0].rawValue || '').trim();
-              }
-            } catch (e) {}
-          }
-          if (!code) {
-            setStatus('Scanning photo…');
-            code = await decodeWithZXingRobust(file);
-          }
-          if (code) {
-            await fillSupplementFromBarcode(code, file);
-          } else {
-            alert('No barcode detected. Try a closer, well-lit shot filling the frame.');
-          }
-        } catch (err) {
-          console.error('Scan error:', err);
-          alert('Could not read the image. Please try again.');
-        } finally {
-          setStatus('');
-          cameraInput.value = '';
-        }
+    // OFF (barcode-based)
+    var off = await fetchProductInfoFromOFF(code);
+    if (off) {
+      var curr = getCurrentFieldValues();
+      populateModalFields({
+        code:   code,
+        name:   curr.name   || off.name   || '',
+        brand:  curr.brand  || off.brand  || '',
+        dose:   curr.dose   || off.dose   || '',
+        serves: curr.serves || off.serves || ''
       });
     }
 
-    // Bind immediately if possible
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      bind();
-    } else {
-      document.addEventListener('DOMContentLoaded', bind);
+    // Health Canada with what we have
+    var curr1 = getCurrentFieldValues();
+    if (curr1.name || curr1.brand || code) {
+      var hc = await fetchProductInfoFromHC({ name: curr1.name, brand: curr1.brand, code: code });
+      if (hc) {
+        var now = getCurrentFieldValues();
+        populateModalFields({
+          code:   code,
+          name:   now.name   || hc.name   || '',
+          brand:  now.brand  || hc.brand  || '',
+          dose:   now.dose   || hc.dose   || '',
+          serves: now.serves || hc.serves || ''
+        });
+      }
     }
 
-    // Observe for late insertions
-    var mo = new MutationObserver(function() {
-      if (!window.__SCANNER_BOUND) bind();
+    // Optional OCR
+    var curr2 = getCurrentFieldValues();
+    if (!anyFilled(curr2) && fileForOCR && window.Tesseract && window.Tesseract.recognize) {
+      try {
+        setStatus('Reading label text…');
+        var ocr = await ocrFrontLabel(fileForOCR);
+        if (ocr) {
+          var merged = {
+            code:   code,
+            name:   curr2.name   || ocr.name  || '',
+            brand:  curr2.brand  || ocr.brand || '',
+            dose:   curr2.dose   || ocr.dose  || '',
+            serves: curr2.serves || ''
+          };
+          populateModalFields(merged);
+          if (ocr.npn || ocr.din || ocr.name || ocr.brand) {
+            var hc2 = await fetchProductInfoFromHC({
+              name:  ocr.name || '',
+              brand: ocr.brand || '',
+              code:  ocr.npn || ocr.din || ''
+            });
+            if (hc2) {
+              var nowDoseEl = document.getElementById('bm_serving');
+              var nowServEl = document.getElementById('bm_servings');
+              if (nowDoseEl && !nowDoseEl.value && hc2.dose) nowDoseEl.value = hc2.dose;
+              if (nowServEl && !nowServEl.value && hc2.serves) nowServEl.value = hc2.serves;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('OCR failed:', e);
+      }
+    }
+
+    setStatus('');
+    var nameEl = document.getElementById('bm_name');
+    if (nameEl && nameEl.focus) nameEl.focus();
+  }
+
+  // ---------- Scanner (photo → decode) ----------
+  onReady(function () {
+    var btn = document.getElementById('barcodeBtn');
+    if (!btn) return;
+
+    var cameraInput = document.createElement('input');
+    cameraInput.type = 'file';
+    cameraInput.accept = 'image/jpeg,image/png'; // prefer JPEG/PNG
+    cameraInput.capture = 'environment';
+    cameraInput.style.display = 'none';
+    document.body.appendChild(cameraInput);
+
+    btn.addEventListener('click', function () { cameraInput.click(); });
+
+    cameraInput.addEventListener('change', async function () {
+      var file = cameraInput.files && cameraInput.files[0];
+      if (!file) return;
+
+      // HEIC/HEIF guard
+      var t = (file.type || '').toLowerCase();
+      if (t.indexOf('heic') >= 0 || t.indexOf('heif') >= 0) {
+        alert('This photo is HEIC. Please retake as JPEG (Settings ▸ Camera ▸ Formats ▸ Most Compatible) or try again.');
+        cameraInput.value = '';
+        return;
+      }
+
+      try {
+        var code = '';
+
+        // Try native BarcodeDetector first
+        if ('BarcodeDetector' in window) {
+          try {
+            var bmp = await makeBitmapFromFile(file, 1600);
+            if (bmp) {
+              var det = await makeBarcodeDetector();
+              var res = await det.detect(bmp);
+              if (res && res.length && res[0] && res[0].rawValue) code = String(res[0].rawValue || '').trim();
+            }
+          } catch (e) {}
+        }
+
+        // iPhone/Safari fallback (or if BD found nothing)
+        if (!code) {
+          setStatus('Scanning photo…');
+          code = await decodeWithZXingRobust(file);
+        }
+
+        if (code) {
+          await openModalWithAutoFill(code, file);
+        } else {
+          alert('No barcode detected. Try a closer, well-lit shot filling the frame (make the code fill most of the image).');
+        }
+      } catch (err) {
+        console.error('Scan error:', err);
+        alert('Could not read the image. Please try again.');
+      } finally {
+        setStatus('');
+        cameraInput.value = '';
+      }
     });
-    mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
-  })();
-
-
-// (legacy scanner removed)
-;
+  });
 })();
