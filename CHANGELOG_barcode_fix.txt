@@ -1,3 +1,0 @@
-Applied patches:
-- index.html: Patched CSP (img-src blob:) if present; enforced accept='image/*' and capture='environment' on file inputs.
-- barcode.js: Safer BarcodeDetector (no upc_a; try/catch; supported formats); robust HEIC guard; ZXing scale 1280; imageSmoothing off; mild grayscale/contrast pre-process.
