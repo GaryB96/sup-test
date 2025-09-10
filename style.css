@@ -1064,7 +1064,7 @@ body.sidebar-collapsed main {
 }
 
 @media (max-width: 600px){
-  #supplementModal{ padding: 0; }
+  #supplementModal{ padding: 10; }
 
   #supplementModal .modal-content{
     width: 100vw;
@@ -1083,6 +1083,9 @@ body.sidebar-collapsed main {
     width: 90%;
   }
   #supplementModal .modal-actions--split {
-    margin-right: 10px;
+    margin-right: 20px;
+  }
+  #supplementModal .cycle-inline {
+    Margin-left: 10px;
   }
 }
