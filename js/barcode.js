@@ -473,88 +473,25 @@ async function makeBarcodeDetector() {
     return !!(curr.name || curr.brand || curr.dose || curr.serves);
   }
 
-  //async function openModalWithAutoFill(code, fileForOCR) {
-    await fillSupplementFromBarcode(code, file); // (not openModalWithAutoFill)
-    ensureModal();
-    var overlay = document.getElementById('barcodeOverlay');
-    var modal   = document.getElementById('barcodeModal');
-    if (!overlay || !modal) return;
-    overlay.style.display = 'block';
-    modal.style.display   = 'flex';
-    document.body.style.overflow = 'hidden';
-
-    setStatus('Looking up product info…');
-    populateModalFields({ code: code });
-
-    // OFF (barcode-based)
-    var off = await fetchProductInfoFromOFF(code);
-    if (off) {
-      var curr = getCurrentFieldValues();
-      populateModalFields({
-        code:   code,
-        name:   curr.name   || off.name   || '',
-        brand:  curr.brand  || off.brand  || '',
-        dose:   curr.dose   || off.dose   || '',
-        serves: curr.serves || off.serves || ''
-      });
-    }
-
-    // Health Canada with what we have
-    var curr1 = getCurrentFieldValues();
-    if (curr1.name || curr1.brand || code) {
-      var hc = await fetchProductInfoFromHC({ name: curr1.name, brand: curr1.brand, code: code });
-      if (hc) {
-        var now = getCurrentFieldValues();
-        populateModalFields({
-          code:   code,
-          name:   now.name   || hc.name   || '',
-          brand:  now.brand  || hc.brand  || '',
-          dose:   now.dose   || hc.dose   || '',
-          serves: now.serves || hc.serves || ''
-        });
-      }
-    }
-
-    // Optional OCR
-    var curr2 = getCurrentFieldValues();
-    if (!anyFilled(curr2) && fileForOCR && window.Tesseract && window.Tesseract.recognize) {
-      try {
-        setStatus('Reading label text…');
-        var ocr = await ocrFrontLabel(fileForOCR);
-        if (ocr) {
-          var merged = {
-            code:   code,
-            name:   curr2.name   || ocr.name  || '',
-            brand:  curr2.brand  || ocr.brand || '',
-            dose:   curr2.dose   || ocr.dose  || '',
-            serves: curr2.serves || ''
-          };
-          populateModalFields(merged);
-          if (ocr.npn || ocr.din || ocr.name || ocr.brand) {
-            var hc2 = await fetchProductInfoFromHC({
-              name:  ocr.name || '',
-              brand: ocr.brand || '',
-              code:  ocr.npn || ocr.din || ''
-            });
-            if (hc2) {
-              var nowDoseEl = document.getElementById('bm_serving');
-              var nowServEl = document.getElementById('bm_servings');
-              if (nowDoseEl && !nowDoseEl.value && hc2.dose) nowDoseEl.value = hc2.dose;
-              if (nowServEl && !nowServEl.value && hc2.serves) nowServEl.value = hc2.serves;
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('OCR failed:', e);
-      }
-    }
-
-    setStatus('');
-    var nameEl = document.getElementById('bm_name');
-    if (nameEl && nameEl.focus) nameEl.focus();
+  // ---------- Autofill flow ----------
+  function getCurrentFieldValues() {
+    var out = {
+      name:   (document.getElementById('bm_name') && document.getElementById('bm_name').value || '').trim(),
+      brand:  (document.getElementById('bm_brand') && document.getElementById('bm_brand').value || '').trim(),
+      dose:   (document.getElementById('bm_serving') && document.getElementById('bm_serving').value || '').trim(),
+      serves: (document.getElementById('bm_servings') && document.getElementById('bm_servings').value || '').trim()
+    };
+    return out;
+  }
+  function anyFilled(curr) {
+    return !!(curr.name || curr.brand || curr.dose || curr.serves);
   }
 
-  
+  // Replace legacy barcode modal path with direct supplement autofill
+  async function openModalWithAutoFill(code, fileForOCR) {
+    return fillSupplementFromBarcode(code, fileForOCR);
+  }
+
   // Ensure scanner button works even if modal content is re-rendered or on Android DOM quirks
   (function ensureScannerBinding(){
     var bound = false;
