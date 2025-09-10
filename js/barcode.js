@@ -473,7 +473,8 @@ async function makeBarcodeDetector() {
     return !!(curr.name || curr.brand || curr.dose || curr.serves);
   }
 
-  async function openModalWithAutoFill(code, fileForOCR) {
+  //async function openModalWithAutoFill(code, fileForOCR) {
+    await fillSupplementFromBarcode(code, file); // (not openModalWithAutoFill)
     ensureModal();
     var overlay = document.getElementById('barcodeOverlay');
     var modal   = document.getElementById('barcodeModal');
@@ -631,7 +632,7 @@ async function makeBarcodeDetector() {
   })();
 
 // ---------- Scanner (photo → decode) ----------
-onReady(function () {
+/*onReady(function () {
     if (window.__SCANNER_BOUND) return;
     var btn = document.getElementById('barcodeBtn');
     if (!btn) return;
@@ -691,5 +692,120 @@ onReady(function () {
         cameraInput.value = '';
       }
     });
-  });
+  }); */
+
+  /* ---------- Scanner (photo → decode) — SINGLETON ---------- */
+(function scannerSingleton() {
+  if (window.__SCANNER_INIT) return;
+  window.__SCANNER_INIT = true;
+
+  var busy = false;     // prevent double-processing
+  var inputEl = null;   // single hidden file input
+
+  function ensureInput() {
+    if (inputEl) return inputEl;
+    inputEl = document.createElement('input');
+    inputEl.type = 'file';
+    inputEl.accept = 'image/*';          // Android: allow all image types
+    inputEl.capture = 'environment';
+    inputEl.style.display = 'none';
+    document.body.appendChild(inputEl);
+    return inputEl;
+  }
+
+  async function handleFile(file) {
+    if (!file || busy) return;
+    busy = true;
+
+    try {
+      // HEIC/HEIF guard (rare but defensive)
+      var t = (file.type || '').toLowerCase();
+      if (t.includes('heic') || t.includes('heif')) {
+        alert('This image format is not supported on some devices. Please switch your camera to JPEG/“Most Compatible”, or select a different photo.');
+        return;
+      }
+
+      let code = '';
+
+      // Native detector first (where available)
+      if ('BarcodeDetector' in window) {
+        try {
+          var bmp = await makeBitmapFromFile(file, 1600);
+          if (bmp) {
+            var det = await makeBarcodeDetector();
+            var res = await det.detect(bmp);
+            if (res && res.length && res[0] && res[0].rawValue) {
+              code = String(res[0].rawValue || '').trim();
+            }
+          }
+        } catch (_) {}
+      }
+
+      // Fallback to ZXing if needed
+      if (!code) {
+        try {
+          setStatus && setStatus('Scanning photo…');
+        } catch (_) {}
+        try {
+          code = await decodeWithZXingRobust(file);
+        } catch (e) {
+          console.warn('ZXing error:', e);
+          code = '';
+        } finally {
+          try { setStatus && setStatus(''); } catch (_) {}
+        }
+      }
+
+      if (code) {
+        // Fill the Supplement Modal fields directly
+        await fillSupplementFromBarcode(code, file);
+      } else {
+        alert('No barcode detected. Try a closer, well-lit shot with the barcode filling most of the frame.');
+      }
+    } catch (err) {
+      console.error('Scan error:', err);
+      alert('Could not read the image. Please try again.');
+    } finally {
+      busy = false;
+      try { inputEl.value = ''; } catch (_) {}
+    }
+  }
+
+  function bindButton_ifPresent() {
+    var btn = document.getElementById('barcodeBtn');
+    if (!btn || btn.dataset.scannerBound === '1') return;
+
+    ensureInput();
+    btn.addEventListener('click', function () {
+      if (busy) return;
+      inputEl.click();
+    });
+    inputEl.addEventListener('change', function () {
+      var f = inputEl.files && inputEl.files[0];
+      handleFile(f);
+    });
+
+    btn.dataset.scannerBound = '1';
+  }
+
+  // Bind now if possible
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    bindButton_ifPresent();
+  } else {
+    document.addEventListener('DOMContentLoaded', bindButton_ifPresent, { once: true });
+  }
+
+  // Also observe for late insertions (modal content re-render)
+  var mo = new MutationObserver(bindButton_ifPresent);
+  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+})();
+
+  (function showMobileNote() {
+  var note = document.getElementById("barcodeMobileNote");
+  if (!note) return;
+  var isMobileUA = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (isMobileUA) note.classList.add("hidden");
+  else note.classList.remove("hidden");
+})();
+
 })();
