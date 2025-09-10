@@ -17,7 +17,7 @@ h1 {
 form { margin-bottom: 20px; }
 form input, form select {
   display: block;
-  width: 100%;
+  width: 90%;
   max-width: 400px;
   margin: 10px auto;
   padding: 10px;
@@ -1034,15 +1034,6 @@ body.sidebar-collapsed main {
   }
 }
 
-#supplementModal #suppCycleStartWrap{
-  display: grid;           /* use grid for layout */
-  grid-auto-flow: column;   /* lay inputs left-to-right */
-  gap: 8px;                 /* tighten spacing */
-  width: auto;              /* don’t expand to full row width */
-  justify-content: start;   /* hug the label */
-  align-items: center;
-}
-
 /* keep the boxes reasonable so they don’t force horizontal scroll */
 #supplementModal #suppDaysOn,
 #supplementModal #suppDaysOff{
@@ -1051,16 +1042,24 @@ body.sidebar-collapsed main {
   box-sizing: border-box;
 }
 
-/* Hidden by default */
-#supplementModal #suppCycleStartWrap { display: none; }
-
-/* Show & lay out horizontally when checked */
-#supplementModal .form-row-inline:has(#suppCycleChk:checked) #suppCycleStartWrap {
-  display: grid;
-  margin-top: 4px;
+/* Days group: keep its space, hide contents until checked */
+#supplementModal #suppCycleStartWrap{
+  display: grid;                 /* your horizontal layout stays intact */
   grid-auto-flow: column;
   gap: 8px;
   width: auto;
   justify-content: start;
   align-items: center;
+
+  /* reserve space, but hide content */
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 300ms ease-in-out;
 }
+
+/* When "On a cycle" (suppCycleChk) is checked, reveal the group without resizing the modal */
+#supplementModal .form-row-inline:has(#suppCycleChk:checked) #suppCycleStartWrap{
+  visibility: visible;
+  opacity: 1;
+}
+
