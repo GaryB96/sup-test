@@ -319,7 +319,14 @@ body:not(.logged-in) #accountActions { display: none; }
 
 .modal.hidden{display:none;}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;padding-top:10vh;}
-.modal .modal-content{background:#fff;border-radius:12px;padding:20px;max-width:600px;width:92%;}
+.modal .modal-content{
+  background:#fff;
+  border-radius:12px;
+  padding:20px;
+  max-width:600px;
+  width:92%;
+  box-sizing: border-box;
+}
 
 
 /* Notes status pill */
@@ -687,7 +694,6 @@ body:not(.logged-in) #accountActions { display: none; }
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 14px;
-  margin-left: -10px;
 }
 
 .modal .modal-actions {
