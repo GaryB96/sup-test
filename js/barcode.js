@@ -784,7 +784,10 @@ async function makeBarcodeDetector() {
   var note = document.getElementById("barcodeMobileNote");
   if (!note) return;
 
-  // Simple mobile detection (viewport + UA)
+(function showMobileNote() {
+  var note = document.getElementById("barcodeMobileNote");
+  if (!note) return;
+
   var isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) 
                  || (window.innerWidth < 768);
 
@@ -794,5 +797,6 @@ async function makeBarcodeDetector() {
     note.classList.remove("hidden");
   }
 })();
+
 
 })();
