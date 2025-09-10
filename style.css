@@ -1078,12 +1078,6 @@ body.sidebar-collapsed main {
   margin: 0;
   border-radius: 0;
   overflow: hidden;    /* then scroll the .modal-body instead */
-}
-#supplementModal .modal-body{
-  height: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
 
     /* keep your visual theme — these are already defined above;
        include them here ONLY if you don't have them in the desktop block */
@@ -1092,6 +1086,12 @@ body.sidebar-collapsed main {
     border-radius: 12px;
     padding: 20px;
     color: #fff;
+  }
+
+  #supplementModal .modal-body{
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   }
 
   /* inputs shouldn’t force horizontal scroll */
