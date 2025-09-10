@@ -1080,6 +1080,19 @@ body.sidebar-collapsed main {
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     margin: 0 auto;
+
+  position: relative;
+  z-index: 1;
+  width: min(560px, 92vw);
+  max-height: 85vh;
+  overflow: auto;
+  margin: 8vh auto 0; /* centered horizontally */
+  background: #0b1220;        /* matches your sidebar theme */
+  border: 1px solid #22c55e;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  color: #fff;
   }
   #supplementModal .form-row {
     width: 90%;
