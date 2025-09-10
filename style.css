@@ -1068,8 +1068,8 @@ body.sidebar-collapsed main {
 
   #supplementModal .modal-content{
     width: 100vw;
-    height: 100vh;          /* fallback */
-    height: 100dvh;         /* dynamic viewport height on mobile */
+    height: 95vh;          /* fallback */
+    height: 95dvh;         /* dynamic viewport height on mobile */
     max-width: none;
     max-height: none;
     border-radius: 0;       /* edge-to-edge look */
