@@ -502,7 +502,8 @@ function anyFilled(curr) {
 
       var cameraInput = document.createElement('input');
       cameraInput.type = 'file';
-      cameraInput.accept = 'image/*';
+      // Hint iOS to return JPEG/PNG instead of HEIC when possible
+      cameraInput.accept = 'image/jpeg,image/jpg,image/png';
       cameraInput.capture = 'environment';
       cameraInput.style.display = 'none';
       document.body.appendChild(cameraInput);
