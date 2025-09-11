@@ -325,11 +325,45 @@ async function makeBarcodeDetector() {
     });
   }
 
+  // ---------- Dynamic loader for ZXing (for iOS where UMD global may be missing) ----------
+  function loadScript(url, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+      try {
+        var s = document.createElement('script');
+        s.src = url;
+        s.async = true;
+        var done = false;
+        s.onload = function () { if (!done) { done = true; resolve(); } };
+        s.onerror = function () { if (!done) { done = true; reject(new Error('Script load failed: ' + url)); } };
+        document.head.appendChild(s);
+        setTimeout(function(){ if (!done) { done = true; reject(new Error('Script load timeout: ' + url)); } }, timeoutMs || 6000);
+      } catch (e) { reject(e); }
+    });
+  }
+
+  async function ensureZXingLoaded() {
+    var ZX = (typeof window !== 'undefined') ? (window.ZXing || window.ZXingBrowser) : null;
+    if (ZX && ZX.BrowserMultiFormatReader) return ZX;
+    try { console.info('[barcode] attempting to load @zxing/browser UMD'); } catch(_){}
+    try { await loadScript('https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js', 7000); } catch (e1) { try { console.warn('[barcode] load @zxing/browser failed', e1); } catch(_){} }
+    ZX = (typeof window !== 'undefined') ? (window.ZXing || window.ZXingBrowser) : null;
+    if (ZX && ZX.BrowserMultiFormatReader) return ZX;
+    try { console.info('[barcode] attempting to load @zxing/library UMD'); } catch(_){}
+    try { await loadScript('https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js', 7000); } catch (e2) { try { console.warn('[barcode] load @zxing/library failed', e2); } catch(_){} }
+    ZX = (typeof window !== 'undefined') ? (window.ZXing || window.ZXingBrowser) : null;
+    return (ZX && ZX.BrowserMultiFormatReader) ? ZX : null;
+  }
+
   // ---------- ZXing robust fallback (iPhone/Safari) ----------
   async function decodeWithZXingRobust(file) {
     // Support both @zxing/browser UMD globals: ZXing (some builds) or ZXingBrowser
     var ZX = (typeof window !== 'undefined') ? (window.ZXing || window.ZXingBrowser) : null;
     try { console.info('[barcode] ZX global:', ZX ? (ZX.name || 'present') : 'missing'); } catch(_){}
+    if (!(ZX && ZX.BrowserMultiFormatReader)) {
+      try { console.warn('ZXing not available, loading dynamically...'); } catch(_){}
+      ZX = await ensureZXingLoaded();
+      try { console.info('[barcode] ZX after load:', (ZX && ZX.BrowserMultiFormatReader) ? 'present' : 'missing'); } catch(_){}
+    }
     if (!(ZX && ZX.BrowserMultiFormatReader)) {
       console.warn('ZXing not available');
       return '';
@@ -556,6 +590,19 @@ function anyFilled(curr) {
           if (!code) {
             setStatus('Scanning photo…');
             code = await decodeWithZXingRobust(file);
+          }
+          // Final fallback: try BarcodeDetector even on iOS if available
+          if (!code && 'BarcodeDetector' in window) {
+            try {
+              var bmp2 = await makeBitmapFromFile(file, 1600);
+              if (bmp2) {
+                var det2 = await makeBarcodeDetector();
+                var res2 = await det2.detect(bmp2);
+                if (res2 && res2.length && res2[0] && res2[0].rawValue) {
+                  code = String(res2[0].rawValue || '').trim();
+                }
+              }
+            } catch (_) {}
           }
           if (code) {
             await fillSupplementFromBarcode(code, file);
