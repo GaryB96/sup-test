@@ -342,22 +342,22 @@ async function makeBarcodeDetector() {
   }
 
   async function ensureZXingLoaded() {
-    var ZX = (typeof window !== 'undefined') ? (window.ZXing || window.ZXingBrowser) : null;
+    var ZX = (typeof window !== 'undefined') ? (window.ZXingBrowser || window.ZXing) : null;
     if (ZX && ZX.BrowserMultiFormatReader) return ZX;
     try { console.info('[barcode] attempting to load @zxing/browser UMD'); } catch(_){}
     try { await loadScript('https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js', 7000); } catch (e1) { try { console.warn('[barcode] load @zxing/browser failed', e1); } catch(_){} }
-    ZX = (typeof window !== 'undefined') ? (window.ZXing || window.ZXingBrowser) : null;
+    ZX = (typeof window !== 'undefined') ? (window.ZXingBrowser || window.ZXing) : null;
     if (ZX && ZX.BrowserMultiFormatReader) return ZX;
     try { console.info('[barcode] attempting to load @zxing/library UMD'); } catch(_){}
     try { await loadScript('https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js', 7000); } catch (e2) { try { console.warn('[barcode] load @zxing/library failed', e2); } catch(_){} }
-    ZX = (typeof window !== 'undefined') ? (window.ZXing || window.ZXingBrowser) : null;
+    ZX = (typeof window !== 'undefined') ? (window.ZXingBrowser || window.ZXing) : null;
     return (ZX && ZX.BrowserMultiFormatReader) ? ZX : null;
   }
 
   // ---------- ZXing robust fallback (iPhone/Safari) ----------
   async function decodeWithZXingRobust(file) {
     // Support both @zxing/browser UMD globals: ZXing (some builds) or ZXingBrowser
-    var ZX = (typeof window !== 'undefined') ? (window.ZXing || window.ZXingBrowser) : null;
+    var ZX = (typeof window !== 'undefined') ? (window.ZXingBrowser || window.ZXing) : null;
     try { console.info('[barcode] ZX global:', ZX ? (ZX.name || 'present') : 'missing'); } catch(_){}
     if (!(ZX && ZX.BrowserMultiFormatReader)) {
       try { console.warn('ZXing not available, loading dynamically...'); } catch(_){}
@@ -384,12 +384,27 @@ async function makeBarcodeDetector() {
         }
         try { console.info('[barcode] base canvas dims:', baseCanvas.width, 'x', baseCanvas.height); } catch(_){}
         // light preprocess
-        preprocessFor1D(baseCanvas.getContext('2d'), baseCanvas.width, baseCanvas.height);
+        var bctx2 = baseCanvas.getContext('2d');
+        preprocessFor1D(bctx2, baseCanvas.width, baseCanvas.height);
+        // Try normal decode
         try {
           var res0 = await decodeFromCanvasCompat(new ZX.BrowserMultiFormatReader(), baseCanvas);
           var t0 = res0 && (res0.text || (res0.getText && res0.getText()));
           if (t0 && String(t0).trim()) { return String(t0).trim(); }
         } catch (e0) { try { console.info('[barcode] base canvas decode failed', e0 && e0.message); } catch(_){} }
+        // Try inverted decode
+        try {
+          var id0 = bctx2.getImageData(0,0,baseCanvas.width, baseCanvas.height);
+          for (var ii=0; ii<id0.data.length; ii+=4) {
+            id0.data[ii]   = 255 - id0.data[ii];
+            id0.data[ii+1] = 255 - id0.data[ii+1];
+            id0.data[ii+2] = 255 - id0.data[ii+2];
+          }
+          bctx2.putImageData(id0, 0, 0);
+          var res0i = await decodeFromCanvasCompat(new ZX.BrowserMultiFormatReader(), baseCanvas);
+          var t0i = res0i && (res0i.text || (res0i.getText && res0i.getText()));
+          if (t0i && String(t0i).trim()) { return String(t0i).trim(); }
+        } catch (e0i) { try { console.info('[barcode] base canvas inverted decode failed', e0i && e0i.message); } catch(_){} }
       }
     } catch (eInit) { try { console.info('[barcode] base canvas init failed', eInit && eInit.message); } catch(_){} }
 
@@ -410,6 +425,7 @@ async function makeBarcodeDetector() {
       ]);
       hints.set(ZX.DecodeHintType.TRY_HARDER, true);
       try { hints.set(ZX.DecodeHintType.ASSUME_GS1, true); } catch(_){}
+      try { hints.set(ZX.DecodeHintType.ALSO_INVERTED, true); } catch(_){}
     }
     var reader = new ZX.BrowserMultiFormatReader(hints);
 
@@ -536,6 +552,20 @@ async function makeBarcodeDetector() {
             var text = res && (res.text || (res.getText && res.getText()));
             if (text && String(text).trim()) { reader.reset(); return String(text).trim(); }
           } catch (eDec) {}
+
+          // Try inverted decode on this crop
+          try {
+            var id = ctx.getImageData(0,0,outW,outH);
+            for (var kk=0; kk<id.data.length; kk+=4) {
+              id.data[kk]   = 255 - id.data[kk];
+              id.data[kk+1] = 255 - id.data[kk+1];
+              id.data[kk+2] = 255 - id.data[kk+2];
+            }
+            ctx.putImageData(id, 0, 0);
+            var resInv = await decodeFromCanvasCompat(reader, canvas);
+            var textInv = resInv && (resInv.text || (resInv.getText && resInv.getText()));
+            if (textInv && String(textInv).trim()) { reader.reset(); return String(textInv).trim(); }
+          } catch (_) {}
         } catch (loopErr) {}
       }
     }
