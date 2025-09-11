@@ -29,19 +29,28 @@
   upgrade-insecure-requests;
 ">
 
-  <script src="./js/barcode.js?v=7"></script>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="icon" href="data:," />
-  <title>Supplement Tracker</title>
-  <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=9">
-  <link rel="stylesheet" href="notifications.css"/>
-  <link rel="stylesheet" href="barcodeStyle.css">
-  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="data:," />
+<title>Supplement Tracker</title>
+
+<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="notifications.css"/>
+<link rel="stylesheet" href="barcodeStyle.css">
+
+<!-- Libraries FIRST (allowed by your CSP) -->
+<script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<!-- Your scanner AFTER libraries (pick the file you’re actually using) -->
+<script src="./js/barcode.js?v=8"></script>
+<!-- or, if you’re using the iOS-focused build: -->
+<!-- <script src="./js/barcode.iosfix.js?v=8"></script> -->
+<!-- Firebase (these can remain here if you like) -->
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+
   <style>
     body:not(.logged-in) #appContent { display: none; }
     body:not(.logged-in) .sidebar { display: none; }
