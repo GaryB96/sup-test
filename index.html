@@ -43,7 +43,16 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 <!-- Your scanner AFTER libraries (pick the file you’re actually using) -->
-<script src="./js/barcode.js?v=9"></script>
+<!-- In-page console for iPhone debugging (remove when done) -->
+<script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script>
+<script>window.vConsole = new window.VConsole();</script>
+<script>
+  window.onerror = function(m,s,l,c,e){ try { console.error('[onerror]', m, s+':'+l, e); } catch(_){} };
+  window.addEventListener('unhandledrejection', function(e){ try { console.error('[unhandled]', e.reason); } catch(_){} });
+  console.info('[debug] vConsole initialized');
+  </script>
+<!-- Your scanner AFTER libraries (pick the file you’re actually using) -->
+<script src="./js/barcode.js?v=12"></script>
 <!-- or, if you’re using the iOS-focused build: -->
 <!-- <script src="./js/barcode.iosfix.js?v=8"></script> -->
 <!-- Firebase (these can remain here if you like) -->
