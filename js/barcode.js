@@ -26,8 +26,8 @@ function isProblematicHeic(file) {
   const type = (file && file.type || '').toLowerCase();
   const extHeic = name.endsWith('.heic') || name.endsWith('.heif');
   const typeHeic = type.includes('heic') || type.includes('heif') || type.includes('quicktime') || type.includes('heic-sequence');
-  const emptyType = !type; // Some iOS cases present empty MIME
-  return extHeic || typeHeic || emptyType;
+  // Allow empty MIME (some iOS cases) rather than blocking
+  return extHeic || typeHeic;
 }
 
 // --- Added: safer detector factory
@@ -113,24 +113,7 @@ async function makeBarcodeDetector() {
 
     setSearchLinks({ code: code, name: name, brand: brand });
   }
-    ensureModal();
-    var overlay = document.getElementById('barcodeOverlay');
-    var modal   = document.getElementById('barcodeModal');
-    if (!overlay || !modal) return;
-    overlay.style.display = 'block';
-    modal.style.display   = 'flex';
-    document.body.style.overflow = 'hidden';
-    populateModalFields({
-      code: code,
-      name:  seed.name  || '',
-      brand: seed.brand || '',
-      dose:  seed.dose  || '',
-      serves:seed.serves|| ''
-    });
-    setStatus('');
-    var nameEl = document.getElementById('bm_name');
-    if (nameEl && nameEl.focus) nameEl.focus();
-  });
+  
 
   // ---------- External lookups ----------
   async function fetchProductInfoFromHC(args, opts) {
@@ -348,7 +331,9 @@ async function makeBarcodeDetector() {
 
   // ---------- ZXing robust fallback (iPhone/Safari) ----------
   async function decodeWithZXingRobust(file) {
-    if (!(window.ZXing && ZXing.BrowserMultiFormatReader)) {
+    // Support both @zxing/browser UMD globals: ZXing (some builds) or ZXingBrowser
+    var ZX = (typeof window !== 'undefined') ? (window.ZXing || window.ZXingBrowser) : null;
+    if (!(ZX && ZX.BrowserMultiFormatReader)) {
       console.warn('ZXing not available');
       return '';
     }
@@ -360,15 +345,15 @@ async function makeBarcodeDetector() {
     try { img = await loadImage(dataUrl); } catch (e2) { console.warn('Image load failed', e2); return ''; }
 
     var hints = new Map();
-    if (ZXing && ZXing.DecodeHintType && ZXing.BarcodeFormat) {
-      hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-        ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.UPC_A,
-        ZXing.BarcodeFormat.EAN_8,  ZXing.BarcodeFormat.UPC_E,
-        ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39
+    if (ZX && ZX.DecodeHintType && ZX.BarcodeFormat) {
+      hints.set(ZX.DecodeHintType.POSSIBLE_FORMATS, [
+        ZX.BarcodeFormat.EAN_13, ZX.BarcodeFormat.UPC_A,
+        ZX.BarcodeFormat.EAN_8,  ZX.BarcodeFormat.UPC_E,
+        ZX.BarcodeFormat.CODE_128, ZX.BarcodeFormat.CODE_39
       ]);
-      hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+      hints.set(ZX.DecodeHintType.TRY_HARDER, true);
     }
-    var reader = new ZXing.BrowserMultiFormatReader(hints);
+    var reader = new ZX.BrowserMultiFormatReader(hints);
 
     function makeCanvas(w, h) { var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
 
