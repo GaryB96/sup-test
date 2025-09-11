@@ -434,13 +434,15 @@ async function makeBarcodeDetector() {
     function makeCanvas(w, h) { var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
 
     // First, try canvas-based decode with preprocessing and rotations
-    var maxW = 1200;
-    var scale = img.width > maxW ? maxW / img.width : 1;
-    var baseW = Math.max(1, Math.round(img.width * scale));
-    var baseH = Math.max(1, Math.round(img.height * scale));
+    // Use baseCanvas (EXIF-corrected) if available; otherwise the <img>
+    var src = baseCanvas || img;
+    var maxW = 1400;
+    var scale = src.width > maxW ? maxW / src.width : 1;
+    var baseW = Math.max(1, Math.round(src.width * scale));
+    var baseH = Math.max(1, Math.round(src.height * scale));
 
     var angles = [0, 90, 270, 180];
-    var crops  = ['full','center','hstrip','vstrip'];
+    var crops  = ['full','center','hstrip','vstrip','topstrip','bottomstrip','leftstrip','rightstrip'];
 
     for (var ai = 0; ai < angles.length; ai++) {
       for (var ci = 0; ci < crops.length; ci++) {
@@ -449,27 +451,39 @@ async function makeBarcodeDetector() {
           var crop = crops[ci];
 
           // Compute crop source
-          var sx = 0, sy = 0, sw = img.width, sh = img.height;
+          var sx = 0, sy = 0, sw = src.width, sh = src.height;
           if (crop === 'center') {
-            var cw = Math.round(img.width * 0.8);
-            var ch = Math.round(img.height * 0.8);
-            sx = Math.round((img.width - cw) / 2);
-            sy = Math.round((img.height - ch) / 2);
+            var cw = Math.round(src.width * 0.8);
+            var ch = Math.round(src.height * 0.8);
+            sx = Math.round((src.width - cw) / 2);
+            sy = Math.round((src.height - ch) / 2);
             sw = cw; sh = ch;
           } else if (crop === 'hstrip') {
             // middle horizontal band (good for 1D barcodes)
-            var ch2 = Math.round(img.height * 0.35);
+            var ch2 = Math.round(src.height * 0.35);
             sx = 0;
-            sy = Math.round((img.height - ch2) / 2);
-            sw = img.width;
+            sy = Math.round((src.height - ch2) / 2);
+            sw = src.width;
             sh = ch2;
           } else if (crop === 'vstrip') {
             // middle vertical band (for tall/rotated codes)
-            var cw2 = Math.round(img.width * 0.35);
-            sx = Math.round((img.width - cw2) / 2);
+            var cw2 = Math.round(src.width * 0.35);
+            sx = Math.round((src.width - cw2) / 2);
             sy = 0;
             sw = cw2;
-            sh = img.height;
+            sh = src.height;
+          } else if (crop === 'topstrip') {
+            var tch = Math.round(src.height * 0.35);
+            sx = 0; sy = 0; sw = src.width; sh = tch;
+          } else if (crop === 'bottomstrip') {
+            var bch = Math.round(src.height * 0.35);
+            sx = 0; sy = src.height - bch; sw = src.width; sh = bch;
+          } else if (crop === 'leftstrip') {
+            var lcw = Math.round(src.width * 0.35);
+            sx = 0; sy = 0; sw = lcw; sh = src.height;
+          } else if (crop === 'rightstrip') {
+            var rcw = Math.round(src.width * 0.35);
+            sx = src.width - rcw; sy = 0; sw = rcw; sh = src.height;
           }
           // Target size
           var tw = Math.max(1, Math.round(sw * scale));
@@ -485,7 +499,7 @@ async function makeBarcodeDetector() {
           ctx.save();
           ctx.translate(outW / 2, outH / 2);
           ctx.rotate(rad);
-          ctx.drawImage(img, sx, sy, sw, sh, -tw / 2, -th / 2, tw, th);
+          ctx.drawImage(src, sx, sy, sw, sh, -tw / 2, -th / 2, tw, th);
           ctx.restore();
 
           // preprocess for 1D contrast
