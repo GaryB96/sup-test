@@ -386,7 +386,7 @@ async function makeBarcodeDetector() {
         // light preprocess
         preprocessFor1D(baseCanvas.getContext('2d'), baseCanvas.width, baseCanvas.height);
         try {
-          var res0 = await (new ZX.BrowserMultiFormatReader()).decodeFromCanvas(baseCanvas);
+          var res0 = await decodeFromCanvasCompat(new ZX.BrowserMultiFormatReader(), baseCanvas);
           var t0 = res0 && (res0.text || (res0.getText && res0.getText()));
           if (t0 && String(t0).trim()) { return String(t0).trim(); }
         } catch (e0) { try { console.info('[barcode] base canvas decode failed', e0 && e0.message); } catch(_){} }
@@ -431,7 +431,32 @@ async function makeBarcodeDetector() {
       }
     } catch (e) { try { console.info('[barcode] data URL decode failed', e && e.message); } catch(_){} }
 
-    function makeCanvas(w, h) { var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+  function makeCanvas(w, h) { var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+
+  // Compat: some ZXing builds lack decodeFromCanvas; emulate via data URL
+  async function decodeFromCanvasCompat(reader, canvas) {
+    try {
+      if (typeof reader.decodeFromCanvas === 'function') {
+        return await reader.decodeFromCanvas(canvas);
+      }
+    } catch (_) {}
+    try { console.info('[barcode] using compat path: canvas->dataURL'); } catch(_){}
+    var url;
+    try { url = canvas.toDataURL('image/jpeg', 0.92); } catch(_) { url = canvas.toDataURL('image/png'); }
+    if (typeof reader.decodeFromImageUrl === 'function') {
+      return await reader.decodeFromImageUrl(url);
+    }
+    // As a last resort, create an <img> and try element-based decode if available
+    try {
+      var imgEl = new Image();
+      imgEl.src = url;
+      await new Promise(function(res, rej){ imgEl.onload = res; imgEl.onerror = rej; });
+      if (typeof reader.decodeFromImageElement === 'function') {
+        return await reader.decodeFromImageElement(imgEl);
+      }
+    } catch (_) {}
+    throw new Error('No canvas decode path available');
+  }
 
     // First, try canvas-based decode with preprocessing and rotations
     // Use baseCanvas (EXIF-corrected) if available; otherwise the <img>
@@ -505,9 +530,9 @@ async function makeBarcodeDetector() {
           // preprocess for 1D contrast
           preprocessFor1D(ctx, outW, outH);
 
-          // Try decode from canvas
+          // Try decode from canvas (compat if needed)
           try {
-            var res = await reader.decodeFromCanvas(canvas);
+            var res = await decodeFromCanvasCompat(reader, canvas);
             var text = res && (res.text || (res.getText && res.getText()));
             if (text && String(text).trim()) { reader.reset(); return String(text).trim(); }
           } catch (eDec) {}
