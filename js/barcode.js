@@ -369,7 +369,31 @@ async function makeBarcodeDetector() {
       return '';
     }
 
-    // Read file as data URL (CSP-friendly)
+    // First, build a canvas using createImageBitmap (respects EXIF on iOS) then try decode
+    var baseCanvas;
+    try {
+      var bmp0 = await makeBitmapFromFile(file, 1600);
+      if (bmp0) {
+        if (typeof bmp0.getContext === 'function') {
+          baseCanvas = bmp0; // already a canvas
+        } else {
+          baseCanvas = document.createElement('canvas');
+          baseCanvas.width = bmp0.width; baseCanvas.height = bmp0.height;
+          var bctx = baseCanvas.getContext('2d', { willReadFrequently: true });
+          bctx.drawImage(bmp0, 0, 0);
+        }
+        try { console.info('[barcode] base canvas dims:', baseCanvas.width, 'x', baseCanvas.height); } catch(_){}
+        // light preprocess
+        preprocessFor1D(baseCanvas.getContext('2d'), baseCanvas.width, baseCanvas.height);
+        try {
+          var res0 = await (new ZX.BrowserMultiFormatReader()).decodeFromCanvas(baseCanvas);
+          var t0 = res0 && (res0.text || (res0.getText && res0.getText()));
+          if (t0 && String(t0).trim()) { return String(t0).trim(); }
+        } catch (e0) { try { console.info('[barcode] base canvas decode failed', e0 && e0.message); } catch(_){} }
+      }
+    } catch (eInit) { try { console.info('[barcode] base canvas init failed', eInit && eInit.message); } catch(_){} }
+
+    // Read file as data URL (fallback path)
     var dataUrl;
     try { dataUrl = await readFileAsDataURL(file); } catch (e) { console.warn('FileReader failed', e); return ''; }
     var img;
@@ -381,9 +405,11 @@ async function makeBarcodeDetector() {
       hints.set(ZX.DecodeHintType.POSSIBLE_FORMATS, [
         ZX.BarcodeFormat.EAN_13, ZX.BarcodeFormat.UPC_A,
         ZX.BarcodeFormat.EAN_8,  ZX.BarcodeFormat.UPC_E,
-        ZX.BarcodeFormat.CODE_128, ZX.BarcodeFormat.CODE_39
+        ZX.BarcodeFormat.CODE_128, ZX.BarcodeFormat.CODE_39,
+        ZX.BarcodeFormat.ITF
       ]);
       hints.set(ZX.DecodeHintType.TRY_HARDER, true);
+      try { hints.set(ZX.DecodeHintType.ASSUME_GS1, true); } catch(_){}
     }
     var reader = new ZX.BrowserMultiFormatReader(hints);
 
