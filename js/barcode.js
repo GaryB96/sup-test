@@ -135,9 +135,7 @@ async function makeBarcodeDetector() {
     ];
 
     var ac = new AbortController();
-    var to = setTimeout(function () {
-  var IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || ((navigator.platform === 'MacIntel') && navigator.maxTouchPoints > 1);
-  var FORCE_ZXING_ON_IOS = true; ac.abort(); }, timeoutMs);
+    var to = setTimeout(function () { ac.abort(); }, timeoutMs);
     try {
       for (var i = 0; i < urls.length; i++) {
         var url = urls[i];
@@ -175,9 +173,7 @@ async function makeBarcodeDetector() {
     if (/^\d{12}$/.test(code || '')) candidates.push('0' + code); // UPC-A -> EAN-13
 
     var ac = new AbortController();
-    var to = setTimeout(function () {
-  var IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || ((navigator.platform === 'MacIntel') && navigator.maxTouchPoints > 1);
-  var FORCE_ZXING_ON_IOS = true; ac.abort(); }, timeoutMs);
+    var to = setTimeout(function () { ac.abort(); }, timeoutMs);
     try {
       for (var i = 0; i < candidates.length; i++) {
         var c = candidates[i];
