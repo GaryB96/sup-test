@@ -595,4 +595,4 @@ window.openBarcodeModal = function (code, seed) {
     dose: (seed && seed.dose) || '',
     serves: (seed && seed.serves) || ''
   });
-};
+}})();
