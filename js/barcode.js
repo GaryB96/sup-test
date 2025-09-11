@@ -374,6 +374,7 @@ async function makeBarcodeDetector() {
     try { dataUrl = await readFileAsDataURL(file); } catch (e) { console.warn('FileReader failed', e); return ''; }
     var img;
     try { img = await loadImage(dataUrl); } catch (e2) { console.warn('Image load failed', e2); return ''; }
+    try { console.info('[barcode] image dims:', img && img.width, 'x', img && img.height); } catch(_){}
 
     var hints = new Map();
     if (ZX && ZX.DecodeHintType && ZX.BarcodeFormat) {
@@ -387,20 +388,22 @@ async function makeBarcodeDetector() {
     var reader = new ZX.BrowserMultiFormatReader(hints);
 
     // Fast-path: try decoding directly from the image element or data URL
+    try { console.info('[barcode] try direct decode (element)'); } catch(_){}
     try {
       if (typeof reader.decodeFromImageElement === 'function') {
         var directRes = await reader.decodeFromImageElement(img);
         var directText = directRes && (directRes.text || (directRes.getText && directRes.getText()));
-        if (directText && String(directText).trim()) { reader.reset(); return String(directText).trim(); }
+        if (directText && String(directText).trim()) { reader.reset(); try { console.info('[barcode] decoded via image element'); } catch(_){} return String(directText).trim(); }
       }
-    } catch (_) {}
+    } catch (e) { try { console.info('[barcode] direct decode failed', e && e.message); } catch(_){} }
+    try { console.info('[barcode] try direct decode (data URL)'); } catch(_){}
     try {
       if (typeof reader.decodeFromImageUrl === 'function') {
         var urlRes = await reader.decodeFromImageUrl(dataUrl);
         var urlText = urlRes && (urlRes.text || (urlRes.getText && urlRes.getText()));
-        if (urlText && String(urlText).trim()) { reader.reset(); return String(urlText).trim(); }
+        if (urlText && String(urlText).trim()) { reader.reset(); try { console.info('[barcode] decoded via data URL'); } catch(_){} return String(urlText).trim(); }
       }
-    } catch (_) {}
+    } catch (e) { try { console.info('[barcode] data URL decode failed', e && e.message); } catch(_){} }
 
     function makeCanvas(w, h) { var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
 
