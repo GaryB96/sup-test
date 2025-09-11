@@ -329,6 +329,7 @@ async function makeBarcodeDetector() {
   async function decodeWithZXingRobust(file) {
     // Support both @zxing/browser UMD globals: ZXing (some builds) or ZXingBrowser
     var ZX = (typeof window !== 'undefined') ? (window.ZXing || window.ZXingBrowser) : null;
+    try { console.info('[barcode] ZX global:', ZX ? (ZX.name || 'present') : 'missing'); } catch(_){}
     if (!(ZX && ZX.BrowserMultiFormatReader)) {
       console.warn('ZXing not available');
       return '';
@@ -351,10 +352,26 @@ async function makeBarcodeDetector() {
     }
     var reader = new ZX.BrowserMultiFormatReader(hints);
 
+    // Fast-path: try decoding directly from the image element or data URL
+    try {
+      if (typeof reader.decodeFromImageElement === 'function') {
+        var directRes = await reader.decodeFromImageElement(img);
+        var directText = directRes && (directRes.text || (directRes.getText && directRes.getText()));
+        if (directText && String(directText).trim()) { reader.reset(); return String(directText).trim(); }
+      }
+    } catch (_) {}
+    try {
+      if (typeof reader.decodeFromImageUrl === 'function') {
+        var urlRes = await reader.decodeFromImageUrl(dataUrl);
+        var urlText = urlRes && (urlRes.text || (urlRes.getText && urlRes.getText()));
+        if (urlText && String(urlText).trim()) { reader.reset(); return String(urlText).trim(); }
+      }
+    } catch (_) {}
+
     function makeCanvas(w, h) { var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
 
     // First, try canvas-based decode with preprocessing and rotations
-    var maxW = 1600;
+    var maxW = 1200;
     var scale = img.width > maxW ? maxW / img.width : 1;
     var baseW = Math.max(1, Math.round(img.width * scale));
     var baseH = Math.max(1, Math.round(img.height * scale));
@@ -515,6 +532,8 @@ function anyFilled(curr) {
       cameraInput.addEventListener('change', async function () {
         var file = cameraInput.files && cameraInput.files[0];
         if (!file) return;
+
+        try { console.info('[barcode] file selected:', { name: file.name, type: file.type, size: file.size }); } catch(_){}
 
         if (isProblematicHeic(file)) {
           alert('This image format (HEIC/Live Photo) may not decode reliably. Please switch your Camera format to "Most Compatible" (JPEG) or retake the photo with that setting.');
