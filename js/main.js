@@ -8,6 +8,23 @@ import { updateSupplement } from "./supplements.js";
 
 document.documentElement.classList.add("auth-pending");
 
+// Deterministic palette-based color picker shared by summary + calendar
+if (!window.pickColor) {
+  window.pickColor = function pickColor(seed) {
+    const palette = [
+      "#2196F3", "#FF9800", "#9C27B0", "#1EE92F",
+      "#E91E63", "#3F51B5", "#009688", "#795548"
+    ];
+    let h = 2166136261 >>> 0;
+    const s = String(seed || "");
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    const idx = Math.abs(h) % palette.length;
+    return palette[idx];
+  };
+}
 
 // Modal State - edit vs add
 let SUPP_MODAL_CTX = { mode: "add", id: null };
@@ -840,8 +857,10 @@ form.addEventListener("submit", async (e) => {
   const daysOn    = onCycle ? (form.querySelector("#suppDaysOn")?.value || "") : "";
   const daysOff   = onCycle ? (form.querySelector("#suppDaysOff")?.value || "") : "";
 
-  // Ensure color (important for summary + calendar)
-  let color = onCycle ? ((typeof pickColor === 'function' ? pickColor(name) : null) || "#cccccc") : "#cccccc";
+  // Ensure color (important for summary + calendar). Only color cycle items.
+  let color = onCycle
+    ? (typeof window.pickColor === 'function' ? window.pickColor(name) : "#2196F3")
+    : null;
 
   const data = {
     name,

@@ -68,13 +68,16 @@ if (_isToday) {
     supplementEl.className = "supplement";
     supplementEl.textContent = supplement.name;
 
-    if (supplement.color) {
-      supplementEl.style.backgroundColor = supplement.color;
-      supplementEl.style.color = "#fff";
-      supplementEl.style.padding = "2px 4px";
-      supplementEl.style.borderRadius = "4px";
-      supplementEl.style.marginTop = "2px";
-      supplementEl.style.fontSize = "0.75rem";
+    {
+      const color = supplement.color || (typeof window !== 'undefined' && typeof window.pickColor === 'function' ? window.pickColor(supplement.name) : null);
+      if (color) {
+        supplementEl.style.backgroundColor = color;
+        supplementEl.style.color = "#fff";
+        supplementEl.style.padding = "2px 4px";
+        supplementEl.style.borderRadius = "4px";
+        supplementEl.style.marginTop = "2px";
+        supplementEl.style.fontSize = "0.75rem";
+      }
     }
 
     supplementsContainer.appendChild(supplementEl);

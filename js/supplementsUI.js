@@ -283,11 +283,17 @@ function renderSupplements() {
     const box = document.createElement("div");
     box.className = "supplement-box cycle-strip";
     const __defaultAccent = (getComputedStyle(document.documentElement)
-  .getPropertyValue("--supp-accent-default").trim()) || "#cccccc";
-const __accent = (supplement && supplement.color) ? supplement.color : __defaultAccent;
-box.style.borderLeftColor = __accent;
-// Bottom strip: match left if on a cycle; otherwise use the same default
-box.style.borderBottom = `6px solid ${ (supplement && supplement.cycle) ? __accent : __defaultAccent }`;
+      .getPropertyValue("--supp-accent-default").trim()) || "#cccccc";
+    const hasCycle = !!(supplement && supplement.cycle);
+    const fallback = (typeof window !== 'undefined' && typeof window.pickColor === 'function')
+      ? window.pickColor(supplement && supplement.name)
+      : "#2196F3";
+    const __accent = (supplement && supplement.color)
+      ? supplement.color
+      : (hasCycle ? fallback : __defaultAccent);
+    box.style.borderLeftColor = __accent;
+    // Bottom strip: match left if on a cycle; otherwise use the same default
+    box.style.borderBottom = `6px solid ${ hasCycle ? __accent : __defaultAccent }`;
 
     const nameRow = document.createElement("div");
     const strong = document.createElement("strong");
