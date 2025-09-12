@@ -289,7 +289,13 @@ box.style.borderBottom = `6px solid ${ (supplement && supplement.cycle) ? __acce
 
     const nameRow = document.createElement("div");
     const strong = document.createElement("strong");
-    strong.textContent = (supplement && supplement.name) ? supplement.name : "";
+    const nm = (supplement && supplement.name) ? String(supplement.name).trim() : "";
+    let br = "";
+    if (supplement) {
+      const rawBrand = supplement.brand || supplement.Brand || supplement.brandname || supplement.brand_name || "";
+      br = typeof rawBrand === "string" ? rawBrand.trim() : (rawBrand ? String(rawBrand).trim() : "");
+    }
+    strong.textContent = br ? (nm ? nm + ", " + br : br) : nm;
     nameRow.appendChild(strong);
     const doseRow = document.createElement("div");
     doseRow.textContent = "Dosage: " + ((supplement && supplement.dosage) ? supplement.dosage : "");
