@@ -334,12 +334,12 @@
             </div>
 
             <div class="form-row">
-              <label for="suppName">Name</label>
+              <label for="suppName">Name <span class="req" aria-hidden="true">*</span></label>
               <input id="suppName" name="name" type="text" required />
             </div>
 
             <div class="form-row">
-              <label for="suppDosage">Dosage</label>
+              <label for="suppDosage">Dosage <span class="req" aria-hidden="true">*</span></label>
               <input id="suppDosage" name="dosage" type="text" placeholder="e.g., 500mg" />
             </div>
 
@@ -350,6 +350,7 @@
 
             <!-- Time of day -->
             <div class="form-row">
+              <label class="time-of-day-label">Time of day <span class="req" aria-hidden="true">*</span></label>
               <div class="time-grid">
                 <label class="time-item">
                   <input type="checkbox" name="time" value="Morning">
@@ -375,6 +376,7 @@
 
               <input type="date" id="suppCycleStart" name="startDate">
               <span class="field-caption">Start Date</span>
+              <span id="startDateReqStar" class="req" aria-hidden="true" style="display:none">*</span>
 
               <div id="suppCycleStartWrap" class="cycle-start is-hidden">
                 <input type="number" id="suppDaysOn" name="onDay" placeholder="Days On">

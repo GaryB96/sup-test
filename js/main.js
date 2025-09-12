@@ -803,8 +803,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------- Cycle UI toggle (non-collapsing by default) ----------
-  const cycleChk  = form.querySelector("#suppCycleChk");
-  const startWrap = form.querySelector("#suppCycleStartWrap");
+  const cycleChk   = form.querySelector("#suppCycleChk");
+  const startWrap  = form.querySelector("#suppCycleStartWrap");
+  const startInput = form.querySelector("#suppCycleStart");
+  const startReq   = form.querySelector("#startDateReqStar");
   if (cycleChk && startWrap) {
     // Prefer .is-hidden (keeps space reserved); fallback to .hidden if that's what you have
     const hideClass = startWrap.classList.contains("is-hidden") ? "is-hidden" : "hidden";
@@ -815,6 +817,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // If you must use .hidden, also ensure your CSS preserves layout; otherwise this will reflow.
         startWrap.classList.toggle("hidden", !cycleChk.checked);
       }
+      if (startInput) startInput.required = !!cycleChk.checked;
+      if (startReq) startReq.style.display = cycleChk.checked ? 'inline' : 'none';
     };
     cycleChk.addEventListener("change", sync);
     sync();
@@ -849,6 +853,12 @@ form.addEventListener("submit", async (e) => {
   }
   if (!times.length) {
     try { typeof showInlineStatus === "function" && showInlineStatus("Select at least one time of day.", "error"); } catch {}
+    return;
+  }
+
+  // Require start date when cycling
+  if (onCycle && !startDate) {
+    try { typeof showInlineStatus === "function" && showInlineStatus("Please select a cycle start date.", "error"); } catch {}
     return;
   }
 
