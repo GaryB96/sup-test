@@ -854,10 +854,15 @@ form.addEventListener("submit", async (e) => {
   };
 
   // Read modal context to decide add vs edit
-  const ctx = (typeof SUPP_MODAL_CTX !== "undefined" && SUPP_MODAL_CTX) || (window.SUPP_MODAL_CTX || { mode: "add", id: null });
+  // Prefer the shared window context if it indicates edit; otherwise fall back to local default
+  const ctx = (window.SUPP_MODAL_CTX && window.SUPP_MODAL_CTX.mode)
+    ? window.SUPP_MODAL_CTX
+    : ((typeof SUPP_MODAL_CTX !== "undefined" && SUPP_MODAL_CTX) || { mode: "add", id: null });
+  try { console.info('[supp-modal] submit ctx:', ctx); } catch {}
 
   try {
     if (ctx.mode === "edit" && ctx.id) {
+      try { console.info('[supp-modal] updating', ctx.id); } catch {}
       // UPDATE path
       if (typeof updateSupplement === "function") {
         await updateSupplement(uid, ctx.id, data);
@@ -866,6 +871,7 @@ form.addEventListener("submit", async (e) => {
       }
     } else {
       // ADD path
+      try { console.info('[supp-modal] adding new'); } catch {}
       await addSupplement(uid, data);
     }
 
@@ -889,11 +895,10 @@ form.addEventListener("submit", async (e) => {
     }
     closeModal();
 
-    // Reset context to default add mode
+    // Reset context to default add mode in both places
+    window.SUPP_MODAL_CTX = { mode: "add", id: null };
     if (typeof SUPP_MODAL_CTX !== "undefined") {
-      SUPP_MODAL_CTX = { mode: "add", id: null };
-    } else {
-      window.SUPP_MODAL_CTX = { mode: "add", id: null };
+      SUPP_MODAL_CTX = window.SUPP_MODAL_CTX;
     }
   } catch (err) {
     console.error("Save failed:", err);
@@ -925,32 +930,13 @@ function getModalValues() {
   return { name, dosage, times, cycle, startDate, color };
 }
 
-document.addEventListener("click", async (e) => {
+// Let supplementsUI.js handle opening + prefill for edit buttons.
+document.addEventListener("click", (e) => {
   const editBtn = e.target.closest(".btn-edit-supp");
   if (!editBtn) return;
-
   const id = editBtn.dataset.id;
   if (!id) return;
-
-  // Get the item from your in-memory store OR fetch it.
-  // Prefer your existing list in memory to avoid 2nd read:
-  const supp = getSupplementById(id); // implement or use your store
-
-  if (!supp) return;
-
-  // Enter edit mode and prefill
-  SUPP_MODAL_CTX = { mode: "edit", id };
-  setModalValues({
-    name: supp.name,
-    brand: supp.brand || "",
-    dosage: supp.dosage,
-    times: supp.times ?? (supp.time ? [supp.time] : []), // back-compat
-    cycle: supp.cycle || null,
-    startDate: supp.startDate || "",
-    color: supp.color || pickColor?.(supp.name) || "#cccccc"
-  });
-
-  openSupplementModal(); // your existing function to show the modal
+  window.SUPP_MODAL_CTX = { mode: "edit", id };
 });
 
 });
