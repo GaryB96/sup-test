@@ -652,6 +652,49 @@ function generateCycleDates(startDateStr, cycle, endDate) {
 }
 
 // 🌐 Expose calendar refresh globally
+// Helper: compute order reminder date (7 days before last dose)
+function _computeOrderReminderDate(supp) {
+  try {
+    const servings = Number(supp && supp.servings);
+    const startStr = (supp && supp.startDate) ? String(supp.startDate) : '';
+    const timesArr = Array.isArray(supp?.times) ? supp.times
+                    : (Array.isArray(supp?.time) ? supp.time
+                       : (typeof supp?.time === 'string' && supp.time ? [supp.time] : []));
+    const perDay = timesArr.length;
+    if (!servings || servings <= 0 || !startStr || perDay <= 0) return null;
+    const m = startStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+    const y = +m[1], mo = +m[2]-1, d = +m[3];
+    const start = new Date(y, mo, d);
+    start.setHours(0,0,0,0);
+    const needOnDays = Math.max(1, Math.ceil(servings / perDay));
+    let last = null;
+    if (supp && supp.cycle && (Number(supp.cycle.on)||0) + (Number(supp.cycle.off)||0) > 0) {
+      const on = Math.max(0, Number(supp.cycle.on)||0);
+      const off = Math.max(0, Number(supp.cycle.off)||0);
+      const period = Math.max(1, on + off);
+      let i = 0, count = 0; const date = new Date(start);
+      let guard = 0;
+      while (count < needOnDays && guard < 5000) {
+        if ((i % period) < on) {
+          count++;
+          last = new Date(date);
+        }
+        if (count >= needOnDays) break;
+        date.setDate(date.getDate() + 1);
+        i++; guard++;
+      }
+    } else {
+      last = new Date(start);
+      last.setDate(last.getDate() + (needOnDays - 1));
+    }
+    if (!last) return null;
+    const reminder = new Date(last);
+    reminder.setDate(reminder.getDate() - 7);
+    return reminder;
+  } catch { return null; }
+}
+
 async function refreshCalendar() {
   if (!currentUser || !currentUser.uid) return;
   try {
@@ -691,6 +734,22 @@ async function refreshCalendar() {
         }
       }
     }
+
+    // Add one-time order reminders (7 days before last dose) for this month
+    try {
+      for (const supp of rawSupplements) {
+        if (!supp || !supp.orderReminder) continue;
+        const rDate = _computeOrderReminderDate(supp);
+        if (!rDate) continue;
+        if (rDate.getMonth() === currentMonth && rDate.getFullYear() === currentYear) {
+          expandedSupplements.push({
+            name: `Order more: ${supp.name}`,
+            date: toLocalYMD(rDate),
+            color: '#b45309'
+          });
+        }
+      }
+    } catch {}
 
     const calendarEl = document.getElementById("calendar");
     const labelEl = document.getElementById("currentMonthLabel");

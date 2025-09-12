@@ -1,7 +1,8 @@
 import {
   fetchSupplements,
   addSupplement,
-  deleteSupplement
+  deleteSupplement,
+  updateSupplement
 } from "./supplements.js";
 import { db } from "./firebaseConfig.js";
 import {
@@ -388,11 +389,44 @@ delBtn.textContent = "Delete";
 
 actions.append(editBtn, delBtn);
 
-// append in the order you want to see them
-const children = [nameRow, doseRow];
-if (start) children.push(dateRow);
-children.push(timeRow);
-if (remainRow && remainRow.textContent) children.push(remainRow);
+// append rows based on card size (compact vs large)
+const isCompact = !!(supplementSummaryContainer && supplementSummaryContainer.classList && supplementSummaryContainer.classList.contains('size-compact'));
+const children = [nameRow, doseRow, timeRow];
+ if (!isCompact) {
+  if (start) children.push(dateRow);
+  if (cycleDiv) children.push(cycleDiv);
+  if (remainRow && remainRow.textContent) children.push(remainRow);
+  // Add reminder toggle when remaining can be computed
+  try {
+    const totalServings = Number(supplement && supplement.servings);
+    const hasStart = !!(supplement && supplement.startDate);
+    const timesArr = Array.isArray(supplement?.times) ? supplement.times
+                     : (Array.isArray(supplement?.time) ? supplement.time
+                        : (typeof supplement?.time === 'string' && supplement.time ? [supplement.time] : []));
+    const perDay = timesArr.length;
+    if (totalServings > 0 && hasStart && perDay > 0) {
+      const row = document.createElement('div');
+      row.className = 'toggle order-toggle';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'toggle-input';
+      cb.checked = !!supplement.orderReminder;
+      cb.setAttribute('aria-label', 'Order reminder (7 days before last dose)');
+      cb.addEventListener('change', async ()=>{
+        try {
+          if (!currentUser?.uid || !supplement?.id) return;
+          await updateSupplement(currentUser.uid, supplement.id, { orderReminder: !!cb.checked });
+          if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
+        } catch(e){ console.error('[reminder] failed', e); }
+      });
+      const lab = document.createElement('span');
+      lab.className = 'toggle-label';
+      lab.textContent = 'Order reminder (7 days before last dose)';
+      row.append(cb, lab);
+      children.push(row);
+    }
+  } catch {}
+}
 if (cycleDiv) children.push(cycleDiv);
 children.push(actions);
 
@@ -487,6 +521,8 @@ if (sizeControls) {
       const size = btn.getAttribute("data-size");
       localStorage.setItem(SIZE_KEY, size);
       applySavedSize();
+      // Re-render cards so compact vs large rows update instantly
+      try { renderSupplements(); } catch (_) {}
     });
   });
 }

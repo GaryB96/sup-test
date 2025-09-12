@@ -501,6 +501,21 @@ body:not(.logged-in) #accountActions { display: none; }
 
 /* Required field marker */
 .req{ color:#dc2626; margin-left:4px; font-weight:700; }
+
+/* Toggle switch (summary reminder) */
+.toggle{ display:inline-flex; align-items:center; gap:8px; margin-top:4px; }
+.toggle-input{
+  appearance:none; -webkit-appearance:none; outline:none; cursor:pointer;
+  width:42px; height:24px; border-radius:999px; background:#d1d5db; position:relative; transition:background .2s ease;
+  border:1px solid #c7cbd1;
+}
+.toggle-input::after{
+  content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:999px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.25);
+  transition: transform .2s ease;
+}
+.toggle-input:checked{ background:#22c55e; border-color:#1fa24f; }
+.toggle-input:checked::after{ transform: translateX(18px); }
+.toggle-label{ font-size:.92rem; color:#444; }
 .status-pill.info{color:#374151}
 
 

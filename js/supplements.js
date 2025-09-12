@@ -70,6 +70,7 @@ export async function addSupplement(uid, data) {
     cycle,
     startDate,
     color: data?.color || null,
+    orderReminder: !!(data && data.orderReminder),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
@@ -121,6 +122,7 @@ export async function updateSupplement(uid, supplementId, data) {
     ...(brand  !== undefined ? { brand: String(brand).trim() || null } : {}),
     ...(dosage !== undefined ? { dosage: String(dosage).trim() } : {}),
     ...(servings !== undefined ? { servings } : {}),
+    ...((data && "orderReminder" in data) ? { orderReminder: !!data.orderReminder } : {}),
     ...(times  !== undefined ? { times, time: (Array.isArray(times) ? (times[0] || null) : null) } : {}),
     ...(cycle  !== undefined ? { cycle } : {}),
     ...(startDate !== undefined ? { startDate } : {}),
