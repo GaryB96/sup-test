@@ -39,6 +39,7 @@ export async function addSupplement(uid, data) {
   if (!uid) throw new Error("No user id");
 
   const name   = (data?.name || "").trim();
+  const brand  = (data?.brand || "").trim();
   const dosage = (data?.dosage || "").trim();
 
   // Accept either `times` (modal) or `time` (legacy)
@@ -60,6 +61,7 @@ export async function addSupplement(uid, data) {
 
   const docData = {
     name,
+    brand: brand || null,
     dosage,
     time: Array.isArray(times) ? (times[0] || null) : (data?.time ?? null),
     times,
@@ -83,6 +85,7 @@ export async function updateSupplement(uid, supplementId, data) {
   if (!uid || !supplementId) throw new Error("Missing uid or supplementId");
 
   const name   = (data?.name ?? undefined);
+  const brand  = (data?.brand ?? undefined);
   const dosage = (data?.dosage ?? undefined);
 
   const times = Array.isArray(data?.times)
@@ -110,6 +113,7 @@ export async function updateSupplement(uid, supplementId, data) {
 
   const payload = {
     ...(name   !== undefined ? { name: String(name).trim() } : {}),
+    ...(brand  !== undefined ? { brand: String(brand).trim() || null } : {}),
     ...(dosage !== undefined ? { dosage: String(dosage).trim() } : {}),
     ...(times  !== undefined ? { times, time: (Array.isArray(times) ? (times[0] || null) : null) } : {}),
     ...(cycle  !== undefined ? { cycle } : {}),

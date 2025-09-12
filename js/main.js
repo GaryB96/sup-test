@@ -815,6 +815,7 @@ form.addEventListener("submit", async (e) => {
 
   // Collect values from the modal
   const name   = form.querySelector("#suppName")?.value?.trim() || "";
+  const brand  = form.querySelector("#suppBrand")?.value?.trim() || "";
   const dosage = form.querySelector("#suppDosage")?.value?.trim() || "";
 
   const times = Array.from(form.querySelectorAll('input[name="time"]:checked'))
@@ -830,6 +831,7 @@ form.addEventListener("submit", async (e) => {
 
   const data = {
     name,
+    brand: brand || null,
     dosage,
     times,
     cycle: onCycle ? { on: daysOn, off: daysOff } : null,
@@ -926,6 +928,7 @@ document.addEventListener("click", async (e) => {
   SUPP_MODAL_CTX = { mode: "edit", id };
   setModalValues({
     name: supp.name,
+    brand: supp.brand || "",
     dosage: supp.dosage,
     times: supp.times ?? (supp.time ? [supp.time] : []), // back-compat
     cycle: supp.cycle || null,

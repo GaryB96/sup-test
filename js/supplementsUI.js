@@ -143,8 +143,10 @@ function editSupplement(id) {
   const q = (sel) => formModal.querySelector(sel);
 
   const nameEl   = q("#suppName");
+  const brandEl  = q("#suppBrand");
   const dosageEl = q("#suppDosage");
   if (nameEl)   nameEl.value   = supplement.name || "";
+  if (brandEl)  brandEl.value  = supplement.brand || "";
   if (dosageEl) dosageEl.value = supplement.dosage || "";
 
   // Times checkboxes in modal
@@ -289,7 +291,9 @@ box.style.borderBottom = `6px solid ${ (supplement && supplement.cycle) ? __acce
 
     const nameRow = document.createElement("div");
     const strong = document.createElement("strong");
-    strong.textContent = (supplement && supplement.name) ? supplement.name : "";
+    const nm = (supplement && supplement.name) ? String(supplement.name).trim() : "";
+    const br = (supplement && supplement.brand) ? String(supplement.brand).trim() : "";
+    strong.textContent = br ? (nm ? nm + ", " + br : br) : nm;
     nameRow.appendChild(strong);
     const doseRow = document.createElement("div");
     doseRow.textContent = "Dosage: " + ((supplement && supplement.dosage) ? supplement.dosage : "");
