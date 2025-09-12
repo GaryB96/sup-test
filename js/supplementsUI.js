@@ -299,6 +299,13 @@ box.style.borderBottom = `6px solid ${ (supplement && supplement.cycle) ? __acce
     nameRow.appendChild(strong);
     const doseRow = document.createElement("div");
     doseRow.textContent = "Dosage: " + ((supplement && supplement.dosage) ? supplement.dosage : "");
+    
+    // Optional start date (shown when present)
+    const start = (supplement && supplement.startDate) ? String(supplement.startDate).trim() : "";
+    const dateRow = document.createElement("div");
+    if (start) {
+      dateRow.textContent = "Start: " + start;
+    }
     const timeRow = document.createElement("div");
     if (labelForTime) timeRow.textContent = "Time: " + labelForTime;
     else {
@@ -334,7 +341,9 @@ delBtn.textContent = "Delete";
 actions.append(editBtn, delBtn);
 
 // append in the order you want to see them
-const children = [nameRow, doseRow, timeRow];
+const children = [nameRow, doseRow];
+if (start) children.push(dateRow);
+children.push(timeRow);
 if (cycleDiv) children.push(cycleDiv);
 children.push(actions);
 
