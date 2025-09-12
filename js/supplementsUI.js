@@ -260,6 +260,20 @@ function renderSupplements() {
       supplementSummaryContainer.removeChild(supplementSummaryContainer.firstChild);
     }
   }
+  // Local date formatter: 2025-09-01 -> Sept. 1, 2025
+  function fmtYMDPretty(ymd) {
+    try {
+      if (!ymd || typeof ymd !== 'string') return '';
+      const m = ymd.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) return ymd;
+      const y = Number(m[1]);
+      const mo = Number(m[2]);
+      const d = Number(m[3]);
+      const months = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
+      const mon = months[Math.max(1, Math.min(12, mo)) - 1] || '';
+      return mon ? `${mon} ${d}, ${y}` : ymd;
+    } catch { return ymd || ''; }
+  }
   const norm = (v) => (typeof v === "string" ? v.trim().toLowerCase() : "");
   const cap1 = (s) => (s && s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s);
   const ORDER = ["Morning", "Afternoon", "Evening", "Unscheduled"];
@@ -299,12 +313,12 @@ box.style.borderBottom = `6px solid ${ (supplement && supplement.cycle) ? __acce
     nameRow.appendChild(strong);
     const doseRow = document.createElement("div");
     doseRow.textContent = "Dosage: " + ((supplement && supplement.dosage) ? supplement.dosage : "");
-    
+
     // Optional start date (shown when present)
     const start = (supplement && supplement.startDate) ? String(supplement.startDate).trim() : "";
     const dateRow = document.createElement("div");
     if (start) {
-      dateRow.textContent = "Start: " + start;
+      dateRow.textContent = "Start: " + fmtYMDPretty(start);
     }
     const timeRow = document.createElement("div");
     if (labelForTime) timeRow.textContent = "Time: " + labelForTime;
@@ -314,8 +328,8 @@ box.style.borderBottom = `6px solid ${ (supplement && supplement.cycle) ? __acce
       timeRow.textContent = "Time: " + timesText;
     }
     const c = (supplement && supplement.cycle) || {};
-const onDays = Number(c.on || 0);
-const offDays = Number(c.off || 0);
+    const onDays = Number(c.on || 0);
+    const offDays = Number(c.off || 0);
 
 let cycleDiv = null;
 if (onDays > 0 || offDays > 0) {
@@ -324,6 +338,40 @@ if (onDays > 0 || offDays > 0) {
   // optional: a small class if you want to style it
   // cycleDiv.className = "cycle-line";
 }
+
+ // Remaining doses (approx)
+ const remainRow = document.createElement("div");
+ (function computeRemaining(){
+   try {
+     const totalServings = Number(supplement && supplement.servings);
+     const startStr = (supplement && supplement.startDate) ? String(supplement.startDate).trim() : '';
+     // times per day
+     const timesArr = Array.isArray(supplement?.times) ? supplement.times
+                      : (Array.isArray(supplement?.time) ? supplement.time
+                         : (typeof supplement?.time === 'string' && supplement.time ? [supplement.time] : []));
+     const perDay = timesArr.length;
+     if (!totalServings || totalServings <= 0 || !startStr || perDay <= 0) return;
+     const m = startStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+     if (!m) return;
+     const y = +m[1], mo = +m[2]-1, d = +m[3];
+     const start = new Date(y, mo, d);
+     const today = new Date();
+     // normalize to local midnight
+     start.setHours(0,0,0,0); today.setHours(0,0,0,0);
+     let daysElapsed = Math.floor((today - start) / 86400000) + 1; // include start day
+     if (daysElapsed < 0) daysElapsed = 0;
+     let onDaysCount = daysElapsed;
+     if (onDays > 0 || offDays > 0) {
+       const period = Math.max(1, onDays + Math.max(0, offDays));
+       const full = Math.floor(daysElapsed / period);
+       const rem = daysElapsed % period;
+       onDaysCount = full * onDays + Math.min(onDays, rem);
+     }
+     const consumed = Math.max(0, onDaysCount * perDay);
+     const remaining = Math.max(0, totalServings - consumed);
+     remainRow.textContent = `Approx. Doses Remaining: ${remaining} of ${totalServings}`;
+   } catch {}
+ })();
 
 const actions = document.createElement("div");
 actions.className = "actions";
@@ -344,6 +392,7 @@ actions.append(editBtn, delBtn);
 const children = [nameRow, doseRow];
 if (start) children.push(dateRow);
 children.push(timeRow);
+if (remainRow && remainRow.textContent) children.push(remainRow);
 if (cycleDiv) children.push(cycleDiv);
 children.push(actions);
 

@@ -41,6 +41,7 @@ export async function addSupplement(uid, data) {
   const name   = (data?.name || "").trim();
   const brand  = (data?.brand || "").trim();
   const dosage = (data?.dosage || "").trim();
+  const servings = Number.isFinite(Number(data?.servings)) ? Number(data.servings) : null;
 
   // Accept either `times` (modal) or `time` (legacy)
   const times = Array.isArray(data?.times)
@@ -63,6 +64,7 @@ export async function addSupplement(uid, data) {
     name,
     brand: brand || null,
     dosage,
+    servings,
     time: Array.isArray(times) ? (times[0] || null) : (data?.time ?? null),
     times,
     cycle,
@@ -87,6 +89,9 @@ export async function updateSupplement(uid, supplementId, data) {
   const name   = (data?.name ?? undefined);
   const brand  = (data?.brand ?? undefined);
   const dosage = (data?.dosage ?? undefined);
+  const servings = (data && "servings" in data)
+    ? (Number.isFinite(Number(data.servings)) ? Number(data.servings) : null)
+    : undefined;
 
   const times = Array.isArray(data?.times)
     ? data.times
@@ -115,6 +120,7 @@ export async function updateSupplement(uid, supplementId, data) {
     ...(name   !== undefined ? { name: String(name).trim() } : {}),
     ...(brand  !== undefined ? { brand: String(brand).trim() || null } : {}),
     ...(dosage !== undefined ? { dosage: String(dosage).trim() } : {}),
+    ...(servings !== undefined ? { servings } : {}),
     ...(times  !== undefined ? { times, time: (Array.isArray(times) ? (times[0] || null) : null) } : {}),
     ...(cycle  !== undefined ? { cycle } : {}),
     ...(startDate !== undefined ? { startDate } : {}),

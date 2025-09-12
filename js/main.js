@@ -838,6 +838,7 @@ form.addEventListener("submit", async (e) => {
   const name   = form.querySelector("#suppName")?.value?.trim() || "";
   const brand  = form.querySelector("#suppBrand")?.value?.trim() || "";
   const dosage = form.querySelector("#suppDosage")?.value?.trim() || "";
+  const servingsRaw = form.querySelector("#suppServings")?.value;
 
   const times = Array.from(form.querySelectorAll('input[name="time"]:checked'))
     .map(cb => cb.value); // e.g., ["Morning","Evening"]
@@ -856,16 +857,16 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
+  const onCycle   = !!form.querySelector("#suppCycleChk")?.checked;
+  const startDate = onCycle ? (form.querySelector("#suppCycleStart")?.value || null) : null;
+  const daysOn    = onCycle ? (form.querySelector("#suppDaysOn")?.value || "") : "";
+  const daysOff   = onCycle ? (form.querySelector("#suppDaysOff")?.value || "") : "";
+
   // Require start date when cycling
   if (onCycle && !startDate) {
     try { typeof showInlineStatus === "function" && showInlineStatus("Please select a cycle start date.", "error"); } catch {}
     return;
   }
-
-  const onCycle   = !!form.querySelector("#suppCycleChk")?.checked;
-  const startDate = onCycle ? (form.querySelector("#suppCycleStart")?.value || null) : null;
-  const daysOn    = onCycle ? (form.querySelector("#suppDaysOn")?.value || "") : "";
-  const daysOff   = onCycle ? (form.querySelector("#suppDaysOff")?.value || "") : "";
 
   // Ensure color (important for summary + calendar). Only color cycle items.
   let color = onCycle
@@ -876,6 +877,7 @@ form.addEventListener("submit", async (e) => {
     name,
     brand: brand || null,
     dosage,
+    servings: (servingsRaw != null && String(servingsRaw).trim() !== "") ? (parseInt(servingsRaw, 10) || null) : null,
     times,
     cycle: onCycle ? { on: daysOn, off: daysOff } : null,
     startDate,
