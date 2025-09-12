@@ -821,13 +821,27 @@ form.addEventListener("submit", async (e) => {
   const times = Array.from(form.querySelectorAll('input[name="time"]:checked'))
     .map(cb => cb.value); // e.g., ["Morning","Evening"]
 
+  // Basic validation: require name, dosage, and at least one time of day
+  if (!name) {
+    try { typeof showInlineStatus === "function" && showInlineStatus("Please enter a name.", "error"); } catch {}
+    return;
+  }
+  if (!dosage) {
+    try { typeof showInlineStatus === "function" && showInlineStatus("Please enter a dosage.", "error"); } catch {}
+    return;
+  }
+  if (!times.length) {
+    try { typeof showInlineStatus === "function" && showInlineStatus("Select at least one time of day.", "error"); } catch {}
+    return;
+  }
+
   const onCycle   = !!form.querySelector("#suppCycleChk")?.checked;
   const startDate = onCycle ? (form.querySelector("#suppCycleStart")?.value || null) : null;
   const daysOn    = onCycle ? (form.querySelector("#suppDaysOn")?.value || "") : "";
   const daysOff   = onCycle ? (form.querySelector("#suppDaysOff")?.value || "") : "";
 
   // Ensure color (important for summary + calendar)
-  let color = onCycle ? pickColor(name) : "#cccccc";
+  let color = onCycle ? ((typeof pickColor === 'function' ? pickColor(name) : null) || "#cccccc") : "#cccccc";
 
   const data = {
     name,
