@@ -124,10 +124,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('dayModal');
   const closeBtn = document.getElementById('closeDayBtn');
   if (!modal) return;
-  if (closeBtn) closeBtn.addEventListener('click', () => { modal.classList.add('hidden'); document.body.style.overflow=''; });
+  function close(){ modal.classList.add('hidden'); document.body.style.overflow=''; }
+  if (closeBtn) closeBtn.addEventListener('click', close);
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) { modal.classList.add('hidden'); document.body.style.overflow=''; }
+    if (e.target === modal || (e.target && e.target.matches('[data-close-modal]'))) close();
   });
+  window.addEventListener('keydown', (e) => { if (!modal.classList.contains('hidden') && e.key === 'Escape') close(); });
 });
 
   calendarEl.appendChild(daysGrid);
