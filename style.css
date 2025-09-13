@@ -491,6 +491,12 @@ body:not(.logged-in) #accountActions { display: none; }
 .live-hud{ position:absolute; inset:auto 0 0 0; display:flex; align-items:center; justify-content:space-between; padding:6px 8px; background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 60%); color:#fff; }
 .live-hint{ font-size:.9rem; opacity:.9; }
 
+/* Mobile-only warning next to scan button */
+.scan-warn{ margin-left:8px; color:#b45309; font-weight:600; display:inline-flex; align-items:center; }
+.scan-warn.bump{ animation: scan-bump .45s ease; }
+@keyframes scan-bump { 0%{ transform:scale(1)} 30%{ transform:scale(1.08)} 60%{ transform:scale(.98)} 100%{ transform:scale(1)} }
+.supplement-barcodeBtn:disabled{ opacity:.55; cursor:not-allowed; }
+
 /* === Highlight current day === */
 .day.today {
   outline: 2px solid #028819;
@@ -820,7 +826,7 @@ body:not(.logged-in) #accountActions { display: none; }
   border-radius: 6px;
   border: none;
   font-size: 12px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   height: 30px;

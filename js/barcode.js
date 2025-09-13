@@ -808,6 +808,7 @@ function anyFilled(curr) {
       var btn = document.getElementById('barcodeBtn');
       var liveBtn = document.getElementById('liveScanBtn');
       var liveStop = document.getElementById('liveStopBtn');
+      var liveWarn = document.getElementById('liveScanWarn');
       if (!btn && !liveBtn) return;
       bound = true; window.__SCANNER_BOUND = true;
 
@@ -824,7 +825,25 @@ function anyFilled(curr) {
         btn.dataset.scannerBound = '1';
       }
       if (liveBtn && liveBtn.dataset && liveBtn.dataset.scannerBound !== '1') {
-        liveBtn.addEventListener('click', function () { startLiveScan(); });
+        // Mobile/desktop detection
+        var IS_MOBILE = (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) || ((navigator.platform === 'MacIntel') && navigator.maxTouchPoints > 1);
+        if (!IS_MOBILE) {
+          // Desktop: disable button and show warning
+          try { liveBtn.disabled = true; } catch(_){ }
+          if (liveWarn) liveWarn.classList.remove('hidden');
+          liveBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (liveWarn) {
+              liveWarn.classList.remove('bump');
+              // retrigger animation
+              void liveWarn.offsetWidth;
+              liveWarn.classList.add('bump');
+            }
+          });
+        } else {
+          if (liveWarn) liveWarn.classList.add('hidden');
+          liveBtn.addEventListener('click', function () { startLiveScan(); });
+        }
         liveBtn.dataset.scannerBound = '1';
       }
       if (liveStop && liveStop.dataset && liveStop.dataset.scannerBound !== '1') {
