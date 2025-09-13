@@ -173,14 +173,16 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 
 /* === Page Title (top-right) === */
 .page-title-bar{ display:flex; justify-content:flex-end; align-items:flex-start; margin: 8px 0 14px; }
-.page-title{ position:relative; display:inline-block; padding: 6px 60px 10px 14px; border-radius: 12px; }
+.page-title{ position:relative; display:inline-block; padding: 6px 72px 14px 14px; border-radius: 12px; }
 .page-title-text{ font-size: 2rem; font-weight: 900; letter-spacing:.2px; }
-.page-title-logo{ position:absolute; right: 8px; bottom: -10px; width: 42px; height: 42px; opacity:.95; }
+.page-title-badge{ position:absolute; right: 8px; bottom: -14px; width: 56px; height: 56px; border-radius: 14px; background:#0b1220; border:1px solid #1e293b; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,.25); }
+.page-title-badge img{ width: 72%; height:auto; display:block; }
 
 @media (max-width: 520px){
   .page-title-text{ font-size: 1.5rem; }
-  .page-title{ padding-right: 46px; }
-  .page-title-logo{ width: 32px; height: 32px; bottom: -8px; right: 6px; }
+  .page-title{ padding-right: 56px; }
+  .page-title-badge{ width: 40px; height: 40px; bottom: -10px; right: 6px; border-radius: 10px; }
+  .page-title-badge img{ width: 70%; }
 }
 
 /* ===== Auth Visibility ===== */
