@@ -497,6 +497,8 @@ if (isCompact) {
         try {
           if (!currentUser?.uid || !supplement?.id) return;
           await updateSupplement(currentUser.uid, supplement.id, { orderReminder: !!cb.checked });
+          // Keep local state in sync so size toggles preserve the checkbox state
+          try { supplement.orderReminder = !!cb.checked; } catch(_) {}
           if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
         } catch(e){ console.error('[reminder] failed', e); }
       });
