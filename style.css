@@ -1045,10 +1045,20 @@ body.logged-in main { margin-left: 220px; }
 /* Size presets you can toggle with a single class */
 .summary-container.size-compact {
   /* Make small cards as narrow as practical on desktop */
-  --card-min: 100px;
+  --card-min: 155px;
   --card-gap: 6px;
   --card-pad: 8px;
   --card-font: 12px;
+}
+
+/* Prevent single small cards from stretching full width */
+.summary-container.size-compact .supp-group__content{
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min), max-content));
+  justify-content: start;
+  justify-items: start;
+}
+.summary-container.size-compact .supplement-box{
+  max-width: var(--card-min + 10px);
 }
 
 .summary-container.size-cozy {
