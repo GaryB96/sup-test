@@ -917,7 +917,8 @@ form.addEventListener("submit", async (e) => {
   }
 
   const onCycle   = !!form.querySelector("#suppCycleChk")?.checked;
-  const startDate = onCycle ? (form.querySelector("#suppCycleStart")?.value || null) : null;
+  // Always capture a start date if provided; require only when cycling
+  const startDate = (form.querySelector("#suppCycleStart")?.value || null);
   const daysOn    = onCycle ? (form.querySelector("#suppDaysOn")?.value || "") : "";
   const daysOff   = onCycle ? (form.querySelector("#suppDaysOff")?.value || "") : "";
 
