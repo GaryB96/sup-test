@@ -417,6 +417,7 @@ body:not(.logged-in) #accountActions { display: none; }
 
 /* Body */
 .modal-body{ padding: 14px 18px 0 18px; }
+.modal-body{ display:flex; justify-content:center; }
 .notes-textarea{
   width: 100%;
   min-height: clamp(220px, 40vh, 480px);
@@ -429,6 +430,7 @@ body:not(.logged-in) #accountActions { display: none; }
   font: 500 0.98rem/1.55 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
   transition: border-color .15s ease, box-shadow .15s ease;
 }
+.modal-body .notes-textarea{ max-width: 820px; }
 .notes-textarea::placeholder{ color: color-mix(in oklab, var(--muted) 80%, transparent); }
 .notes-textarea:focus{
   outline: none;
@@ -516,6 +518,15 @@ body:not(.logged-in) #accountActions { display: none; }
 .toggle-input:checked{ background:#22c55e; border-color:#1fa24f; }
 .toggle-input:checked::after{ transform: translateX(18px); }
 .toggle-label{ font-size:.92rem; color:#444; }
+
+/* === Supplement Modal desktop sizing === */
+@media (min-width: 1024px){
+  #supplementModal .modal-content{
+    max-width: 780px; /* wider on desktop */
+    max-height: none; /* avoid inner scroll on tall screens */
+  }
+  #supplementModal{ overflow-y: visible; }
+}
 .status-pill.info{color:#374151}
 
 
