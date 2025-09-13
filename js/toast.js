@@ -35,20 +35,32 @@ export function showToast(message, type = 'info', timeout = 4000) {
 
 // Confirm-style toast with Yes/No actions. Returns a Promise<boolean>.
 export function showConfirmToast(message, opts = {}) {
-  const { confirmText = 'Yes', cancelText = 'No', type = 'warn', timeout = 0, anchor = null } = opts || {};
+  const { confirmText = 'Yes', cancelText = 'No', type = 'warn', timeout = 0, anchor = null, outsideClose = false, hideActions } = opts || {};
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.setAttribute('role', 'alertdialog');
-  toast.innerHTML = `
-    <div class="toast-row">
-      <div class="toast-msg">${message}</div>
-      <div class="toast-actions">
-        <button class="toast-btn toast-cancel" type="button">${cancelText}</button>
-        <button class="toast-btn toast-confirm" type="button">${confirmText}</button>
+
+  const infoMode = (hideActions === true) || (hideActions === undefined && type === 'info' && !!anchor);
+  if (infoMode) {
+    // Info popover style: no OK/Cancel, just close
+    toast.innerHTML = `
+      <div class="toast-row">
+        <div class="toast-msg">${message}</div>
         <button class="toast-close" aria-label="Close">&times;</button>
       </div>
-    </div>
-  `;
+    `;
+  } else {
+    toast.innerHTML = `
+      <div class="toast-row">
+        <div class="toast-msg">${message}</div>
+        <div class="toast-actions">
+          <button class="toast-btn toast-cancel" type="button">${cancelText}</button>
+          <button class="toast-btn toast-confirm" type="button">${confirmText}</button>
+          <button class="toast-close" aria-label="Close">&times;</button>
+        </div>
+      </div>
+    `;
+  }
   if (anchor && anchor.getBoundingClientRect) {
     toast.classList.add('toast-popover');
     document.body.appendChild(toast);
@@ -75,10 +87,23 @@ export function showConfirmToast(message, opts = {}) {
   return new Promise((resolve) => {
     const onConfirm = () => { close(); resolve(true); };
     const onCancel  = () => { close(); resolve(false); };
-    toast.querySelector('.toast-confirm').addEventListener('click', onConfirm);
-    toast.querySelector('.toast-cancel').addEventListener('click', onCancel);
-    toast.querySelector('.toast-close').addEventListener('click', onCancel);
+    const closeBtn = toast.querySelector('.toast-close');
+    if (!infoMode) {
+      toast.querySelector('.toast-confirm').addEventListener('click', onConfirm);
+      toast.querySelector('.toast-cancel').addEventListener('click', onCancel);
+    }
+    if (closeBtn) closeBtn.addEventListener('click', onCancel);
     if (timeout > 0) setTimeout(onCancel, timeout);
+    // Close on outside click for infoMode or when explicitly requested
+    if (infoMode || outsideClose) {
+      const onOutside = (e) => {
+        if (!toast.contains(e.target) && (!anchor || !anchor.contains(e.target))) {
+          document.removeEventListener('mousedown', onOutside, true);
+          onCancel();
+        }
+      };
+      document.addEventListener('mousedown', onOutside, true);
+    }
   });
 }
 
@@ -123,6 +148,11 @@ export function showInfoPopover(message, opts = {}) {
     document.removeEventListener('mousedown', onOutside, true);
     window.removeEventListener('resize', position);
     window.removeEventListener('scroll', position, true);
+    try {
+      if (anchor) {
+        anchor.dispatchEvent(new CustomEvent('infoPopoverClosed', { bubbles: true }));
+      }
+    } catch {}
   };
   const onOutside = (e) => {
     if (!pop.contains(e.target) && (!anchor || !anchor.contains(e.target))) close();
@@ -132,6 +162,7 @@ export function showInfoPopover(message, opts = {}) {
   window.addEventListener('resize', position);
   window.addEventListener('scroll', position, true);
   if (timeout > 0) setTimeout(close, timeout);
+  return { element: pop, close };
 }
 
 

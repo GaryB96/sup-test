@@ -453,7 +453,7 @@
   <script type="module" src="./js/notifications.js"></script>
   <script type="module" src="./js/sidebar-toggle.js"></script>
   <script type="module">
-    import { showConfirmToast } from './js/toast.js';
+    import { showInfoPopover } from './js/toast.js';
     document.addEventListener('DOMContentLoaded', () => {
       const nav = document.querySelector('.calendar-nav');
       if (!nav) return;
@@ -469,16 +469,20 @@
         help.textContent = '?';
         nav.insertBefore(help, nav.firstElementChild);
       }
-      help.addEventListener('click', async () => {
-        try {
-          help.setAttribute('aria-expanded','true');
-          await showConfirmToast(
-            'The Cycle Calendar shows days you are ON for supplements with a cycle. Add a Start Date and On/Off days in the form to see colored entries. You can tap a day to view details.',
-            { confirmText: 'OK', cancelText: 'Close', type: 'info', anchor: help, timeout: 0 }
-          );
-        } finally {
+      help.addEventListener('click', () => {
+        // Mark as expanded while popover is visible
+        help.setAttribute('aria-expanded','true');
+        // Show simple info popover (closes on outside click or X)
+        showInfoPopover(
+          'The Cycle Calendar shows days you are ON for supplements with a cycle. Add a Start Date and On/Off days in the form to see colored entries. You can tap a day to view details.',
+          { type: 'info', anchor: help, timeout: 0 }
+        );
+        // Reset aria-expanded when the popover closes
+        const onClosed = () => {
           help.setAttribute('aria-expanded','false');
-        }
+          help.removeEventListener('infoPopoverClosed', onClosed);
+        };
+        help.addEventListener('infoPopoverClosed', onClosed, { once: true });
       });
     });
   </script>
