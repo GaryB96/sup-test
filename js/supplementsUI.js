@@ -518,6 +518,8 @@ if (onDays > 0 || offDays > 0) {
         menuBtn.setAttribute('aria-haspopup', 'menu');
         menuBtn.setAttribute('aria-expanded', 'false');
         menuBtn.setAttribute('title', 'More');
+        // Ensure consistent glyph for kebab menu (vertical ellipsis)
+        menuBtn.textContent = '⋮';
         menuBtn.innerText = '⋯';
 
         const menu = document.createElement('div');
@@ -563,6 +565,17 @@ if (onDays > 0 || offDays > 0) {
         menuDel.dataset.id = (supplement && supplement.id) ? supplement.id : '';
         menuDel.textContent = 'Delete';
         menu.append(menuEdit, menuDel);
+        // Direct handlers so actions work even if global rebinding hasn’t run yet
+        menuEdit.addEventListener('click', () => editSupplement(menuEdit.dataset.id));
+        menuDel.addEventListener('click', async () => {
+          try {
+            const ok = await showConfirmToast('Delete this supplement?', { confirmText: 'Delete', cancelText: 'Cancel', type: 'warn', anchor: menuDel });
+            if (!ok) return;
+            await deleteSupplement(currentUser && currentUser.uid, menuDel.dataset.id);
+            await refreshData();
+            if (typeof window.refreshCalendar === "function") await window.refreshCalendar();
+          } catch(e) { console.error('Delete cancelled/failed', e); }
+        });
 
         // Open/close behavior
         let closing = null;
