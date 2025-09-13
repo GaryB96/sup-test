@@ -1011,7 +1011,9 @@ body.logged-in main { margin-left: 220px; }
   border:1px solid #e5e7eb; background:#ffffff; color:#111827;
   display:inline-flex; align-items:center; justify-content:center; font-weight:800; cursor:pointer;
 }
-.card-menu{ position:absolute; top:38px; right:6px; min-width:160px; background:#ffffff; color:#111827; border:1px solid #e5e7eb; border-radius:10px; box-shadow:0 10px 24px rgba(0,0,0,.18); z-index:4000; padding:6px; display:flex; flex-direction:column; gap:4px; }
+.card-menu{ position:absolute; top:38px; right:6px; min-width:160px; background:#ffffff; color:#111827; border:1px solid #e5e7eb; border-radius:10px; box-shadow:0 10px 24px rgba(0,0,0,.18); z-index:4000; padding:6px; display:flex; flex-direction:column; gap:4px; opacity:0; transform: translateY(-4px) scale(.98); transition: opacity .14s ease, transform .14s ease; }
+.card-menu.show{ opacity:1; transform:none; }
+.card-menu .menu-item:focus{ outline: 2px solid #93c5fd; outline-offset: 2px; }
 .card-menu .menu-item{ display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:transparent; border:0; color:inherit; cursor:pointer; padding:8px 10px; border-radius:8px; }
 .card-menu .menu-item:hover{ background:#f3f4f6; }
 .card-menu .menu-toggle input{ width:16px; height:16px; }
