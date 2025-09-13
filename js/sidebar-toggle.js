@@ -24,13 +24,7 @@
   }
 
   function computeInitial(sidebar) {
-    // Force collapsed on small screens regardless of previous preference
-    try {
-      if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
-        return true;
-      }
-    } catch {}
-    // Otherwise: persisted -> attribute -> default (expanded)
+    // Priority: persisted -> attribute -> media query
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored === 'true' || stored === 'false') return (stored === 'true');
@@ -38,7 +32,7 @@
     if (sidebar && sidebar.hasAttribute('data-collapsed')) {
       return sidebar.getAttribute('data-collapsed') === 'true';
     }
-    return false;
+    return window.matchMedia('(max-width: 600px)').matches;
   }
 
   function initIfPossible() {
@@ -50,7 +44,6 @@
       lastSidebar = sidebar;
       const initial = computeInitial(sidebar);
       setCollapsed(sidebar, tab, iconEl, initial);
-      try { document.body.classList.add('sidebar-initialized'); } catch {}
     }
 
     if (!initialized) {

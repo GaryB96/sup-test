@@ -489,17 +489,13 @@ if (nextBtn) {
 if (user) {
       document.body.classList.add("logged-in");
       currentUser = user;
-      try { window.appCurrentUser = user; } catch {}
       setNotesButtonVisibility(true);
       const event = new CustomEvent("user-authenticated", { detail: user });
       window.dispatchEvent(event);
-      // Also trigger supplements refresh directly as a backup (order-agnostic)
-      try { if (typeof window.refreshSuppSummary === 'function') window.refreshSuppSummary(); } catch {}
 
       setNotesButtonVisibility(true);
     } else {
       document.body.classList.remove("logged-in");
-      try { window.appCurrentUser = null; } catch {}
       if (calendarEl) calendarEl.innerHTML = "";
       if (labelEl) labelEl.textContent = "";
       

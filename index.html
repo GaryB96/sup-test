@@ -263,6 +263,19 @@
             </span>
           </div>
         </div>
+        
+        <!-- Tutorial: shown only when there are NO supplements (toggled by supplementsUI.js) -->
+        <div id="summaryTutorial" class="tutorial-card hidden" role="region" aria-label="Getting started tutorial">
+          <h2 class="tutorial-title">Getting started</h2>
+          <ul class="tutorial-list">
+            <li>Click <strong>Add New Supplement</strong> in the sidebar.</li>
+            <li>Optionally use the barcode scanner to auto-fill details.</li>
+            <li>Select your times (e.g., Morning/Afternoon/Evening) and dosage.</li>
+            <li>On a cycle? Enter On/Off days and a Start Date.</li>
+            <li>See your cycle days in the <strong>Cycle Calendar</strong> below.</li>
+            <li>From Account Options, download a calendar with reminders.</li>
+          </ul>
+        </div>
         <h1 id="summaryTitle">Supplement Summary</h1>
 
         <!-- Card size controls (now inside appContent) -->
@@ -452,21 +465,8 @@
   <script type="module" src="./js/supplementsUI.js"></script>
   <script type="module" src="./js/notifications.js"></script>
   <script type="module" src="./js/sidebar-toggle.js"></script>
-  <script>
-    (function(){
-      try {
-        if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
-          document.addEventListener('DOMContentLoaded', function(){
-            document.body.classList.add('sidebar-collapsed');
-            var sb = document.getElementById('sidebar');
-            if (sb) sb.setAttribute('data-collapsed','true');
-          }, { once: true });
-        }
-      } catch (e) {}
-    })();
-  </script>
   <script type="module">
-    import { showConfirmToast } from './js/toast.js';
+    import { showInfoPopover } from './js/toast.js';
     document.addEventListener('DOMContentLoaded', () => {
       const nav = document.querySelector('.calendar-nav');
       if (!nav) return;
@@ -482,16 +482,20 @@
         help.textContent = '?';
         nav.insertBefore(help, nav.firstElementChild);
       }
-      help.addEventListener('click', async () => {
-        try {
-          help.setAttribute('aria-expanded','true');
-          await showConfirmToast(
-            'The Cycle Calendar shows days you are or or off for supplements with a cycle. Add a start date and on/Off days in the add supplement form to see entries. You can also tap a day to view details, and add a reminder to purchase more supplements',
-            { confirmText: 'OK', cancelText: 'Close', type: 'info', anchor: help, timeout: 0 }
-          );
-        } finally {
+      help.addEventListener('click', () => {
+        // Mark as expanded while popover is visible
+        help.setAttribute('aria-expanded','true');
+        // Show simple info popover (closes on outside click or X)
+        showInfoPopover(
+          'The Cycle Calendar shows days you are ON for supplements with a cycle. Add a Start Date and On/Off days in the form to see colored entries. You can tap a day to view details.',
+          { type: 'info', anchor: help, timeout: 0 }
+        );
+        // Reset aria-expanded when the popover closes
+        const onClosed = () => {
           help.setAttribute('aria-expanded','false');
-        }
+          help.removeEventListener('infoPopoverClosed', onClosed);
+        };
+        help.addEventListener('infoPopoverClosed', onClosed, { once: true });
       });
     });
   </script>

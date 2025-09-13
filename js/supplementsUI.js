@@ -41,14 +41,6 @@ window.addEventListener("user-authenticated", async (e) => {
   await refreshData();
 });
 
-// If auth already happened before this module loaded, pick it up
-try {
-  if (window.appCurrentUser && !currentUser) {
-    currentUser = window.appCurrentUser;
-    refreshData().catch(console.error);
-  }
-} catch {}
-
 // ----------------------------------------------------------------------------
 // Utilities
 // ----------------------------------------------------------------------------
@@ -290,7 +282,7 @@ if (cancelEditBtn) {
 
 async function refreshData() {
   if (!currentUser || !currentUser.uid) {
-    console.warn("[supplementsUI] currentUser is not ready yet.");
+    console.warn("⛔ currentUser is not ready yet.");
     return;
   }
 
