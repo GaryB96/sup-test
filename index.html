@@ -43,14 +43,7 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 <!-- Your scanner AFTER libraries (pick the file you’re actually using) -->
-<!-- In-page console for iPhone debugging (remove when done) -->
-<script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script>
-<script>window.vConsole = new window.VConsole();</script>
-<script>
-  window.onerror = function(m,s,l,c,e){ try { console.error('[onerror]', m, s+':'+l, e); } catch(_){} };
-  window.addEventListener('unhandledrejection', function(e){ try { console.error('[unhandled]', e.reason); } catch(_){} });
-  console.info('[debug] vConsole initialized');
-  </script>
+<!-- Debug console removed -->
 <!-- Your scanner AFTER libraries (pick the file you’re actually using) -->
 <!-- Statically include ZXing library UMD to ensure global on iOS -->
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
@@ -190,7 +183,7 @@
       <button id="notesBtn" class="sidebar-btn">Notes</button>
       <button id="addSupplementBtn" class="sidebar-btn">Add New Supplement</button>
 
-      <button id="devBtn" class="sidebar-btn" onclick="openBarcodeModal()">Open modal (dev)</button>
+      
 
       <img id="icon" src="./assets/logo-icon.svg" alt="logo" class="banner-logo">
     </aside>
