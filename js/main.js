@@ -489,6 +489,13 @@ if (nextBtn) {
 if (user) {
       document.body.classList.add("logged-in");
       currentUser = user;
+      // Collapse sidebar on sign-in (no change to animation speed)
+      try {
+        localStorage.setItem('sidebar_collapsed_v1', 'true');
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.setAttribute('data-collapsed','true');
+        document.body.classList.add('sidebar-collapsed');
+      } catch {}
       setNotesButtonVisibility(true);
       const event = new CustomEvent("user-authenticated", { detail: user });
       window.dispatchEvent(event);
