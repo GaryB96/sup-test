@@ -1091,16 +1091,6 @@ body.sidebar-collapsed main { margin-left: 0; }
 }
 /* keep tab flush on collapse */
 .sidebar[data-collapsed="true"] .sidebar-tab { transform: translateX(0); }
-/* main shifts only to the tab width when collapsed */
-body.sidebar-collapsed main {
-  margin-left: calc(var(--sidebar-tab-width, 25px) + 10px);
-  transition: margin-left 1.28s ease;
-}
-
-body.sidebar-collapsed main {
-  margin-left: calc(var(--sidebar-tab-width, 25px) + 10px);
-  transition: margin-left 1.28s ease;
-}
 
 /* --- Hard guarantee: collapse via body class too (higher specificity) --- */
 body.sidebar-collapsed #sidebar {
@@ -1108,15 +1098,7 @@ body.sidebar-collapsed #sidebar {
 }
 
 /* Always animate margin-left */
-main {
-  margin-left: 0;
-  transition: margin-left 1.2s ease; /* animate both directions */
-}
-
-/* When collapsed, push content over a bit */
-body.sidebar-collapsed main {
-  margin-left: calc(var(--sidebar-tab-width, 25px) + 10px);
-}
+main { transition: margin-left .28s ease; }
 
 /* (Optional) sync the sidebar’s speed so they move together */
 #sidebar {
@@ -1125,10 +1107,9 @@ body.sidebar-collapsed main {
 
 /* Mobile-first: default collapsed on small screens without JS flicker */
 @media (max-width: 768px){
-  #sidebar { transform: translateX(calc(-100% + var(--sidebar-tab-width, 25px))) !important; }
-  #sidebar[data-collapsed="false"] { transform: translateX(0) !important; }
-  body.logged-in main { margin-left: 0 !important; }
-  body.sidebar-collapsed main { margin-left: 0 !important; }
+  body:not(.sidebar-initialized) #sidebar { transform: translateX(calc(-100% + var(--sidebar-tab-width, 25px))) !important; }
+  body:not(.sidebar-initialized) #sidebar[data-collapsed="false"] { transform: translateX(0) !important; }
+  body:not(.sidebar-initialized).logged-in main { margin-left: 0 !important; }
 }
 
 /* Supplement Modal: label on its own line, date input below it */

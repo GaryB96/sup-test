@@ -50,6 +50,7 @@
       lastSidebar = sidebar;
       const initial = computeInitial(sidebar);
       setCollapsed(sidebar, tab, iconEl, initial);
+      try { document.body.classList.add('sidebar-initialized'); } catch {}
     }
 
     if (!initialized) {

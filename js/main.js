@@ -493,6 +493,8 @@ if (user) {
       setNotesButtonVisibility(true);
       const event = new CustomEvent("user-authenticated", { detail: user });
       window.dispatchEvent(event);
+      // Also trigger supplements refresh directly as a backup (order-agnostic)
+      try { if (typeof window.refreshSuppSummary === 'function') window.refreshSuppSummary(); } catch {}
 
       setNotesButtonVisibility(true);
     } else {
