@@ -453,64 +453,147 @@ if (onDays > 0 || offDays > 0) {
     }
   } catch {}
 
-const actions = document.createElement("div");
-actions.className = "actions";
-
-const editBtn = document.createElement("button");
-editBtn.className = "edit-btn btn-edit-supp";
-editBtn.dataset.id = (supplement && supplement.id) ? supplement.id : "";
-editBtn.textContent = "Edit";
-
-const delBtn = document.createElement("button");
-delBtn.className = "delete-btn";
-delBtn.dataset.id = (supplement && supplement.id) ? supplement.id : "";
-delBtn.textContent = "Delete";
-
-actions.append(editBtn, delBtn);
+    const actions = document.createElement("div");
+    actions.className = "actions";
+    const editBtn = document.createElement("button");
+    editBtn.className = "edit-btn btn-edit-supp";
+    editBtn.dataset.id = (supplement && supplement.id) ? supplement.id : "";
+    editBtn.textContent = "Edit";
+    const delBtn = document.createElement("button");
+    delBtn.className = "delete-btn";
+    delBtn.dataset.id = (supplement && supplement.id) ? supplement.id : "";
+    delBtn.textContent = "Delete";
+    actions.append(editBtn, delBtn);
 
 // append rows based on card size (compact vs large)
-const isCompact = !!(supplementSummaryContainer && supplementSummaryContainer.classList && supplementSummaryContainer.classList.contains('size-compact'));
-const children = [nameRow, doseRow, timeRow];
-if (isCompact) {
-  if (remainRow && remainRow.textContent) children.push(remainRow); // show days remaining on compact
-} else {
-  if (start) children.push(dateRow);
-  if (cycleDiv) children.push(cycleDiv);
-  if (remainRow && remainRow.textContent) children.push(remainRow);
-  // Add reminder toggle when remaining can be computed
-  try {
-    const totalServings = Number(supplement && supplement.servings);
-    const hasStart = !!(supplement && supplement.startDate);
-    const timesArr = Array.isArray(supplement?.times) ? supplement.times
+    const isCompact = !!(supplementSummaryContainer && supplementSummaryContainer.classList && supplementSummaryContainer.classList.contains('size-compact'));
+    const children = [nameRow, doseRow, timeRow];
+    if (isCompact) {
+      if (remainRow && remainRow.textContent) children.push(remainRow); // show days remaining on compact
+    } else {
+      if (start) children.push(dateRow);
+      if (cycleDiv) children.push(cycleDiv);
+      if (remainRow && remainRow.textContent) children.push(remainRow);
+      // Add reminder toggle when remaining can be computed
+      try {
+        const totalServings = Number(supplement && supplement.servings);
+        const hasStart = !!(supplement && supplement.startDate);
+        const timesArr = Array.isArray(supplement?.times) ? supplement.times
                      : (Array.isArray(supplement?.time) ? supplement.time
                         : (typeof supplement?.time === 'string' && supplement.time ? [supplement.time] : []));
-    const perDay = timesArr.length;
-    if (totalServings > 0 && hasStart && perDay > 0) {
-      const row = document.createElement('div');
-      row.className = 'toggle order-toggle';
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.className = 'toggle-input';
-      cb.checked = !!supplement.orderReminder;
-      cb.setAttribute('aria-label', 'Order reminder (7 days before last dose)');
-      cb.addEventListener('change', async ()=>{
-        try {
-          if (!currentUser?.uid || !supplement?.id) return;
-          await updateSupplement(currentUser.uid, supplement.id, { orderReminder: !!cb.checked });
-          // Keep local state in sync so size toggles preserve the checkbox state
-          try { supplement.orderReminder = !!cb.checked; } catch(_) {}
-          if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
-        } catch(e){ console.error('[reminder] failed', e); }
-      });
-      const lab = document.createElement('span');
-      lab.className = 'toggle-label';
-      lab.textContent = 'Order reminder (7 days before last dose)';
-      row.append(cb, lab);
-      children.push(row);
+        const perDay = timesArr.length;
+        if (totalServings > 0 && hasStart && perDay > 0) {
+          const row = document.createElement('div');
+          row.className = 'toggle order-toggle';
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.className = 'toggle-input';
+          cb.checked = !!supplement.orderReminder;
+          cb.setAttribute('aria-label', 'Order reminder (7 days before last dose)');
+          cb.addEventListener('change', async ()=>{
+            try {
+              if (!currentUser?.uid || !supplement?.id) return;
+              await updateSupplement(currentUser.uid, supplement.id, { orderReminder: !!cb.checked });
+              // Keep local state in sync so size toggles preserve the checkbox state
+              try { supplement.orderReminder = !!cb.checked; } catch(_) {}
+              if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
+            } catch(e){ console.error('[reminder] failed', e); }
+          });
+          const lab = document.createElement('span');
+          lab.className = 'toggle-label';
+          lab.textContent = 'Order reminder (7 days before last dose)';
+          row.append(cb, lab);
+          children.push(row);
+        }
+      } catch {}
     }
-  } catch {}
-}
-children.push(actions);
+    // Actions or menu depending on size
+    if (isCompact) {
+      try {
+        // Build kebab menu in top-right
+        box.classList.add('has-menu');
+        const menuBtn = document.createElement('button');
+        menuBtn.type = 'button';
+        menuBtn.className = 'card-menu-btn';
+        menuBtn.setAttribute('aria-haspopup', 'menu');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        menuBtn.setAttribute('title', 'More');
+        menuBtn.innerText = '⋯';
+
+        const menu = document.createElement('div');
+        menu.className = 'card-menu hidden';
+        menu.setAttribute('role', 'menu');
+
+        // Reminder toggle in menu (same condition as large)
+        const totalServings = Number(supplement && supplement.servings);
+        const hasStart = !!(supplement && supplement.startDate);
+        const timesArr = Array.isArray(supplement?.times) ? supplement.times
+                     : (Array.isArray(supplement?.time) ? supplement.time
+                        : (typeof supplement?.time === 'string' && supplement.time ? [supplement.time] : []));
+        const perDay = timesArr.length;
+        if (totalServings > 0 && hasStart && perDay > 0) {
+          const toggleItem = document.createElement('label');
+          toggleItem.className = 'menu-item menu-toggle';
+          const menuCb = document.createElement('input');
+          menuCb.type = 'checkbox';
+          menuCb.checked = !!supplement.orderReminder;
+          menuCb.addEventListener('change', async ()=>{
+            try {
+              if (!currentUser?.uid || !supplement?.id) return;
+              await updateSupplement(currentUser.uid, supplement.id, { orderReminder: !!menuCb.checked });
+              try { supplement.orderReminder = !!menuCb.checked; } catch(_) {}
+              if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
+            } catch(e){ console.error('[reminder] failed', e); }
+          });
+          const txt = document.createElement('span');
+          txt.textContent = 'Order reminder';
+          toggleItem.append(menuCb, txt);
+          menu.appendChild(toggleItem);
+        }
+
+        // Edit/Delete items in menu
+        const menuEdit = document.createElement('button');
+        menuEdit.type = 'button';
+        menuEdit.className = 'menu-item edit-btn';
+        menuEdit.dataset.id = (supplement && supplement.id) ? supplement.id : '';
+        menuEdit.textContent = 'Edit';
+        const menuDel = document.createElement('button');
+        menuDel.type = 'button';
+        menuDel.className = 'menu-item delete-btn';
+        menuDel.dataset.id = (supplement && supplement.id) ? supplement.id : '';
+        menuDel.textContent = 'Delete';
+        menu.append(menuEdit, menuDel);
+
+        // Open/close behavior
+        let closing = null;
+        const openMenu = () => {
+          menu.classList.remove('hidden');
+          menuBtn.setAttribute('aria-expanded','true');
+          const onDoc = (ev) => {
+            if (!menu.contains(ev.target) && ev.target !== menuBtn && !menuBtn.contains(ev.target)) closeMenu();
+          };
+          document.addEventListener('mousedown', onDoc, true);
+          closing = () => document.removeEventListener('mousedown', onDoc, true);
+        };
+        const closeMenu = () => {
+          menu.classList.add('hidden');
+          menuBtn.setAttribute('aria-expanded','false');
+          if (typeof closing === 'function') { closing(); closing = null; }
+        };
+        menuBtn.addEventListener('click', () => {
+          const isOpen = !menu.classList.contains('hidden');
+          if (isOpen) closeMenu(); else openMenu();
+        });
+
+        // Append after children so it overlays top-right
+        box.append(menuBtn, menu);
+      } catch(_){
+        // Fallback: show actions row if menu fails
+        children.push(actions);
+      }
+    } else {
+      children.push(actions);
+    }
 
 box.append(...children);
 return box;
