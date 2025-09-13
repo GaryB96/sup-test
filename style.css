@@ -208,7 +208,8 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 @media (max-width: 520px){
   .page-title-text{ font-size: 2rem; }
   .page-title{ padding-right: 68px; }
-  .page-title-badge{ width: 56px; height: 56px; right: 8px; border-radius: 14px; top: 50%; transform: translateY(-50%); }
+  /* Nudge the badge higher on small screens */
+  .page-title-badge{ width: 56px; height: 56px; right: 8px; border-radius: 14px; top: 35%; transform: translateY(-50%); }
   .page-title-badge img{ width: 76%; }
 }
 
