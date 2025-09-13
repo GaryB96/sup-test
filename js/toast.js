@@ -82,4 +82,56 @@ export function showConfirmToast(message, opts = {}) {
   });
 }
 
+// Info popover anchored to an element; closes with X, timeout, or outside click.
+export function showInfoPopover(message, opts = {}) {
+  const { type = 'info', timeout = 0, anchor = null } = opts || {};
+  const pop = document.createElement('div');
+  pop.className = `toast ${type}`;
+  pop.classList.add('toast-popover');
+  pop.setAttribute('role', 'dialog');
+  pop.innerHTML = `
+    <div class="toast-row">
+      <div class="toast-msg">${message}</div>
+      <button class="toast-close" aria-label="Close">&times;</button>
+    </div>
+  `;
+  document.body.appendChild(pop);
+
+  const position = () => {
+    try {
+      if (!(anchor && anchor.getBoundingClientRect)) return;
+      const rect = anchor.getBoundingClientRect();
+      const tw = pop.offsetWidth || 240;
+      const th = pop.offsetHeight || 64;
+      let left = Math.max(8, Math.min(window.innerWidth - tw - 8, rect.left + rect.width/2 - tw/2));
+      let top  = rect.top - th - 10;
+      if (top < 8) top = rect.bottom + 10; // place below if not enough space above
+      pop.style.position = 'fixed';
+      pop.style.left = `${left}px`;
+      pop.style.top  = `${top}px`;
+    } catch {}
+  };
+
+  requestAnimationFrame(() => {
+    position();
+    pop.classList.add('show');
+  });
+
+  const close = () => {
+    pop.classList.remove('show');
+    pop.addEventListener('transitionend', () => pop.remove(), { once: true });
+    document.removeEventListener('mousedown', onOutside, true);
+    window.removeEventListener('resize', position);
+    window.removeEventListener('scroll', position, true);
+  };
+  const onOutside = (e) => {
+    if (!pop.contains(e.target) && (!anchor || !anchor.contains(e.target))) close();
+  };
+  pop.querySelector('.toast-close').addEventListener('click', close);
+  document.addEventListener('mousedown', onOutside, true);
+  window.addEventListener('resize', position);
+  window.addEventListener('scroll', position, true);
+  if (timeout > 0) setTimeout(close, timeout);
+}
+
 
