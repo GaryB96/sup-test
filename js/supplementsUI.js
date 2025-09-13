@@ -364,6 +364,8 @@ function renderSupplements() {
       tutEl.classList.toggle('hidden', !!hasSupps);
       tutEl.style.display = hasSupps ? 'none' : 'block';
     }
+    // Also set a body flag to let CSS force visibility if needed
+    try { document.body.classList.toggle('no-supps', !hasSupps); } catch {}
   } catch(_){}
   // Local date formatter: 2025-09-01 -> Sept. 1, 2025
   function fmtYMDPretty(ymd) {
@@ -700,10 +702,14 @@ return box;
 
 function wireSummaryActions() {
   document.querySelectorAll(".edit-btn").forEach((btn) => {
+    // Skip kebab menu items; those have direct handlers
+    if (btn.closest('.card-menu')) return;
     btn.addEventListener("click", () => editSupplement(btn.dataset.id));
   });
-    document.querySelectorAll(".delete-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
+  document.querySelectorAll(".delete-btn").forEach((btn) => {
+    // Skip kebab menu items; those have direct handlers
+    if (btn.closest('.card-menu')) return;
+    btn.addEventListener("click", async () => {
         try {
           const ok = await showConfirmToast('Delete this supplement?', { confirmText: 'Delete', cancelText: 'Cancel', type: 'warn', anchor: btn });
           if (!ok) return;

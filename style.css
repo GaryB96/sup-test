@@ -530,7 +530,7 @@ body:not(.logged-in) #accountActions { display: none; }
 .supplement-barcodeBtn:disabled{ opacity:.55; cursor:not-allowed; }
 
 /* Toast popover near buttons */
-.toast-popover{ position: fixed; z-index: 6000; }
+.toast-popover{ position: fixed; z-index: 99999; }
 
 /* Help icon (calendar question mark) */
 .help-icon{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:999px; border:1px solid #cbd5e1; background:#ffffff; color:#0f172a; font-weight:800; margin-right:6px; cursor:pointer; }
