@@ -255,7 +255,13 @@
 
       <!-- ✅ Main App Content (hidden until logged-in) -->
       <section id="appContent">
-        <h1>Supplement Summary</h1>
+        <div class="page-title-bar">
+          <div class="page-title" aria-label="App title: Supplement Tracker">
+            <span class="page-title-text">Supplement Tracker</span>
+            <img class="page-title-logo" src="./assets/logo-icon.svg" alt="" />
+          </div>
+        </div>
+        <h1 id="summaryTitle">Supplement Summary</h1>
 
         <!-- Card size controls (now inside appContent) -->
         <div id="summarySizeControls" class="summary-controls" style="display:flex; gap:8px; align-items:center; margin:8px 0 12px;">

@@ -261,6 +261,14 @@ function renderSupplements() {
       supplementSummaryContainer.removeChild(supplementSummaryContainer.firstChild);
     }
   }
+  // Toggle summary title and size controls visibility when no supplements
+  try {
+    const titleEl = document.getElementById('summaryTitle');
+    const sizeCtrls = document.getElementById('summarySizeControls');
+    const hasSupps = Array.isArray(supplements) && supplements.length > 0;
+    if (titleEl) titleEl.style.display = hasSupps ? '' : 'none';
+    if (sizeCtrls) sizeCtrls.style.display = hasSupps ? 'flex' : 'none';
+  } catch(_){}
   // Local date formatter: 2025-09-01 -> Sept. 1, 2025
   function fmtYMDPretty(ymd) {
     try {
