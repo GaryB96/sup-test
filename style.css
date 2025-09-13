@@ -172,10 +172,16 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 .day-modal-list .supplement { font-size: 0.95rem; padding: 6px 8px; border-radius: 6px; color:#fff; }
 
 /* === Page Title (top-right) === */
-.page-title-bar{ display:flex; justify-content:flex-end; align-items:flex-start; margin: 6px 0 10px; }
-.page-title{ position:relative; display:inline-block; padding: 4px 36px 6px 10px; border-radius: 10px; }
-.page-title-text{ font-size: 1.25rem; font-weight: 800; letter-spacing:.2px; }
-.page-title-logo{ position:absolute; right: 6px; bottom: -6px; width: 26px; height: 26px; opacity:.9; }
+.page-title-bar{ display:flex; justify-content:flex-end; align-items:flex-start; margin: 8px 0 14px; }
+.page-title{ position:relative; display:inline-block; padding: 6px 60px 10px 14px; border-radius: 12px; }
+.page-title-text{ font-size: 2rem; font-weight: 900; letter-spacing:.2px; }
+.page-title-logo{ position:absolute; right: 8px; bottom: -10px; width: 42px; height: 42px; opacity:.95; }
+
+@media (max-width: 520px){
+  .page-title-text{ font-size: 1.5rem; }
+  .page-title{ padding-right: 46px; }
+  .page-title-logo{ width: 32px; height: 32px; bottom: -8px; right: 6px; }
+}
 
 /* ===== Auth Visibility ===== */
 body.logged-in #authContainer { display: none; }
