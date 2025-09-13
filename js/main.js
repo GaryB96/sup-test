@@ -489,6 +489,7 @@ if (nextBtn) {
 if (user) {
       document.body.classList.add("logged-in");
       currentUser = user;
+      try { window.appCurrentUser = user; } catch {}
       setNotesButtonVisibility(true);
       const event = new CustomEvent("user-authenticated", { detail: user });
       window.dispatchEvent(event);
@@ -496,6 +497,7 @@ if (user) {
       setNotesButtonVisibility(true);
     } else {
       document.body.classList.remove("logged-in");
+      try { window.appCurrentUser = null; } catch {}
       if (calendarEl) calendarEl.innerHTML = "";
       if (labelEl) labelEl.textContent = "";
       

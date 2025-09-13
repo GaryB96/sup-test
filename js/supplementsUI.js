@@ -41,6 +41,14 @@ window.addEventListener("user-authenticated", async (e) => {
   await refreshData();
 });
 
+// If auth already happened before this module loaded, pick it up
+try {
+  if (window.appCurrentUser && !currentUser) {
+    currentUser = window.appCurrentUser;
+    refreshData().catch(console.error);
+  }
+} catch {}
+
 // ----------------------------------------------------------------------------
 // Utilities
 // ----------------------------------------------------------------------------

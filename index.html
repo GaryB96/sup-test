@@ -452,6 +452,19 @@
   <script type="module" src="./js/supplementsUI.js"></script>
   <script type="module" src="./js/notifications.js"></script>
   <script type="module" src="./js/sidebar-toggle.js"></script>
+  <script>
+    (function(){
+      try {
+        if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
+          document.addEventListener('DOMContentLoaded', function(){
+            document.body.classList.add('sidebar-collapsed');
+            var sb = document.getElementById('sidebar');
+            if (sb) sb.setAttribute('data-collapsed','true');
+          }, { once: true });
+        }
+      } catch (e) {}
+    })();
+  </script>
   <script type="module">
     import { showConfirmToast } from './js/toast.js';
     document.addEventListener('DOMContentLoaded', () => {
