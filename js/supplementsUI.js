@@ -359,7 +359,11 @@ function renderSupplements() {
     const hasSupps  = Array.isArray(supplements) && supplements.length > 0;
     if (titleEl)   titleEl.style.display = hasSupps ? '' : 'none';
     if (sizeCtrls) sizeCtrls.style.display = hasSupps ? 'flex' : 'none';
-    if (tutEl)     tutEl.classList.toggle('hidden', !!hasSupps);
+    if (tutEl) {
+      // Prefer class toggle, but also set inline display for robustness
+      tutEl.classList.toggle('hidden', !!hasSupps);
+      tutEl.style.display = hasSupps ? 'none' : 'block';
+    }
   } catch(_){}
   // Local date formatter: 2025-09-01 -> Sept. 1, 2025
   function fmtYMDPretty(ymd) {
@@ -522,36 +526,30 @@ if (onDays > 0 || offDays > 0) {
         menuBtn.textContent = '⋮';
         menuBtn.innerText = '⋯';
 
+        // Normalize glyph across environments
+        try { menuBtn.textContent = '...'; menuBtn.innerText = '...'; } catch {}
         const menu = document.createElement('div');
         menu.className = 'card-menu hidden';
         menu.setAttribute('role', 'menu');
 
-        // Reminder toggle in menu (same condition as large)
-        const totalServings = Number(supplement && supplement.servings);
-        const hasStart = !!(supplement && supplement.startDate);
-        const timesArr = Array.isArray(supplement?.times) ? supplement.times
-                     : (Array.isArray(supplement?.time) ? supplement.time
-                        : (typeof supplement?.time === 'string' && supplement.time ? [supplement.time] : []));
-        const perDay = timesArr.length;
-        if (totalServings > 0 && hasStart && perDay > 0) {
-          const toggleItem = document.createElement('label');
-          toggleItem.className = 'menu-item menu-toggle';
-          const menuCb = document.createElement('input');
-          menuCb.type = 'checkbox';
-          menuCb.checked = !!supplement.orderReminder;
-          menuCb.addEventListener('change', async ()=>{
-            try {
-              if (!currentUser?.uid || !supplement?.id) return;
-              await updateSupplement(currentUser.uid, supplement.id, { orderReminder: !!menuCb.checked });
-              try { supplement.orderReminder = !!menuCb.checked; } catch(_) {}
-              if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
-            } catch(e){ console.error('[reminder] failed', e); }
-          });
-          const txt = document.createElement('span');
-          txt.textContent = 'Order reminder';
-          toggleItem.append(menuCb, txt);
-          menu.appendChild(toggleItem);
-        }
+        // Reminder toggle in menu (always shown in compact menu)
+        const toggleItem = document.createElement('label');
+        toggleItem.className = 'menu-item menu-toggle';
+        const menuCb = document.createElement('input');
+        menuCb.type = 'checkbox';
+        menuCb.checked = !!supplement.orderReminder;
+        menuCb.addEventListener('change', async ()=>{
+          try {
+            if (!currentUser?.uid || !supplement?.id) return;
+            await updateSupplement(currentUser.uid, supplement.id, { orderReminder: !!menuCb.checked });
+            try { supplement.orderReminder = !!menuCb.checked; } catch(_) {}
+            if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
+          } catch(e){ console.error('[reminder] failed', e); }
+        });
+        const txt = document.createElement('span');
+        txt.textContent = 'Order reminder';
+        toggleItem.append(menuCb, txt);
+        menu.appendChild(toggleItem);
 
         // Edit/Delete items in menu
         const menuEdit = document.createElement('button');
@@ -571,7 +569,13 @@ if (onDays > 0 || offDays > 0) {
           try {
             const ok = await showConfirmToast('Delete this supplement?', { confirmText: 'Delete', cancelText: 'Cancel', type: 'warn', anchor: menuDel });
             if (!ok) return;
-            await deleteSupplement(currentUser && currentUser.uid, menuDel.dataset.id);
+            const delId = menuDel.dataset.id;
+            await deleteSupplement(currentUser && currentUser.uid, delId);
+            // Immediately reflect deletion in UI to ensure tutorial toggle updates
+            try {
+              supplements = (supplements || []).filter(s => s && s.id !== delId);
+              renderSupplements();
+            } catch {}
             await refreshData();
             if (typeof window.refreshCalendar === "function") await window.refreshCalendar();
           } catch(e) { console.error('Delete cancelled/failed', e); }
@@ -579,20 +583,44 @@ if (onDays > 0 || offDays > 0) {
 
         // Open/close behavior
         let closing = null;
+        const positionMenu = () => {
+          try {
+            const r = menuBtn.getBoundingClientRect();
+            const mw = menu.offsetWidth || 180;
+            const mh = menu.offsetHeight || 10;
+            let left = Math.max(8, Math.min(window.innerWidth - mw - 8, r.right - mw));
+            let top  = r.bottom + 6;
+            if (top + mh > window.innerHeight - 8) top = Math.max(8, r.top - mh - 6);
+            menu.style.position = 'fixed';
+            menu.style.left = `${left}px`;
+            menu.style.top  = `${top}px`;
+          } catch {}
+        };
         const openMenu = () => {
           menu.classList.remove('hidden');
           menuBtn.setAttribute('aria-expanded','true');
           try { box.classList.add('menu-open'); } catch {}
+          try { const grp = box.closest('.supp-group'); if (grp) grp.classList.add('menu-open'); } catch {}
+          // Promote to fixed positioning to avoid clipping/stacking issues
+          positionMenu();
           const onDoc = (ev) => {
             if (!menu.contains(ev.target) && ev.target !== menuBtn && !menuBtn.contains(ev.target)) closeMenu();
           };
+          const onRepos = () => positionMenu();
           document.addEventListener('mousedown', onDoc, true);
-          closing = () => document.removeEventListener('mousedown', onDoc, true);
+          window.addEventListener('resize', onRepos, true);
+          window.addEventListener('scroll', onRepos, true);
+          closing = () => {
+            document.removeEventListener('mousedown', onDoc, true);
+            window.removeEventListener('resize', onRepos, true);
+            window.removeEventListener('scroll', onRepos, true);
+          };
         };
         const closeMenu = () => {
           menu.classList.add('hidden');
           menuBtn.setAttribute('aria-expanded','false');
           try { box.classList.remove('menu-open'); } catch {}
+          try { const grp = box.closest('.supp-group'); if (grp) grp.classList.remove('menu-open'); } catch {}
           if (typeof closing === 'function') { closing(); closing = null; }
         };
         menuBtn.addEventListener('click', () => {
@@ -674,12 +702,18 @@ function wireSummaryActions() {
   document.querySelectorAll(".edit-btn").forEach((btn) => {
     btn.addEventListener("click", () => editSupplement(btn.dataset.id));
   });
-  document.querySelectorAll(".delete-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      try {
-        const ok = await showConfirmToast('Delete this supplement?', { confirmText: 'Delete', cancelText: 'Cancel', type: 'warn', anchor: btn });
-        if (!ok) return;
-        await deleteSupplement(currentUser && currentUser.uid, btn.dataset.id);
+    document.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        try {
+          const ok = await showConfirmToast('Delete this supplement?', { confirmText: 'Delete', cancelText: 'Cancel', type: 'warn', anchor: btn });
+          if (!ok) return;
+        const delId = btn.dataset.id;
+        await deleteSupplement(currentUser && currentUser.uid, delId);
+        // Immediately update local UI to ensure tutorial toggle
+        try {
+          supplements = (supplements || []).filter(s => s && s.id !== delId);
+          renderSupplements();
+        } catch {}
         await refreshData();
         if (typeof window.refreshCalendar === "function") await window.refreshCalendar();
       } catch(e) { console.error('Delete cancelled/failed', e); }
