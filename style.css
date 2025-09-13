@@ -1045,7 +1045,7 @@ body.logged-in main { margin-left: 220px; }
 /* Size presets you can toggle with a single class */
 .summary-container.size-compact {
   /* Make small cards as narrow as practical on desktop */
-  --card-min: 155px;
+  --card-min: 220px;
   --card-gap: 6px;
   --card-pad: 8px;
   --card-font: 12px;
@@ -1053,12 +1053,14 @@ body.logged-in main { margin-left: 220px; }
 
 /* Prevent single small cards from stretching full width */
 .summary-container.size-compact .supp-group__content{
-  grid-template-columns: repeat(auto-fill, minmax(var(--card-min), max-content));
+  /* Fix column width to the small card width so singles don't stretch */
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min), var(--card-min)));
   justify-content: start;
   justify-items: start;
 }
 .summary-container.size-compact .supplement-box{
-  max-width: var(--card-min + 10px);
+  width: var(--card-min);
+  max-width: none;
 }
 
 .summary-container.size-cozy {
