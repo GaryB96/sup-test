@@ -326,6 +326,7 @@ body:not(.logged-in) #accountActions { display: none; }
   max-width:600px;
   width:92%;
   box-sizing: border-box;
+  position: relative;
 }
 
 
@@ -475,6 +476,13 @@ body:not(.logged-in) #accountActions { display: none; }
   .modal-footer{ padding: 10px 14px 12px; }
   .kbd-hint{ display:none; } /* optional: hide hint on very small screens */
 }
+
+/* Scanner spinner overlay */
+.scan-spinner{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:12px; background: rgba(0,0,0,.35); z-index: 10; }
+.scan-spinner.hidden{ display:none; }
+.spinner{ width:28px; height:28px; border:3px solid rgba(255,255,255,.5); border-top-color:#22c55e; border-radius:50%; animation: spin .8s linear infinite; }
+.scan-spinner-text{ color:#fff; font-weight:600; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* === Highlight current day === */
 .day.today {

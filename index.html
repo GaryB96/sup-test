@@ -319,6 +319,11 @@
           <h2 id="supplementModalTitle">Add New Supplement</h2>
           <p id="supplementModalDesc" class="modal-desc">Fill in the details and click Save.</p>
           <button id="barcodeBtn" class="supplement-barcodeBtn">Barcode Scanner</button>
+          <!-- Scanner spinner overlay -->
+          <div id="scanSpinner" class="scan-spinner hidden" role="status" aria-live="polite">
+            <div class="spinner"></div>
+            <div class="scan-spinner-text">Scanning…</div>
+          </div>
           <form id="supplementModalForm" novalidate>
 
             <div class="form-row">

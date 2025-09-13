@@ -71,6 +71,23 @@ async function makeBarcodeDetector() {
     if (el) el.textContent = msg || '';
   }
 
+  function showScanSpinner(text){
+    try{
+      var sp = document.getElementById('scanSpinner');
+      if (!sp) return;
+      sp.classList.remove('hidden');
+      var t = sp.querySelector('.scan-spinner-text');
+      if (t && text) t.textContent = text;
+    }catch(_){}
+  }
+  function hideScanSpinner(){
+    try{
+      var sp = document.getElementById('scanSpinner');
+      if (!sp) return;
+      sp.classList.add('hidden');
+    }catch(_){}
+  }
+
   function setSearchLinks(opts) {
     opts = opts || {};
     var code = opts.code || '';
@@ -674,6 +691,7 @@ function anyFilled(curr) {
         }
 
         try {
+          showScanSpinner('Scanning…');
           var code = '';
           if (!IS_IOS && 'BarcodeDetector' in window) {
             try {
@@ -703,6 +721,7 @@ function anyFilled(curr) {
             } catch (_) {}
           }
           if (code) {
+            showScanSpinner('Looking up product…');
             await fillSupplementFromBarcode(code, file);
           } else {
             alert('No barcode detected. Try a closer, well-lit shot filling the frame.');
@@ -712,6 +731,7 @@ function anyFilled(curr) {
           alert('Could not read the image. Please try again.');
         } finally {
           setStatus('');
+          hideScanSpinner();
           cameraInput.value = '';
         }
       });
