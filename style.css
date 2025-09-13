@@ -124,7 +124,7 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
   border-radius: 4px;
   font-size: 14px;
 }
-.day {
+.day { 
   background-color: #fff;
   border: 1px solid #ddd;
   min-height: 80px;
@@ -166,6 +166,10 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
   .day { min-height: 60px; font-size: 12px; }
   .supplement { font-size: 10px; white-space: normal; word-break: break-word; }
 }
+
+/* Day modal list */
+.day-modal-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.day-modal-list .supplement { font-size: 0.95rem; padding: 6px 8px; border-radius: 6px; color:#fff; }
 
 /* ===== Auth Visibility ===== */
 body.logged-in #authContainer { display: none; }

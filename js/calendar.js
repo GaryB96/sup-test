@@ -84,8 +84,51 @@ if (_isToday) {
   });
 
   dayEl.appendChild(supplementsContainer);
+
+  // Mobile expand: open a modal with this day's details
+  dayEl.addEventListener('click', () => {
+    try {
+      if (!window.matchMedia || !window.matchMedia('(max-width: 600px)').matches) return;
+      const modal = document.getElementById('dayModal');
+      const list = document.getElementById('dayModalList');
+      const title = document.getElementById('dayModalTitle');
+      if (!modal || !list || !title) return;
+      // Clear previous
+      while (list.firstChild) list.removeChild(list.firstChild);
+      // Title pretty format
+      const dt = new Date(year, month, day);
+      const opts = { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' };
+      title.textContent = dt.toLocaleDateString(undefined, opts);
+      if (supplementsForDay.length === 0) {
+        const empty = document.createElement('div');
+        empty.textContent = 'No supplements scheduled.';
+        list.appendChild(empty);
+      } else {
+        supplementsForDay.forEach(s => {
+          const item = document.createElement('div');
+          item.className = 'supplement';
+          item.textContent = s.name;
+          if (s.color) { item.style.backgroundColor = s.color; item.style.color = '#fff'; }
+          list.appendChild(item);
+        });
+      }
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    } catch (e) { /* noop */ }
+  });
   daysGrid.appendChild(dayEl);
 }
+
+// Close handlers for day modal
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('dayModal');
+  const closeBtn = document.getElementById('closeDayBtn');
+  if (!modal) return;
+  if (closeBtn) closeBtn.addEventListener('click', () => { modal.classList.add('hidden'); document.body.style.overflow=''; });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) { modal.classList.add('hidden'); document.body.style.overflow=''; }
+  });
+});
 
   calendarEl.appendChild(daysGrid);
 }
