@@ -383,8 +383,8 @@ function renderSupplements() {
   }
   const norm = (v) => (typeof v === "string" ? v.trim().toLowerCase() : "");
   const cap1 = (s) => (s && s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s);
-  const ORDER = ["Morning", "Afternoon", "Evening", "Unscheduled"];
-  const groups = { Morning: [], Afternoon: [], Evening: [], Unscheduled: [] };
+  const ORDER = ["Morning", "Afternoon", "Evening"];
+  const groups = { Morning: [], Afternoon: [], Evening: [] };
   (supplements || []).forEach((supplement) => {
     const times = Array.isArray(supplement?.time)
   ? supplement.time
@@ -394,8 +394,11 @@ function renderSupplements() {
     const normalized = times.map(norm).map((t) =>
       t.startsWith("m") ? "morning" : t.startsWith("a") ? "afternoon" : t.startsWith("e") ? "evening" : ""
     ).filter(Boolean);
-    if (normalized.length === 0) groups.Unscheduled.push(supplement);
-    else normalized.forEach((t) => { const key = cap1(t); (groups[key] || groups.Unscheduled).push(supplement); });
+    if (normalized.length === 0) {
+      // No time of day selected; skip rendering in summary (time selection is required)
+      return;
+    }
+    normalized.forEach((t) => { const key = cap1(t); if (groups[key]) groups[key].push(supplement); });
   });
   const total = ORDER.reduce((n, k) => n + (groups[k] ? groups[k].length : 0), 0);
   const buildBox = (supplement, labelForTime) => {
@@ -734,12 +737,12 @@ return box;
   });
   btnExpand.addEventListener("click", () => {
     document.querySelectorAll(".supp-group").forEach((d) => (d.open = true));
-    ["Morning","Afternoon","Evening","Unscheduled"].forEach((k) => collapseState[k] = false);
+    ["Morning","Afternoon","Evening"].forEach((k) => collapseState[k] = false);
     setCollapseState(collapseState);
   });
   btnCollapse.addEventListener("click", () => {
     document.querySelectorAll(".supp-group").forEach((d) => (d.open = false));
-    ["Morning","Afternoon","Evening","Unscheduled"].forEach((k) => collapseState[k] = true);
+    ["Morning","Afternoon","Evening"].forEach((k) => collapseState[k] = true);
     setCollapseState(collapseState);
   });
   wireSummaryActions();
