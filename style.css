@@ -163,13 +163,14 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 .calendar-nav{
   display:flex;
   align-items:center;
+  justify-content:center;   /* keep controls grouped on desktop */
   gap:8px;
   flex-wrap: nowrap;
   width: 100%;
 }
 .calendar-nav #currentMonthLabel{
-  flex:1 1 auto;
-  min-width: 0;            /* allow shrinking to avoid wrap */
+  flex:0 1 auto;            /* don't push buttons to edges on wide screens */
+  min-width: 0;             /* allow shrinking to avoid wrap */
   text-align:center;
   font-weight:700;
   white-space:nowrap;
