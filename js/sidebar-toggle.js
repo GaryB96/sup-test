@@ -26,7 +26,7 @@
   function computeInitial(sidebar) {
     // Force collapsed on small screens regardless of previous preference
     try {
-      if (window.matchMedia && window.matchMedia('(max-width: 600px)').matches) {
+      if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
         return true;
       }
     } catch {}
