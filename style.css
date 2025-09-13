@@ -1044,10 +1044,11 @@ body.logged-in main { margin-left: 220px; }
 
 /* Size presets you can toggle with a single class */
 .summary-container.size-compact {
-  --card-min: 200px;
-  --card-gap: 8px;
-  --card-pad: 10px;
-  --card-font: 13px;
+  /* Make small cards as narrow as practical on desktop */
+  --card-min: 100px;
+  --card-gap: 6px;
+  --card-pad: 8px;
+  --card-font: 12px;
 }
 
 .summary-container.size-cozy {
