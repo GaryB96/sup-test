@@ -120,17 +120,32 @@ if (_isToday) {
 }
 
 // Close handlers for day modal
-document.addEventListener('DOMContentLoaded', () => {
-  const modal = document.getElementById('dayModal');
-  const closeBtn = document.getElementById('closeDayBtn');
-  if (!modal) return;
-  function close(){ modal.classList.add('hidden'); document.body.style.overflow=''; }
-  if (closeBtn) closeBtn.addEventListener('click', close);
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal || (e.target && e.target.matches('[data-close-modal]'))) close();
-  });
-  window.addEventListener('keydown', (e) => { if (!modal.classList.contains('hidden') && e.key === 'Escape') close(); });
-});
+// Robust binding for the day modal (works even if module loads after DOMContentLoaded)
+(function bindDayModalControls(){
+  function tryBind(){
+    const modal = document.getElementById('dayModal');
+    if (!modal) return false;
+    if (modal._bound) return true;
+    const closeBtn = document.getElementById('closeDayBtn');
+    const close = () => { modal.classList.add('hidden'); document.body.style.overflow=''; };
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || (e.target && e.target.matches('[data-close-modal]'))) close();
+    });
+    window.addEventListener('keydown', (e) => { if (!modal.classList.contains('hidden') && e.key === 'Escape') close(); });
+    modal._bound = true;
+    return true;
+  }
+  if (!tryBind()) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', tryBind, { once: true });
+    } else {
+      // In case the modal is added later
+      const mo = new MutationObserver(() => { if (tryBind()) mo.disconnect(); });
+      mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+    }
+  }
+})();
 
   calendarEl.appendChild(daysGrid);
 }
