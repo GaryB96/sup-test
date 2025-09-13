@@ -85,10 +85,9 @@ if (_isToday) {
 
   dayEl.appendChild(supplementsContainer);
 
-  // Mobile expand: open a modal with this day's details
+  // Open a modal with this day's details (works on mobile and desktop)
   dayEl.addEventListener('click', () => {
     try {
-      if (!window.matchMedia || !window.matchMedia('(max-width: 600px)').matches) return;
       const modal = document.getElementById('dayModal');
       const list = document.getElementById('dayModalList');
       const title = document.getElementById('dayModalTitle');
