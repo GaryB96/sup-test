@@ -342,6 +342,96 @@ async function makeBarcodeDetector() {
     });
   }
 
+  // ---------- Live scan (camera stream) ----------
+  var __live = { stream: null, zxingCtrl: null, running: false, raf: 0 };
+
+  async function startLiveScan() {
+    try {
+      var wrap = document.getElementById('liveScanWrap');
+      var video = document.getElementById('liveVideo');
+      var stopBtn = document.getElementById('liveStopBtn');
+      if (!wrap || !video) return;
+      if (__live.running) return;
+      __live.running = true;
+      wrap.classList.remove('hidden');
+
+      // Try native BarcodeDetector with getUserMedia
+      var useDetector = ('BarcodeDetector' in window);
+      if (useDetector) {
+        try {
+          var stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+          __live.stream = stream;
+          video.srcObject = stream;
+          await new Promise(function(res){ video.onloadedmetadata = res; });
+          video.play();
+          var det = await makeBarcodeDetector();
+          var stopped = false;
+          if (stopBtn) stopBtn.onclick = function(){ stopped = true; stopLiveScan(); };
+          async function loop(){
+            if (!__live.running || stopped) return;
+            try {
+              var results = await det.detect(video);
+              if (results && results.length && results[0] && results[0].rawValue) {
+                var code = String(results[0].rawValue || '').trim();
+                __live.running = false;
+                stopLiveScan();
+                await fillSupplementFromBarcode(code, null);
+                return;
+              }
+            } catch(_){}
+            __live.raf = requestAnimationFrame(loop);
+          }
+          __live.raf = requestAnimationFrame(loop);
+          return;
+        } catch (e) {
+          // fall through to ZXing
+        }
+      }
+
+      // ZXing video fallback
+      var ZX = (typeof window !== 'undefined') ? (window.ZXingBrowser || window.ZXing) : null;
+      if (ZX && ZX.BrowserMultiFormatReader) {
+        var reader = new ZX.BrowserMultiFormatReader();
+        __live.zxingCtrl = await reader.decodeFromVideoDevice(null, video, async function(res, err){
+          if (!__live.running) return;
+          if (res && (res.text || (res.getText && res.getText()))) {
+            var code = String(res.text || (res.getText && res.getText()) || '').trim();
+            __live.running = false; stopLiveScan();
+            await fillSupplementFromBarcode(code, null);
+          }
+        });
+        if (stopBtn) stopBtn.onclick = function(){ stopLiveScan(); };
+      } else {
+        alert('Live scan is not supported on this browser.');
+        stopLiveScan();
+      }
+    } catch (e) {
+      console.warn('[live] start failed', e); stopLiveScan();
+    }
+  }
+
+  function stopLiveScan() {
+    try {
+      if (__live.raf) cancelAnimationFrame(__live.raf);
+      __live.raf = 0;
+    } catch(_){}
+    try {
+      if (__live.zxingCtrl && __live.zxingCtrl.stop) __live.zxingCtrl.stop();
+    } catch(_){}
+    __live.zxingCtrl = null;
+    try {
+      if (__live.stream) {
+        __live.stream.getTracks().forEach(function(t){ try{ t.stop(); }catch(_){ } });
+      }
+    } catch(_){}
+    __live.stream = null;
+    __live.running = false;
+    var wrap = document.getElementById('liveScanWrap');
+    var video = document.getElementById('liveVideo');
+    if (video) { try { video.pause(); } catch(_){}; video.srcObject = null; }
+    if (wrap) wrap.classList.add('hidden');
+  }
+
   // ---------- Dynamic loader for ZXing (for iOS where UMD global may be missing) ----------
   function loadScript(url, timeoutMs) {
     return new Promise(function (resolve, reject) {
@@ -663,7 +753,9 @@ function anyFilled(curr) {
     function bind() {
       if (bound || window.__SCANNER_BOUND) return;
       var btn = document.getElementById('barcodeBtn');
-      if (!btn) return;
+      var liveBtn = document.getElementById('liveScanBtn');
+      var liveStop = document.getElementById('liveStopBtn');
+      if (!btn && !liveBtn) return;
       bound = true; window.__SCANNER_BOUND = true;
 
       var cameraInput = document.createElement('input');
@@ -674,9 +766,18 @@ function anyFilled(curr) {
       cameraInput.style.display = 'none';
       document.body.appendChild(cameraInput);
 
-      if (btn && btn.dataset && btn.dataset.scannerBound === '1') return;
-      btn.addEventListener('click', function () { cameraInput.click(); });
-      if (btn && btn.dataset) btn.dataset.scannerBound = '1';
+      if (btn && btn.dataset && btn.dataset.scannerBound !== '1') {
+        btn.addEventListener('click', function () { cameraInput.click(); });
+        btn.dataset.scannerBound = '1';
+      }
+      if (liveBtn && liveBtn.dataset && liveBtn.dataset.scannerBound !== '1') {
+        liveBtn.addEventListener('click', function () { startLiveScan(); });
+        liveBtn.dataset.scannerBound = '1';
+      }
+      if (liveStop && liveStop.dataset && liveStop.dataset.scannerBound !== '1') {
+        liveStop.addEventListener('click', function () { stopLiveScan(); });
+        liveStop.dataset.scannerBound = '1';
+      }
 
       cameraInput.addEventListener('change', async function () {
         var file = cameraInput.files && cameraInput.files[0];

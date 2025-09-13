@@ -319,6 +319,14 @@
           <h2 id="supplementModalTitle">Add New Supplement</h2>
           <p id="supplementModalDesc" class="modal-desc">Fill in the details and click Save.</p>
           <button id="barcodeBtn" class="supplement-barcodeBtn">Barcode Scanner</button>
+          <button id="liveScanBtn" class="supplement-barcodeBtn" type="button">Live Scan</button>
+          <div id="liveScanWrap" class="live-scan hidden" aria-live="polite">
+            <video id="liveVideo" autoplay muted playsinline></video>
+            <div class="live-hud">
+              <span class="live-hint">Point a barcode at the camera</span>
+              <button id="liveStopBtn" type="button" class="bm-btn secondary">Stop</button>
+            </div>
+          </div>
           <!-- Scanner spinner overlay -->
           <div id="scanSpinner" class="scan-spinner hidden" role="status" aria-live="polite">
             <div class="spinner"></div>
