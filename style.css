@@ -202,13 +202,13 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 .page-title-bar{ display:flex; justify-content:flex-end; align-items:flex-start; margin: 2px 0 12px; }
 .page-title{ position:relative; display:inline-block; padding: 8px 96px 18px 16px; border-radius: 14px; }
 .page-title-text{ font-size: 2.6rem; font-weight: 900; letter-spacing:.25px; }
-.page-title-badge{ position:absolute; right: 10px; bottom: -18px; width: 72px; height: 72px; border-radius: 16px; background:#0b1220; border:1px solid #1e293b; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.28); }
+.page-title-badge{ position:absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 72px; height: 72px; border-radius: 16px; background:#0b1220; border:1px solid #1e293b; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.28); }
 .page-title-badge img{ width: 78%; height:auto; display:block; }
 
 @media (max-width: 520px){
   .page-title-text{ font-size: 2rem; }
   .page-title{ padding-right: 68px; }
-  .page-title-badge{ width: 56px; height: 56px; bottom: -14px; right: 8px; border-radius: 14px; }
+  .page-title-badge{ width: 56px; height: 56px; right: 8px; border-radius: 14px; top: 50%; transform: translateY(-50%); }
   .page-title-badge img{ width: 76%; }
 }
 
