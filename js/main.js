@@ -164,6 +164,7 @@ function openNotesModal() {
   if (H.input)   ta.removeEventListener("input", H.input);
   if (H.blur)    ta.removeEventListener("blur", H.blur);
   if (H.keydown) modal.removeEventListener("keydown", H.keydown);
+  if (H.backdrop) modal.removeEventListener("click", H.backdrop);
 
   // Add fresh
   H.input = () => { if (status) status.textContent = "Saving…"; debouncedSave(); };
@@ -173,9 +174,17 @@ function openNotesModal() {
       ev.preventDefault(); saveNow();
     }
   };
+  H.backdrop = async (ev) => {
+    // Close when clicking outside the card (on the dark backdrop)
+    if (ev && ev.target === modal) {
+      try { await saveNow(); } catch {}
+      closeNotesModal();
+    }
+  };
   ta.addEventListener("input", H.input);
   ta.addEventListener("blur", H.blur);
   modal.addEventListener("keydown", H.keydown);
+  modal.addEventListener("click", H.backdrop);
 
   // Ensure the close button flushes one final save
   const closeBtn = document.getElementById("closeNotesBtn");
