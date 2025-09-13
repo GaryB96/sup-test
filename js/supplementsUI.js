@@ -582,6 +582,7 @@ if (onDays > 0 || offDays > 0) {
         const openMenu = () => {
           menu.classList.remove('hidden');
           menuBtn.setAttribute('aria-expanded','true');
+          try { box.classList.add('menu-open'); } catch {}
           const onDoc = (ev) => {
             if (!menu.contains(ev.target) && ev.target !== menuBtn && !menuBtn.contains(ev.target)) closeMenu();
           };
@@ -591,6 +592,7 @@ if (onDays > 0 || offDays > 0) {
         const closeMenu = () => {
           menu.classList.add('hidden');
           menuBtn.setAttribute('aria-expanded','false');
+          try { box.classList.remove('menu-open'); } catch {}
           if (typeof closing === 'function') { closing(); closing = null; }
         };
         menuBtn.addEventListener('click', () => {
