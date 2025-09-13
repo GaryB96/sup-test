@@ -164,9 +164,12 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
   display:flex;
   align-items:center;
   gap:8px;
+  flex-wrap: nowrap;
+  width: 100%;
 }
 .calendar-nav #currentMonthLabel{
-  flex:1;
+  flex:1 1 auto;
+  min-width: 0;            /* allow shrinking to avoid wrap */
   text-align:center;
   font-weight:700;
   white-space:nowrap;
@@ -181,6 +184,14 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
   .supplement-box { font-size: 14px; }
   .day { min-height: 60px; font-size: 12px; }
 .supplement { font-size: 10px; white-space: normal; word-break: break-word; }
+}
+
+/* Tighter nav sizing on small phones to keep one line */
+@media (max-width: 480px){
+  .calendar-nav { gap: 4px; }
+  .calendar-nav button{ padding: 6px 8px; font-size: 13px; }
+  .calendar-nav #currentMonthLabel{ font-size: 13px; }
+  .calendar-nav .help-icon{ width:22px; height:22px; font-size: 13px; }
 }
 
 /* Day modal list */
