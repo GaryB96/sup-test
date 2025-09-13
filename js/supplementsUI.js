@@ -290,7 +290,7 @@ if (cancelEditBtn) {
 
 async function refreshData() {
   if (!currentUser || !currentUser.uid) {
-    console.warn("⛔ currentUser is not ready yet.");
+    console.warn("[supplementsUI] currentUser is not ready yet.");
     return;
   }
 

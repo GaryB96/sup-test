@@ -1123,6 +1123,14 @@ body.sidebar-collapsed main {
   transition: transform 1.2s ease;
 }
 
+/* Mobile-first: default collapsed on small screens without JS flicker */
+@media (max-width: 768px){
+  #sidebar { transform: translateX(calc(-100% + var(--sidebar-tab-width, 25px))) !important; }
+  #sidebar[data-collapsed="false"] { transform: translateX(0) !important; }
+  body.logged-in main { margin-left: 0 !important; }
+  body.sidebar-collapsed main { margin-left: 0 !important; }
+}
+
 /* Supplement Modal: label on its own line, date input below it */
 #supplementModal .form-row-inline{
   display: grid;
