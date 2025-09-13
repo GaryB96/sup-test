@@ -354,6 +354,12 @@ async function makeBarcodeDetector() {
       if (__live.running) return;
       __live.running = true;
       wrap.classList.remove('hidden');
+      // iOS/Safari friendly video flags
+      try {
+        video.setAttribute('playsinline','');
+        video.setAttribute('webkit-playsinline','true');
+        video.playsInline = true; video.muted = true; video.autoplay = true;
+      } catch(_){ }
 
       // Try native BarcodeDetector with getUserMedia
       var useDetector = ('BarcodeDetector' in window);
@@ -365,12 +371,26 @@ async function makeBarcodeDetector() {
           await new Promise(function(res){ video.onloadedmetadata = res; });
           video.play();
           var det = await makeBarcodeDetector();
+          // Prepare a canvas for Safari where det.detect(video) may fail
+          var vCan = document.createElement('canvas');
+          var vCtx = vCan.getContext('2d', { willReadFrequently: true });
           var stopped = false;
           if (stopBtn) stopBtn.onclick = function(){ stopped = true; stopLiveScan(); };
           async function loop(){
             if (!__live.running || stopped) return;
             try {
-              var results = await det.detect(video);
+              var results = null;
+              try {
+                // Try detecting on the video element directly
+                results = await det.detect(video);
+              } catch(_e1) {
+                // Fallback: draw current frame to canvas and detect
+                var vw = Math.max(1, video.videoWidth||video.clientWidth||320);
+                var vh = Math.max(1, video.videoHeight||video.clientHeight||240);
+                if (vCan.width !== vw || vCan.height !== vh) { vCan.width = vw; vCan.height = vh; }
+                vCtx.drawImage(video, 0, 0, vw, vh);
+                results = await det.detect(vCan);
+              }
               if (results && results.length && results[0] && results[0].rawValue) {
                 var code = String(results[0].rawValue || '').trim();
                 __live.running = false;
@@ -391,16 +411,49 @@ async function makeBarcodeDetector() {
       // ZXing video fallback
       var ZX = (typeof window !== 'undefined') ? (window.ZXingBrowser || window.ZXing) : null;
       if (ZX && ZX.BrowserMultiFormatReader) {
-        var reader = new ZX.BrowserMultiFormatReader();
-        __live.zxingCtrl = await reader.decodeFromVideoDevice(null, video, async function(res, err){
-          if (!__live.running) return;
-          if (res && (res.text || (res.getText && res.getText()))) {
-            var code = String(res.text || (res.getText && res.getText()) || '').trim();
-            __live.running = false; stopLiveScan();
-            await fillSupplementFromBarcode(code, null);
+        try {
+          var reader = new ZX.BrowserMultiFormatReader();
+          __live.zxingCtrl = await reader.decodeFromVideoDevice(null, video, async function(res, err){
+            if (!__live.running) return;
+            if (res && (res.text || (res.getText && res.getText()))) {
+              var code = String(res.text || (res.getText && res.getText()) || '').trim();
+              __live.running = false; stopLiveScan();
+              await fillSupplementFromBarcode(code, null);
+            }
+          });
+          if (stopBtn) stopBtn.onclick = function(){ stopLiveScan(); };
+          return;
+        } catch (_eZX) {
+          // Canvas polling fallback using ZXing
+          try {
+            var stream2 = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+            __live.stream = stream2; video.srcObject = stream2; await new Promise(function(res){ video.onloadedmetadata = res; }); video.play();
+          } catch(_) { alert('Live scan not supported or permission denied.'); stopLiveScan(); return; }
+          var vCan2 = document.createElement('canvas'); var vCtx2 = vCan2.getContext('2d', { willReadFrequently: true });
+          var reader2 = new ZX.BrowserMultiFormatReader();
+          async function poll(){
+            if (!__live.running) return;
+            try {
+              var vw = Math.max(1, video.videoWidth||video.clientWidth||320);
+              var vh = Math.max(1, video.videoHeight||video.clientHeight||240);
+              if (vCan2.width !== vw || vCan2.height !== vh) { vCan2.width = vw; vCan2.height = vh; }
+              vCtx2.drawImage(video, 0, 0, vw, vh);
+              // Compat: if reader2.decodeFromCanvas missing, use dataURL path
+              var res;
+              try { res = await reader2.decodeFromCanvas(vCan2); }
+              catch(_m){ try { res = await reader2.decodeFromImageUrl(vCan2.toDataURL('image/jpeg', 0.85)); } catch(_m2){} }
+              var t = res && (res.text || (res.getText && res.getText()));
+              if (t && String(t).trim()) {
+                __live.running = false; stopLiveScan();
+                await fillSupplementFromBarcode(String(t).trim(), null);
+                return;
+              }
+            } catch(_){}
+            __live.raf = requestAnimationFrame(poll);
           }
-        });
-        if (stopBtn) stopBtn.onclick = function(){ stopLiveScan(); };
+          __live.raf = requestAnimationFrame(poll);
+          if (stopBtn) stopBtn.onclick = function(){ stopLiveScan(); };
+        }
       } else {
         alert('Live scan is not supported on this browser.');
         stopLiveScan();
