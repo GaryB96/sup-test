@@ -1,14 +1,15 @@
-<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" viewBox="0.0 0.0 160.0 160.0">
-  <ns0:title>Supplement Tracker &#8212; Monogram + Wordmark + Tagline</ns0:title>
-  
-  <ns0:g transform="translate(20,20)">
-    <ns0:rect x="0" y="0" width="160" height="160" rx="24" fill="#0b1220" />
-    <ns0:rect x="20" y="40" width="120" height="44" rx="22" fill="#22c55e" opacity="0.20" />
-    <ns0:rect x="20" y="90" width="120" height="44" rx="22" fill="#22c55e" opacity="0.15" />
-    <ns0:text x="80" y="100" text-anchor="middle" dominant-baseline="middle" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-weight="800" font-size="88" fill="#22c55e">ST</ns0:text>
-  </ns0:g>
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" viewBox="0 0 160 160" aria-label="ST monogram">
+  <ns0:title>Supplement Tracker — Monogram</ns0:title>
 
-  
-  <ns0:g transform="translate(220,0)">
-    </ns0:g>
+  <!-- Dark rounded background -->
+  <ns0:rect x="0" y="0" width="160" height="160" rx="24" fill="#0b1220" />
+
+  <!-- Soft pill shapes behind the letters, centered -->
+  <ns0:rect x="20" y="40" width="120" height="44" rx="22" fill="#22c55e" opacity="0.20" />
+  <ns0:rect x="20" y="90" width="120" height="44" rx="22" fill="#22c55e" opacity="0.15" />
+
+  <!-- ST letters centered -->
+  <ns0:text x="80" y="100" text-anchor="middle" dominant-baseline="middle"
+    font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif"
+    font-weight="800" font-size="88" fill="#22c55e">ST</ns0:text>
 </ns0:svg>

@@ -669,7 +669,23 @@ function _computeOrderReminderDate(supp) {
     const timesArr = Array.isArray(supp?.times) ? supp.times
                     : (Array.isArray(supp?.time) ? supp.time
                        : (typeof supp?.time === 'string' && supp.time ? [supp.time] : []));
-    const perDay = timesArr.length;
+    // Try to infer daily count from dosage text (e.g., "2 per day", "2/day", "2x daily")
+    function parseDailyFromDosage(txt){
+      try {
+        if (!txt) return null;
+        const t = String(txt).toLowerCase();
+        const regs = [
+          /(\d+(?:\.\d+)?)\s*(?:x|×)\s*(?:per\s*day|\/\s*day|a\s*day|daily)?/,
+          /(\d+)\s*(?:per\s*day|\/\s*day|a\s*day|daily)/,
+          /take\s+(\d+)/,
+          /(\d+)\s*(?:capsules?|tablets?|pills?)\s*(?:daily|per\s*day|a\s*day)/
+        ];
+        for (let r of regs){ const m = t.match(r); if (m && m[1]) return Math.max(1, Math.floor(Number(m[1]))); }
+        return null;
+      } catch { return null; }
+    }
+    const parsedDaily = parseDailyFromDosage(supp && supp.dosage);
+    const perDay = (Number(supp && supp.dailyDose) || 0) || parsedDaily || timesArr.length || 1;
     if (!servings || servings <= 0 || !startStr || perDay <= 0) return null;
     const m = startStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!m) return null;
@@ -906,6 +922,7 @@ form.addEventListener("submit", async (e) => {
   const name   = form.querySelector("#suppName")?.value?.trim() || "";
   const brand  = form.querySelector("#suppBrand")?.value?.trim() || "";
   const dosage = form.querySelector("#suppDosage")?.value?.trim() || "";
+  const dailyDoseRaw = form.querySelector("#suppDailyDose")?.value || "";
   const servingsRaw = form.querySelector("#suppServings")?.value;
 
   const times = Array.from(form.querySelectorAll('input[name="time"]:checked'))
@@ -946,6 +963,7 @@ form.addEventListener("submit", async (e) => {
     name,
     brand: brand || null,
     dosage,
+    dailyDose: (dailyDoseRaw && !isNaN(parseInt(dailyDoseRaw,10))) ? parseInt(dailyDoseRaw,10) : null,
     servings: (servingsRaw != null && String(servingsRaw).trim() !== "") ? (parseInt(servingsRaw, 10) || null) : null,
     times,
     cycle: onCycle ? { on: daysOn, off: daysOff } : null,

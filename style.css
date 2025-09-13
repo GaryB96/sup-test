@@ -5,7 +5,7 @@ body {
   background-color: #f9f9f9;
   color: #333;
 }
-main { margin-top: 60px; }
+main { margin-top: 16px; }
 
 h1 {
   text-align: left;
@@ -172,17 +172,17 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 .day-modal-list .supplement { font-size: 0.95rem; padding: 6px 8px; border-radius: 6px; color:#fff; }
 
 /* === Page Title (top-right) === */
-.page-title-bar{ display:flex; justify-content:flex-end; align-items:flex-start; margin: 8px 0 14px; }
-.page-title{ position:relative; display:inline-block; padding: 6px 72px 14px 14px; border-radius: 12px; }
-.page-title-text{ font-size: 2rem; font-weight: 900; letter-spacing:.2px; }
-.page-title-badge{ position:absolute; right: 8px; bottom: -14px; width: 56px; height: 56px; border-radius: 14px; background:#0b1220; border:1px solid #1e293b; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,.25); }
-.page-title-badge img{ width: 72%; height:auto; display:block; }
+.page-title-bar{ display:flex; justify-content:flex-end; align-items:flex-start; margin: 2px 0 12px; }
+.page-title{ position:relative; display:inline-block; padding: 8px 96px 18px 16px; border-radius: 14px; }
+.page-title-text{ font-size: 2.6rem; font-weight: 900; letter-spacing:.25px; }
+.page-title-badge{ position:absolute; right: 10px; bottom: -18px; width: 72px; height: 72px; border-radius: 16px; background:#0b1220; border:1px solid #1e293b; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.28); }
+.page-title-badge img{ width: 78%; height:auto; display:block; }
 
 @media (max-width: 520px){
-  .page-title-text{ font-size: 1.5rem; }
-  .page-title{ padding-right: 56px; }
-  .page-title-badge{ width: 40px; height: 40px; bottom: -10px; right: 6px; border-radius: 10px; }
-  .page-title-badge img{ width: 70%; }
+  .page-title-text{ font-size: 2rem; }
+  .page-title{ padding-right: 68px; }
+  .page-title-badge{ width: 56px; height: 56px; bottom: -14px; right: 8px; border-radius: 14px; }
+  .page-title-badge img{ width: 76%; }
 }
 
 /* ===== Auth Visibility ===== */
@@ -509,11 +509,32 @@ body:not(.logged-in) #accountActions { display: none; }
 .live-hud{ position:absolute; inset:auto 0 0 0; display:flex; align-items:center; justify-content:space-between; padding:6px 8px; background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 60%); color:#fff; }
 .live-hint{ font-size:.9rem; opacity:.9; }
 
+/* Tutorial card (shown when no supplements) */
+.tutorial-card{
+  border: 1px solid #e5e7eb;
+  background:#ffffff;
+  color:#0f172a;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 6px 0 12px;
+}
+.tutorial-title{ margin:0 0 6px; font-size:1rem; font-weight:800; }
+.tutorial-list{ margin:0; padding-left: 20px; }
+.tutorial-list li{ margin: 4px 0; line-height: 1.35; }
+.theme-dark .tutorial-card{ background:#0f172a; color:#e2e8f0; border-color:#1e293b; }
+
 /* Mobile-only warning next to scan button */
 .scan-warn{ margin-left:8px; color:#b45309; font-weight:600; display:inline-flex; align-items:center; }
 .scan-warn.bump{ animation: scan-bump .45s ease; }
 @keyframes scan-bump { 0%{ transform:scale(1)} 30%{ transform:scale(1.08)} 60%{ transform:scale(.98)} 100%{ transform:scale(1)} }
 .supplement-barcodeBtn:disabled{ opacity:.55; cursor:not-allowed; }
+
+/* Toast popover near buttons */
+.toast-popover{ position: fixed; z-index: 3000; }
+
+/* Help icon (calendar question mark) */
+.help-icon{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:999px; border:1px solid #cbd5e1; background:#ffffff; color:#0f172a; font-weight:800; margin-right:6px; cursor:pointer; }
+.theme-dark .help-icon{ background:#0f172a; color:#e2e8f0; border-color:#1e293b; }
 
 /* === Highlight current day === */
 .day.today {

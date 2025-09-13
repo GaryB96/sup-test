@@ -41,6 +41,7 @@ export async function addSupplement(uid, data) {
   const name   = (data?.name || "").trim();
   const brand  = (data?.brand || "").trim();
   const dosage = (data?.dosage || "").trim();
+  const dailyDose = (data && data.dailyDose != null && !isNaN(Number(data.dailyDose))) ? Math.max(1, Number(data.dailyDose)) : null;
   const servings = Number.isFinite(Number(data?.servings)) ? Number(data.servings) : null;
 
   // Accept either `times` (modal) or `time` (legacy)
@@ -58,12 +59,23 @@ export async function addSupplement(uid, data) {
       }
     : null;
 
-  const startDate = cycleEnabled && data?.startDate ? String(data.startDate) : null;
+  // Always capture a start date for better summaries; default to today if not provided
+  let startDate = null;
+  if (data && data.startDate) {
+    startDate = String(data.startDate);
+  } else {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    startDate = `${y}-${m}-${d}`;
+  }
 
   const docData = {
     name,
     brand: brand || null,
     dosage,
+    dailyDose,
     servings,
     time: Array.isArray(times) ? (times[0] || null) : (data?.time ?? null),
     times,
@@ -90,6 +102,9 @@ export async function updateSupplement(uid, supplementId, data) {
   const name   = (data?.name ?? undefined);
   const brand  = (data?.brand ?? undefined);
   const dosage = (data?.dosage ?? undefined);
+  const dailyDose = (data && "dailyDose" in data)
+    ? ((data.dailyDose != null && !isNaN(Number(data.dailyDose))) ? Math.max(1, Number(data.dailyDose)) : null)
+    : undefined;
   const servings = (data && "servings" in data)
     ? (Number.isFinite(Number(data.servings)) ? Number(data.servings) : null)
     : undefined;
@@ -121,6 +136,7 @@ export async function updateSupplement(uid, supplementId, data) {
     ...(name   !== undefined ? { name: String(name).trim() } : {}),
     ...(brand  !== undefined ? { brand: String(brand).trim() || null } : {}),
     ...(dosage !== undefined ? { dosage: String(dosage).trim() } : {}),
+    ...(dailyDose !== undefined ? { dailyDose } : {}),
     ...(servings !== undefined ? { servings } : {}),
     ...((data && "orderReminder" in data) ? { orderReminder: !!data.orderReminder } : {}),
     ...(times  !== undefined ? { times, time: (Array.isArray(times) ? (times[0] || null) : null) } : {}),

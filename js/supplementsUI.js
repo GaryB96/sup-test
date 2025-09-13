@@ -4,6 +4,7 @@ import {
   deleteSupplement,
   updateSupplement
 } from "./supplements.js";
+import { showConfirmToast } from "./toast.js";
 import { db } from "./firebaseConfig.js";
 import {
   doc, getDoc, setDoc
@@ -48,6 +49,76 @@ function getTimeCheckboxes() {
   return document.querySelectorAll(
     ".checkbox-tiles input[type='checkbox']:not(#cycleCheckbox), .checkbox-group input[type='checkbox']:not(#cycleCheckbox)"
   );
+}
+
+// Derive daily servings from explicit field, dosage text, or times selected
+function getPerDay(s) {
+  try {
+    const explicit = Number(s && s.dailyDose);
+    if (explicit && explicit > 0) return explicit;
+    if (typeof parseDailyFromDosage === 'function') {
+      const parsed = parseDailyFromDosage(s && s.dosage);
+      if (parsed && parsed > 0) return parsed;
+    }
+    const timesArr = Array.isArray(s?.times) ? s.times
+                    : (Array.isArray(s?.time) ? s.time
+                       : (typeof s?.time === 'string' && s.time ? [s.time] : []));
+    return Math.max(1, timesArr.length || 1);
+  } catch { return 1; }
+}
+
+// Estimate remaining doses based on startDate, servings, times/day, and cycle on/off
+function computeRemainingDoses(s) {
+  try {
+    const totalServings = Number(s && s.servings);
+    const startStr = (s && s.startDate) ? String(s.startDate).trim() : '';
+    const timesArr = Array.isArray(s?.times) ? s.times
+                    : (Array.isArray(s?.time) ? s.time
+                       : (typeof s?.time === 'string' && s.time ? [s.time] : []));
+    function parseDailyFromDosage(txt){
+      try {
+        if (!txt) return null;
+        const t = String(txt).toLowerCase();
+        const regs = [
+          /(\d+(?:\.\d+)?)\s*(?:x|×)\s*(?:per\s*day|\/\s*day|a\s*day|daily)?/,
+          /(\d+)\s*(?:per\s*day|\/\s*day|a\s*day|daily)/,
+          /take\s+(\d+)/,
+          /(\d+)\s*(?:capsules?|tablets?|pills?)\s*(?:daily|per\s*day|a\s*day)/
+        ];
+        for (let r of regs){ const m = t.match(r); if (m && m[1]) return Math.max(1, Math.floor(Number(m[1]))); }
+        return null;
+      } catch { return null; }
+    }
+    const parsedDaily = parseDailyFromDosage(s && s.dosage);
+    const perDay = (Number(s && s.dailyDose) || 0) || parsedDaily || timesArr.length || 1;
+    if (!totalServings || totalServings <= 0 || !startStr || perDay <= 0) return null;
+
+    const m = startStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+    const y = +m[1], mo = +m[2]-1, d = +m[3];
+    const start = new Date(y, mo, d);
+    const today = new Date();
+    start.setHours(0,0,0,0); today.setHours(0,0,0,0);
+
+    let daysElapsed = Math.floor((today - start) / 86400000) + 1; // include start day
+    if (daysElapsed < 0) daysElapsed = 0;
+
+    let onDaysCount = daysElapsed;
+    const on = Number(s?.cycle?.on || 0);
+    const off = Number(s?.cycle?.off || 0);
+    if (on > 0 || off > 0) {
+      const period = Math.max(1, on + Math.max(0, off));
+      const full = Math.floor(daysElapsed / period);
+      const rem = daysElapsed % period;
+      onDaysCount = full * on + Math.min(on, rem);
+    }
+
+    const consumed = Math.max(0, onDaysCount * perDay);
+    const remaining = Math.max(0, totalServings - consumed);
+    return remaining;
+  } catch {
+    return null;
+  }
 }
 
 if (cycleCheckbox && cycleDetails) {
@@ -144,9 +215,22 @@ function editSupplement(id) {
   const q = (sel) => formModal.querySelector(sel);
 
   const nameEl   = q("#suppName");
+  const brandEl  = q("#suppBrand");
   const dosageEl = q("#suppDosage");
+  const dailyEl  = q("#suppDailyDose");
   if (nameEl)   nameEl.value   = supplement.name || "";
+  if (brandEl)  brandEl.value  = supplement.brand || "";
   if (dosageEl) dosageEl.value = supplement.dosage || "";
+  if (dailyEl)  dailyEl.value  = (supplement && supplement.dailyDose != null) ? String(supplement.dailyDose) : "";
+
+  // Populate servings with the amount remaining (fallback to total if unavailable)
+  const servingsEl = q("#suppServings");
+  if (servingsEl) {
+    const rem = computeRemainingDoses(supplement);
+    if (rem !== null && rem !== undefined) servingsEl.value = String(rem);
+    else if (supplement && supplement.servings != null) servingsEl.value = String(supplement.servings);
+    else servingsEl.value = "";
+  }
 
   // Times checkboxes in modal
   const selectedTimes = Array.isArray(supplement.times)
@@ -157,19 +241,25 @@ function editSupplement(id) {
   });
 
   // Cycle fields
-  const chk   = q("#suppCycleChk");
-  const onEl  = q("#suppDaysOn");
-  const offEl = q("#suppDaysOff");
-  const startEl = q("#suppCycleStart");
+  const chk      = q("#suppCycleChk");
+  const onEl     = q("#suppDaysOn");
+  const offEl    = q("#suppDaysOff");
+  const startEl  = q("#suppCycleStart");
+  const startWrap= q("#suppCycleStartWrap");
   const hasCycle = !!(supplement.cycle && (Number(supplement.cycle.on) > 0 || Number(supplement.cycle.off) > 0));
+  const savedStart = (supplement.startDate || (supplement.cycle && supplement.cycle.startDate) || "");
   if (chk) {
+    // Keep the user's cycle choice: only check when a real cycle exists
     chk.checked = hasCycle;
-    // Let existing UI logic show/hide the cycle section
     chk.dispatchEvent(new Event("change", { bubbles: true }));
   }
   if (onEl)   onEl.value   = hasCycle ? Number(supplement.cycle.on)  : "";
   if (offEl)  offEl.value  = hasCycle ? Number(supplement.cycle.off) : "";
-  if (startEl) startEl.value = hasCycle ? (supplement.startDate || supplement.cycle.startDate || "") : "";
+  if (startEl) startEl.value = savedStart;
+  // If we have a saved start date but not on a cycle, ensure the picker is visible
+  if (!hasCycle && savedStart && startWrap) {
+    startWrap.classList.remove('hidden','is-hidden');
+  }
 
   // Optional color
   const colorEl = q("#suppColor");
@@ -263,11 +353,13 @@ function renderSupplements() {
   }
   // Toggle summary title and size controls visibility when no supplements
   try {
-    const titleEl = document.getElementById('summaryTitle');
+    const titleEl   = document.getElementById('summaryTitle');
     const sizeCtrls = document.getElementById('summarySizeControls');
-    const hasSupps = Array.isArray(supplements) && supplements.length > 0;
-    if (titleEl) titleEl.style.display = hasSupps ? '' : 'none';
+    const tutEl     = document.getElementById('summaryTutorial');
+    const hasSupps  = Array.isArray(supplements) && supplements.length > 0;
+    if (titleEl)   titleEl.style.display = hasSupps ? '' : 'none';
     if (sizeCtrls) sizeCtrls.style.display = hasSupps ? 'flex' : 'none';
+    if (tutEl)     tutEl.classList.toggle('hidden', !!hasSupps);
   } catch(_){}
   // Local date formatter: 2025-09-01 -> Sept. 1, 2025
   function fmtYMDPretty(ymd) {
@@ -321,7 +413,8 @@ box.style.borderBottom = `6px solid ${ (supplement && supplement.cycle) ? __acce
     strong.textContent = br ? (nm ? nm + ", " + br : br) : nm;
     nameRow.appendChild(strong);
     const doseRow = document.createElement("div");
-    doseRow.textContent = "Dosage: " + ((supplement && supplement.dosage) ? supplement.dosage : "");
+    const perDay = getPerDay(supplement);
+    doseRow.textContent = "Dose per day: " + String(perDay);
 
     // Optional start date (shown when present)
     const start = (supplement && supplement.startDate) ? String(supplement.startDate).trim() : "";
@@ -348,39 +441,17 @@ if (onDays > 0 || offDays > 0) {
   // cycleDiv.className = "cycle-line";
 }
 
- // Remaining doses (approx)
- const remainRow = document.createElement("div");
- (function computeRemaining(){
-   try {
-     const totalServings = Number(supplement && supplement.servings);
-     const startStr = (supplement && supplement.startDate) ? String(supplement.startDate).trim() : '';
-     // times per day
-     const timesArr = Array.isArray(supplement?.times) ? supplement.times
-                      : (Array.isArray(supplement?.time) ? supplement.time
-                         : (typeof supplement?.time === 'string' && supplement.time ? [supplement.time] : []));
-     const perDay = timesArr.length;
-     if (!totalServings || totalServings <= 0 || !startStr || perDay <= 0) return;
-     const m = startStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-     if (!m) return;
-     const y = +m[1], mo = +m[2]-1, d = +m[3];
-     const start = new Date(y, mo, d);
-     const today = new Date();
-     // normalize to local midnight
-     start.setHours(0,0,0,0); today.setHours(0,0,0,0);
-     let daysElapsed = Math.floor((today - start) / 86400000) + 1; // include start day
-     if (daysElapsed < 0) daysElapsed = 0;
-     let onDaysCount = daysElapsed;
-     if (onDays > 0 || offDays > 0) {
-       const period = Math.max(1, onDays + Math.max(0, offDays));
-       const full = Math.floor(daysElapsed / period);
-       const rem = daysElapsed % period;
-       onDaysCount = full * onDays + Math.min(onDays, rem);
-     }
-     const consumed = Math.max(0, onDaysCount * perDay);
-     const remaining = Math.max(0, totalServings - consumed);
-     remainRow.textContent = `Approx. Doses Remaining: ${remaining} of ${totalServings}`;
-   } catch {}
- })();
+  // Days remaining (uses dailyDose if provided)
+  const remainRow = document.createElement("div");
+  try {
+    const totalServings = Number(supplement && supplement.servings);
+    const remainingServings = computeRemainingDoses(supplement);
+    const perDay = getPerDay(supplement);
+    if (totalServings > 0 && remainingServings != null && perDay > 0) {
+      const daysRemaining = Math.max(0, Math.ceil(remainingServings / perDay));
+      remainRow.textContent = `Days remaining: ${daysRemaining}`;
+    }
+  } catch {}
 
 const actions = document.createElement("div");
 actions.className = "actions";
@@ -400,7 +471,9 @@ actions.append(editBtn, delBtn);
 // append rows based on card size (compact vs large)
 const isCompact = !!(supplementSummaryContainer && supplementSummaryContainer.classList && supplementSummaryContainer.classList.contains('size-compact'));
 const children = [nameRow, doseRow, timeRow];
- if (!isCompact) {
+if (isCompact) {
+  if (remainRow && remainRow.textContent) children.push(remainRow); // show days remaining on compact
+} else {
   if (start) children.push(dateRow);
   if (cycleDiv) children.push(cycleDiv);
   if (remainRow && remainRow.textContent) children.push(remainRow);
@@ -435,7 +508,6 @@ const children = [nameRow, doseRow, timeRow];
     }
   } catch {}
 }
-if (cycleDiv) children.push(cycleDiv);
 children.push(actions);
 
 box.append(...children);
@@ -504,9 +576,13 @@ function wireSummaryActions() {
   });
   document.querySelectorAll(".delete-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      await deleteSupplement(currentUser && currentUser.uid, btn.dataset.id);
-      await refreshData();
-      if (typeof window.refreshCalendar === "function") await window.refreshCalendar();
+      try {
+        const ok = await showConfirmToast('Delete this supplement?', { confirmText: 'Delete', cancelText: 'Cancel', type: 'warn', anchor: btn });
+        if (!ok) return;
+        await deleteSupplement(currentUser && currentUser.uid, btn.dataset.id);
+        await refreshData();
+        if (typeof window.refreshCalendar === "function") await window.refreshCalendar();
+      } catch(e) { console.error('Delete cancelled/failed', e); }
     });
   });
 }

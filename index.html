@@ -311,6 +311,22 @@
           </div>
           <div id="calendar"></div>
         </div>
+        
+        <!-- Day Details Modal (mobile/desktop calendar expand) -->
+        <div id="dayModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="dayModalTitle">
+          <div class="modal-backdrop" data-close-modal></div>
+          <div class="modal-content" role="document">
+            <div class="modal-header">
+              <div class="modal-title-wrap">
+                <h2 id="dayModalTitle" class="modal-title">Day</h2>
+              </div>
+              <button id="closeDayBtn" class="icon-btn close-btn" aria-label="Close day details">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div id="dayModalList" class="day-modal-list"></div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- Notifications Modal -->
@@ -370,8 +386,13 @@
             </div>
 
             <div class="form-row">
-              <label for="suppDosage">Dosage <span class="req" aria-hidden="true">*</span></label>
+              <label for="suppDosage">Serving Size <span class="req" aria-hidden="true">*</span></label>
               <input id="suppDosage" name="dosage" type="text" placeholder="e.g., 500mg" />
+            </div>
+
+            <div class="form-row">
+              <label for="suppDailyDose">Servings Per Day</label>
+              <input id="suppDailyDose" name="dailyDose" type="number" min="1" inputmode="numeric" placeholder="e.g., 2" />
             </div>
 
             <div class="form-row">
@@ -431,5 +452,35 @@
   <script type="module" src="./js/supplementsUI.js"></script>
   <script type="module" src="./js/notifications.js"></script>
   <script type="module" src="./js/sidebar-toggle.js"></script>
+  <script type="module">
+    import { showConfirmToast } from './js/toast.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      const nav = document.querySelector('.calendar-nav');
+      if (!nav) return;
+      let help = document.getElementById('calendarHelpBtn');
+      if (!help) {
+        help = document.createElement('button');
+        help.id = 'calendarHelpBtn';
+        help.type = 'button';
+        help.className = 'help-icon';
+        help.setAttribute('aria-haspopup','dialog');
+        help.setAttribute('aria-expanded','false');
+        help.setAttribute('aria-label','About the cycle calendar');
+        help.textContent = '?';
+        nav.insertBefore(help, nav.firstElementChild);
+      }
+      help.addEventListener('click', async () => {
+        try {
+          help.setAttribute('aria-expanded','true');
+          await showConfirmToast(
+            'The Cycle Calendar shows days you are ON for supplements with a cycle. Add a Start Date and On/Off days in the form to see colored entries. You can tap a day to view details.',
+            { confirmText: 'OK', cancelText: 'Close', type: 'info', anchor: help, timeout: 0 }
+          );
+        } finally {
+          help.setAttribute('aria-expanded','false');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
