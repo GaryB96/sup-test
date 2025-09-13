@@ -608,6 +608,8 @@ if (onDays > 0 || offDays > 0) {
         const openMenu = () => {
           prevFocus = document.activeElement;
           menu.classList.remove('hidden');
+          // Ensure no conflicting positional styles force full-width
+          try { menu.style.right = 'auto'; menu.style.bottom = 'auto'; menu.style.width = 'auto'; } catch {}
           menuBtn.setAttribute('aria-expanded','true');
           try { box.classList.add('menu-open'); } catch {}
           try { const grp = box.closest('.supp-group'); if (grp) grp.classList.add('menu-open'); } catch {}
