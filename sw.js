@@ -1,30 +1,32 @@
 // Basic offline-first service worker
-const CACHE_NAME = 'supp-tracker-v2';
+const CACHE_NAME = 'supp-tracker-v3';
 const CORE_ASSETS = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/notifications.css',
-  '/barcodeStyle.css',
-  '/manifest.webmanifest',
+  './',
+  'index.html',
+  'style.css',
+  'notifications.css',
+  'barcodeStyle.css',
+  'manifest.webmanifest',
   // JS entry points
-  '/js/main.js',
-  '/js/supplementsUI.js',
-  '/js/supplements.js',
-  '/js/calendar.js',
-  '/js/toast.js',
-  '/js/notifications.js',
-  '/js/sidebar-toggle.js',
-  '/js/firebaseConfig.js',
-  '/js/barcode.js',
+  'js/main.js',
+  'js/supplementsUI.js',
+  'js/supplements.js',
+  'js/calendar.js',
+  'js/toast.js',
+  'js/notifications.js',
+  'js/sidebar-toggle.js',
+  'js/firebaseConfig.js',
+  'js/barcode.js',
   // Branding
-  '/assets/logo-icon.svg',
-  '/assets/logo-combined-wordmark.svg'
+  'assets/logo-icon.svg',
+  'assets/logo-combined-wordmark.svg'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(CORE_ASSETS))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -70,7 +72,7 @@ self.addEventListener('fetch', (event) => {
           const resClone = res.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
           return res;
-        }).catch(() => caches.match('/index.html'))
+        }).catch(() => caches.match(new URL('index.html', self.registration.scope).toString()))
       )
     );
   }

@@ -1061,7 +1061,9 @@ window.markSupplementReordered = async function markSupplementReordered(id) {
 // Service worker registration for PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((e) => console.warn('SW register failed', e));
+    // Register relative to repo path (works on GitHub Pages project sites)
+    navigator.serviceWorker.register('sw.js', { scope: './' })
+      .catch((e) => console.warn('SW register failed', e));
   });
 }
 
