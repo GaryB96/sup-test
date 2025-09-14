@@ -744,6 +744,7 @@ async function refreshCalendar() {
   try {
     const rawSupplements = await fetchSupplements(currentUser.uid);
     const expandedSupplements = [];
+    const seen = new Set(); // key: id|date
     const monthStart = new Date(currentYear, currentMonth, 1);
     const monthEnd = new Date(currentYear, currentMonth, 1);
     monthEnd.setDate(monthEnd.getDate() + 60); // show 60 days ahead
@@ -756,11 +757,21 @@ async function refreshCalendar() {
             date.getMonth() === currentMonth &&
             date.getFullYear() === currentYear
           ) {
-          expandedSupplements.push({
-            name: supp.name,
-            date: toLocalYMD(date),       // <— local YYYY-MM-DD
-            color: supp.color || "#cccccc"
-          });
+          const ymd = toLocalYMD(date);
+          const key = (supp.id || supp.name) + '|' + ymd;
+          if (!seen.has(key)) {
+            seen.add(key);
+            const timesArr = Array.isArray(supp?.times) ? supp.times
+                           : (Array.isArray(supp?.time) ? supp.time
+                              : (typeof supp?.time === 'string' && supp.time ? [supp.time] : []));
+            expandedSupplements.push({
+              id: supp.id,
+              name: supp.name,
+              date: ymd,
+              color: supp.color || "#cccccc",
+              times: timesArr
+            });
+          }
           }
         }
       } else if (supp.date) {
@@ -770,11 +781,21 @@ async function refreshCalendar() {
           date.getMonth() === currentMonth &&
           date.getFullYear() === currentYear
         ) {
-          expandedSupplements.push({
-            name: supp.name,
-            date: supp.date,
-            color: supp.color || "#cccccc"
-          });
+          const ymd = supp.date;
+          const key = (supp.id || supp.name) + '|' + ymd;
+          if (!seen.has(key)) {
+            seen.add(key);
+            const timesArr = Array.isArray(supp?.times) ? supp.times
+                           : (Array.isArray(supp?.time) ? supp.time
+                              : (typeof supp?.time === 'string' && supp.time ? [supp.time] : []));
+            expandedSupplements.push({
+              id: supp.id,
+              name: supp.name,
+              date: ymd,
+              color: supp.color || "#cccccc",
+              times: timesArr
+            });
+          }
         }
       }
     }
@@ -786,12 +807,42 @@ async function refreshCalendar() {
         const rDate = _computeOrderReminderDate(supp);
         if (!rDate) continue;
         if (rDate.getMonth() === currentMonth && rDate.getFullYear() === currentYear) {
+          const ymd = toLocalYMD(rDate);
+          const key = (supp.id || `order-${supp.name}`) + '|' + ymd;
+          if (!seen.has(key)) {
+            seen.add(key);
+            expandedSupplements.push({
+              id: supp.id,
+              name: `Order more: ${supp.name}`,
+              date: ymd,
+              color: '#b45309',
+              type: 'orderReminder',
+              hiddenInGrid: true
+            });
+          }
+        }
+      }
+    } catch {}
+
+    // Include user-toggled supplements for each day of the current month (modal only)
+    try {
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      for (const supp of rawSupplements) {
+        if (!supp || !supp.showOnCalendar) continue;
+        const timesArr = Array.isArray(supp?.times) ? supp.times
+                       : (Array.isArray(supp?.time) ? supp.time
+                          : (typeof supp?.time === 'string' && supp.time ? [supp.time] : []));
+        for (let d = 1; d <= daysInMonth; d++) {
+          const ymd = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          const key = (supp.id || supp.name) + '|' + ymd;
+          if (seen.has(key)) continue; // don't duplicate cycle or one-off
           expandedSupplements.push({
-            name: `Order more: ${supp.name}`,
-            date: toLocalYMD(rDate),
-            color: '#b45309',
-            type: 'orderReminder',
-            id: supp.id
+            id: supp.id,
+            name: supp.name,
+            date: ymd,
+            color: supp.color || '#cccccc',
+            times: timesArr,
+            hiddenInGrid: true
           });
         }
       }

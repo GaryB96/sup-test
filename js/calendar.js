@@ -64,6 +64,7 @@ if (_isToday) {
   // Get all supplements for this day
   const supplementsForDay = supplements.filter(s => s.date === dateString);
   supplementsForDay.forEach(supplement => {
+    if (supplement && supplement.hiddenInGrid) return; // skip grid clutter
     const supplementEl = document.createElement("div");
     supplementEl.className = "supplement";
     supplementEl.textContent = supplement.name;
@@ -101,12 +102,26 @@ if (_isToday) {
       // Track selected day for cross-module use
       const ymd = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
       try { window.__selectedDayYMD = ymd; } catch {}
-      if (supplementsForDay.length === 0) {
-        const empty = document.createElement('div');
-        empty.textContent = 'No supplements scheduled.';
-        list.appendChild(empty);
-      } else {
-        supplementsForDay.forEach(s => {
+      // Group by time of day for the modal view
+      const groups = { Morning: [], Afternoon: [], Evening: [] };
+      supplementsForDay.forEach(s => {
+        const times = Array.isArray(s?.times) ? s.times
+                    : (Array.isArray(s?.time) ? s.time
+                       : (typeof s?.time === 'string' && s.time ? [s.time] : []));
+        let placed = false;
+        ['Morning','Afternoon','Evening'].forEach(slot => {
+          if (times.includes(slot)) { groups[slot].push(s); placed = true; }
+        });
+        if (!placed) { groups.Morning.push(s); } // default bucket
+      });
+
+      const renderGroup = (label, items) => {
+        if (!items || !items.length) return;
+        const h = document.createElement('div');
+        h.className = 'day-section-title';
+        h.textContent = label;
+        list.appendChild(h);
+        items.forEach(s => {
           const item = document.createElement('div');
           item.className = 'supplement';
           item.textContent = s.name;
@@ -128,10 +143,20 @@ if (_isToday) {
             wrap.appendChild(item);
             wrap.appendChild(btn);
             list.appendChild(wrap);
-            return;
+          } else {
+            list.appendChild(item);
           }
-          list.appendChild(item);
         });
+      };
+
+      if (supplementsForDay.length === 0) {
+        const empty = document.createElement('div');
+        empty.textContent = 'No supplements scheduled.';
+        list.appendChild(empty);
+      } else {
+        renderGroup('Morning', groups.Morning);
+        renderGroup('Afternoon', groups.Afternoon);
+        renderGroup('Evening', groups.Evening);
       }
       // (Removed) Add-to-day header button
       modal.classList.remove('hidden');
