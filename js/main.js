@@ -75,6 +75,7 @@ async function openNotificationsModal() {
   const emailEl = el("notifyEmailInput"); if (emailEl) emailEl.value = (auth.currentUser?.email || "");
   const tzEl = el("timezoneSelect"); if (tzEl) tzEl.value = guessTZ();
   try {
+    try { const cal = document.getElementById("calendar"); if (cal) cal.classList.add('is-loading'); } catch {}
     const ref = doc(db, `users/${currentUser.uid}/settings/notifications`);
     const snap = await getDoc(ref);
     if (snap.exists()) {
@@ -282,8 +283,17 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("downloadIcsBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); downloadIcs(); });
 });
 
+// Persist calendar view (month/year)
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
+const CAL_VIEW_KEY = "calendar_view_v1";
+try {
+  const saved = JSON.parse(localStorage.getItem(CAL_VIEW_KEY) || "null");
+  if (saved && Number.isInteger(saved.m) && Number.isInteger(saved.y)) {
+    currentMonth = Math.min(11, Math.max(0, saved.m));
+    currentYear = saved.y;
+  }
+} catch {}
 let currentUser = null;
 
 // Make cycle boundaries available to notifications.js
@@ -403,6 +413,7 @@ if (prevBtn) {
   prevBtn.addEventListener("click", async () => {
     currentMonth--;
     if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    try { localStorage.setItem(CAL_VIEW_KEY, JSON.stringify({ m: currentMonth, y: currentYear })); } catch {}
     await refreshCalendar();
   });
 }
@@ -410,6 +421,7 @@ if (nextBtn) {
   nextBtn.addEventListener("click", async () => {
     currentMonth++;
     if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    try { localStorage.setItem(CAL_VIEW_KEY, JSON.stringify({ m: currentMonth, y: currentYear })); } catch {}
     await refreshCalendar();
   });
 }
@@ -777,7 +789,9 @@ async function refreshCalendar() {
           expandedSupplements.push({
             name: `Order more: ${supp.name}`,
             date: toLocalYMD(rDate),
-            color: '#b45309'
+            color: '#b45309',
+            type: 'orderReminder',
+            id: supp.id
           });
         }
       }
@@ -785,6 +799,7 @@ async function refreshCalendar() {
 
     const calendarEl = document.getElementById("calendar");
     const labelEl = document.getElementById("currentMonthLabel");
+    try { if (calendarEl) calendarEl.classList.remove('is-loading'); } catch {}
     renderCalendar(currentMonth, currentYear, expandedSupplements, calendarEl, labelEl);
   } catch (error) {
     console.error("❌ Failed to fetch supplements for calendar:", error);
@@ -1033,6 +1048,22 @@ form.addEventListener("submit", async (e) => {
     } catch {}
   }
 });
+
+// Expose a helper to mark a supplement as reordered (turn off reminders)
+window.markSupplementReordered = async function markSupplementReordered(id) {
+  try {
+    if (!currentUser || !currentUser.uid || !id) return;
+    await updateSupplement(currentUser.uid, id, { orderReminder: false });
+    await refreshCalendar();
+  } catch (e) { console.error('Failed to update reorder flag', e); }
+};
+
+// Service worker registration for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((e) => console.warn('SW register failed', e));
+  });
+}
 
 function getModalValues() {
   const name = document.querySelector("#supp-name").value.trim();

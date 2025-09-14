@@ -1,47 +1,12 @@
-              <button id="cancelSupplementBtn" class="btn-secondary" type="button" data-close-modal>Cancel</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </main>
-  </div>
-  <div id="app-status" class="status-pill" role="status" aria-live="polite"></div>
-  <script type="module" src="./js/toast.js"></script>
-  <script type="module" src="./js/firebaseConfig.js"></script>
-  <script type="module" src="./js/main.js"></script>
-  <script type="module" src="./js/supplements.js"></script>
-  <script type="module" src="./js/supplementsUI.js"></script>
-  <script type="module" src="./js/notifications.js"></script>
-  <script type="module" src="./js/sidebar-toggle.js"></script>
-  <script type="module">
-    import { showConfirmToast } from './js/toast.js';
-    document.addEventListener('DOMContentLoaded', () => {
-      const nav = document.querySelector('.calendar-nav');
-      if (!nav) return;
-      let help = document.getElementById('calendarHelpBtn');
-      if (!help) {
-        help = document.createElement('button');
-        help.id = 'calendarHelpBtn';
-        help.type = 'button';
-        help.className = 'help-icon';
-        help.setAttribute('aria-haspopup','dialog');
-        help.setAttribute('aria-expanded','false');
-        help.setAttribute('aria-label','About the cycle calendar');
-        help.textContent = '?';
-        nav.insertBefore(help, nav.firstElementChild);
-      }
-      help.addEventListener('click', async () => {
-        try {
-          help.setAttribute('aria-expanded','true');
-          await showConfirmToast(
-            'The Cycle Calendar shows days you are ON for supplements with a cycle. Add a Start Date and On/Off days in the form to see colored entries. You can tap a day to view details.',
-            { confirmText: 'OK', cancelText: 'Close', type: 'info', anchor: help, timeout: 0 }
-          );
-        } finally {
-          help.setAttribute('aria-expanded','false');
-        }
-      });
-    });
-  </script>
-</body>
-</html>
+ditBtn.classList.add("hidden");
+  });
+}
+
+async function refreshData() {
+  if (!currentUser || !currentUser.uid) {
+    console.warn("⛔ currentUser is not ready yet.");
+    return;
+  }
+
+  try {
+    su

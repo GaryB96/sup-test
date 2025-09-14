@@ -98,6 +98,9 @@ if (_isToday) {
       const dt = new Date(year, month, day);
       const opts = { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' };
       title.textContent = dt.toLocaleDateString(undefined, opts);
+      // Track selected day for cross-module use
+      const ymd = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      try { window.__selectedDayYMD = ymd; } catch {}
       if (supplementsForDay.length === 0) {
         const empty = document.createElement('div');
         empty.textContent = 'No supplements scheduled.';
@@ -108,9 +111,64 @@ if (_isToday) {
           item.className = 'supplement';
           item.textContent = s.name;
           if (s.color) { item.style.backgroundColor = s.color; item.style.color = '#fff'; }
+          // Reorder CTA for reminder items
+          if (s && s.type === 'orderReminder' && s.id) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = 'Mark reordered';
+            btn.style.marginLeft = '8px';
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              try { window.markSupplementReordered && window.markSupplementReordered(s.id); } catch {}
+            });
+            const wrap = document.createElement('div');
+            wrap.style.display = 'flex';
+            wrap.style.alignItems = 'center';
+            wrap.style.gap = '6px';
+            wrap.appendChild(item);
+            wrap.appendChild(btn);
+            list.appendChild(wrap);
+            return;
+          }
           list.appendChild(item);
         });
       }
+      // Add action to quickly add a supplement for this date (header, right of date)
+      try {
+        const header = modal.querySelector('.modal-header') || modal;
+        const closeBtn = modal.querySelector('#closeDayBtn');
+        let addBtn = header.querySelector('#addDayHeaderBtn');
+        if (!addBtn) {
+          addBtn = document.createElement('button');
+          addBtn.id = 'addDayHeaderBtn';
+          addBtn.type = 'button';
+          addBtn.className = 'add-day-btn';
+          addBtn.textContent = 'Add to day';
+          if (closeBtn && closeBtn.parentElement === header) {
+            header.insertBefore(addBtn, closeBtn);
+          } else {
+            header.appendChild(addBtn);
+          }
+        }
+        // Always rebind the click to ensure correct date
+        addBtn.onclick = (e) => {
+          e.stopPropagation();
+          const openBtn = document.getElementById('addSupplementBtn');
+          if (openBtn) openBtn.click();
+          setTimeout(() => {
+            const form = document.getElementById('supplementModalForm') || document.querySelector('#supplementModal form');
+            if (!form) return;
+            const start = form.querySelector('#suppCycleStart');
+            const wrap = form.querySelector('#suppCycleStartWrap');
+            const chk  = form.querySelector('#suppCycleChk');
+            if (start) start.value = ymd;
+            if (wrap) wrap.classList.remove('hidden','is-hidden');
+            if (chk && !chk.checked) {
+              wrap && wrap.classList.remove('hidden','is-hidden');
+            }
+          }, 100);
+        };
+      } catch {}
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
     } catch (e) { /* noop */ }

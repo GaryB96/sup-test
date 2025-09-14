@@ -1,6 +1,6 @@
 // firebaseConfig.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -14,5 +14,10 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+// Enable persistent local cache for offline usage (multi-tab safe)
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});
 export const auth = getAuth(app);
