@@ -824,7 +824,7 @@ async function refreshCalendar() {
       }
     } catch {}
 
-    // Include user-toggled supplements for each day of the current month (modal only)
+    // Include user-toggled supplements for each day of the current month (show in grid and modal)
     try {
       const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
       for (const supp of rawSupplements) {
@@ -842,7 +842,7 @@ async function refreshCalendar() {
             date: ymd,
             color: supp.color || '#cccccc',
             times: timesArr,
-            hiddenInGrid: true
+            // visible in grid by default
           });
         }
       }

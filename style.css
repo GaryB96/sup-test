@@ -197,7 +197,23 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 
 .day-modal-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .day-modal-list .supplement { font-size: 0.95rem; padding: 6px 8px; border-radius: 6px; color:#fff; }
-.day-section-title{ margin-top: 8px; font-weight: 800; font-size: .95rem; color: #111827; }
+.day-section-title{
+  margin-top: 10px;
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  display: inline-block;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: .95rem;
+  background: #eef2ff;   /* indigo-50 */
+  color: #1e293b;        /* slate-800 */
+  border: 1px solid #c7d2fe; /* indigo-200 */
+}
+.theme-dark .day-section-title{
+  background: #111827;   /* gray-900 */
+  color: #e5e7eb;        /* gray-200 */
+  border-color: #374151; /* gray-700 */
+}
 
 /* === Page Title (top-right) === */
 .page-title-bar{ display:flex; justify-content:flex-end; align-items:flex-start; margin: 2px 0 12px; }
