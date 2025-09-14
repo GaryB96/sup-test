@@ -133,42 +133,7 @@ if (_isToday) {
           list.appendChild(item);
         });
       }
-      // Add action to quickly add a supplement for this date (header, right of date)
-      try {
-        const header = modal.querySelector('.modal-header') || modal;
-        const closeBtn = modal.querySelector('#closeDayBtn');
-        let addBtn = header.querySelector('#addDayHeaderBtn');
-        if (!addBtn) {
-          addBtn = document.createElement('button');
-          addBtn.id = 'addDayHeaderBtn';
-          addBtn.type = 'button';
-          addBtn.className = 'add-day-btn';
-          addBtn.textContent = 'Add to day';
-          if (closeBtn && closeBtn.parentElement === header) {
-            header.insertBefore(addBtn, closeBtn);
-          } else {
-            header.appendChild(addBtn);
-          }
-        }
-        // Always rebind the click to ensure correct date
-        addBtn.onclick = (e) => {
-          e.stopPropagation();
-          const openBtn = document.getElementById('addSupplementBtn');
-          if (openBtn) openBtn.click();
-          setTimeout(() => {
-            const form = document.getElementById('supplementModalForm') || document.querySelector('#supplementModal form');
-            if (!form) return;
-            const start = form.querySelector('#suppCycleStart');
-            const wrap = form.querySelector('#suppCycleStartWrap');
-            const chk  = form.querySelector('#suppCycleChk');
-            if (start) start.value = ymd;
-            if (wrap) wrap.classList.remove('hidden','is-hidden');
-            if (chk && !chk.checked) {
-              wrap && wrap.classList.remove('hidden','is-hidden');
-            }
-          }, 100);
-        };
-      } catch {}
+      // (Removed) Add-to-day header button
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
     } catch (e) { /* noop */ }
