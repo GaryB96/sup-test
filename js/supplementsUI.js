@@ -516,28 +516,31 @@ if (onDays > 0 || offDays > 0) {
         }
       } catch {}
 
-      // Inline 'Show in calendar' toggle for large cards
+      // Inline 'Show in calendar' toggle for large cards — hidden when on a cycle
       try {
-        const calRow = document.createElement('div');
-        calRow.className = 'toggle cal-toggle';
-        const calCb2 = document.createElement('input');
-        calCb2.type = 'checkbox';
-        calCb2.className = 'toggle-input';
-        calCb2.checked = !!supplement.showOnCalendar;
-        calCb2.setAttribute('aria-label', 'Show this supplement in calendar');
-        calCb2.addEventListener('change', async ()=>{
-          try {
-            if (!currentUser?.uid || !supplement?.id) return;
-            await updateSupplement(currentUser.uid, supplement.id, { showOnCalendar: !!calCb2.checked });
-            try { supplement.showOnCalendar = !!calCb2.checked; } catch(_){ }
-            if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
-          } catch(e){ console.error('[showOnCalendar] failed', e); }
-        });
-        const calLab = document.createElement('span');
-        calLab.className = 'toggle-label';
-        calLab.textContent = 'Show in calendar';
-        calRow.append(calCb2, calLab);
-        children.push(calRow);
+        const hasCycle = !!(supplement && supplement.cycle && ((Number(supplement.cycle.on)||0) > 0 || (Number(supplement.cycle.off)||0) > 0));
+        if (!hasCycle) {
+          const calRow = document.createElement('div');
+          calRow.className = 'toggle cal-toggle';
+          const calCb2 = document.createElement('input');
+          calCb2.type = 'checkbox';
+          calCb2.className = 'toggle-input';
+          calCb2.checked = !!supplement.showOnCalendar;
+          calCb2.setAttribute('aria-label', 'Show this supplement in calendar');
+          calCb2.addEventListener('change', async ()=>{
+            try {
+              if (!currentUser?.uid || !supplement?.id) return;
+              await updateSupplement(currentUser.uid, supplement.id, { showOnCalendar: !!calCb2.checked });
+              try { supplement.showOnCalendar = !!calCb2.checked; } catch(_){ }
+              if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
+            } catch(e){ console.error('[showOnCalendar] failed', e); }
+          });
+          const calLab = document.createElement('span');
+          calLab.className = 'toggle-label';
+          calLab.textContent = 'Show in calendar';
+          calRow.append(calCb2, calLab);
+          children.push(calRow);
+        }
       } catch {}
     }
     // Actions or menu depending on size
@@ -584,27 +587,33 @@ if (onDays > 0 || offDays > 0) {
         toggleItem.append(menuCb, txt);
         menu.appendChild(toggleItem);
 
-        // Show in calendar toggle (menu)
-        const calToggle = document.createElement('label');
-        calToggle.className = 'menu-item menu-toggle';
-        const calCb = document.createElement('input');
-        calCb.type = 'checkbox';
-        calCb.setAttribute('role','menuitemcheckbox');
-        calCb.setAttribute('aria-checked', String(!!supplement.showOnCalendar));
-        calCb.checked = !!supplement.showOnCalendar;
-        calCb.addEventListener('change', async ()=>{
+        // Show in calendar toggle (menu) — hide when on a cycle
+        (function(){
           try {
-            if (!currentUser?.uid || !supplement?.id) return;
-            await updateSupplement(currentUser.uid, supplement.id, { showOnCalendar: !!calCb.checked });
-            try { supplement.showOnCalendar = !!calCb.checked; } catch(_){ }
-            try { calCb.setAttribute('aria-checked', String(!!calCb.checked)); } catch {}
-            if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
-          } catch(e){ console.error('[showOnCalendar] failed', e); }
-        });
-        const calTxt = document.createElement('span');
-        calTxt.textContent = 'Show in calendar';
-        calToggle.append(calCb, calTxt);
-        menu.appendChild(calToggle);
+            const hasCycle = !!(supplement && supplement.cycle && ((Number(supplement.cycle.on)||0) > 0 || (Number(supplement.cycle.off)||0) > 0));
+            if (hasCycle) return;
+            const calToggle = document.createElement('label');
+            calToggle.className = 'menu-item menu-toggle';
+            const calCb = document.createElement('input');
+            calCb.type = 'checkbox';
+            calCb.setAttribute('role','menuitemcheckbox');
+            calCb.setAttribute('aria-checked', String(!!supplement.showOnCalendar));
+            calCb.checked = !!supplement.showOnCalendar;
+            calCb.addEventListener('change', async ()=>{
+              try {
+                if (!currentUser?.uid || !supplement?.id) return;
+                await updateSupplement(currentUser.uid, supplement.id, { showOnCalendar: !!calCb.checked });
+                try { supplement.showOnCalendar = !!calCb.checked; } catch(_){ }
+                try { calCb.setAttribute('aria-checked', String(!!calCb.checked)); } catch {}
+                if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
+              } catch(e){ console.error('[showOnCalendar] failed', e); }
+            });
+            const calTxt = document.createElement('span');
+            calTxt.textContent = 'Show in calendar';
+            calToggle.append(calCb, calTxt);
+            menu.appendChild(calToggle);
+          } catch {}
+        })();
 
         // Edit/Delete items in menu
         const menuEdit = document.createElement('button');

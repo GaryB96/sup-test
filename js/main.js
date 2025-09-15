@@ -829,6 +829,11 @@ async function refreshCalendar() {
       const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
       for (const supp of rawSupplements) {
         if (!supp || !supp.showOnCalendar) continue;
+        // Skip if this supplement is on a cycle; cycles already appear on the calendar
+        try {
+          const hasCycle = !!(supp && supp.cycle && ((Number(supp.cycle.on)||0) > 0 || (Number(supp.cycle.off)||0) > 0));
+          if (hasCycle) continue;
+        } catch {}
         const timesArr = Array.isArray(supp?.times) ? supp.times
                        : (Array.isArray(supp?.time) ? supp.time
                           : (typeof supp?.time === 'string' && supp.time ? [supp.time] : []));
