@@ -217,8 +217,8 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
   border-radius: 6px;
   font-weight: 800;
   font-size: .95rem;
-  background: #eef2ff;   /* indigo-50 */
-  color: #1e293b;        /* slate-800 */
+  background: #0b1220;   /* indigo-50 */
+  color: #22c55e;        /* slate-800 */
   border: 1px solid #c7d2fe; /* indigo-200 */
 }
 .theme-dark .day-section-title{
