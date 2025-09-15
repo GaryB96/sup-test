@@ -811,7 +811,8 @@ body:not(.logged-in) #accountActions { display: none; }
 #sidebar .banner-logo {
   position: absolute;
   bottom: 10%;
-  left: -4%;
+  left: 50%;                 /* center horizontally */
+  transform: translateX(-50%);
   height: auto;
   display: block;
   max-width: 80%;
