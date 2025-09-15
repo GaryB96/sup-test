@@ -196,7 +196,19 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 }
 
 .day-modal-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-.day-modal-list .supplement { font-size: 0.95rem; padding: 6px 8px; border-radius: 6px; color:#fff; }
+.day-modal-list .supplement {
+  font-size: 0.95rem;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color:#fff;
+  /* Only as wide as the text (not full row) */
+  display: inline-block;
+  align-self: flex-start;    /* prevent flex column from stretching it */
+  max-width: 100%;
+  white-space: nowrap;       /* keep it to a single line */
+  overflow: hidden;          /* clip overflow */
+  text-overflow: ellipsis;   /* show ellipsis if too long */
+}
 .day-section-title{
   margin-top: 10px;
   margin-bottom: 6px;
