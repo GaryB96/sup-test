@@ -124,7 +124,17 @@
     return null;
   }
 
-  function buildICS(boundaries, calendarName) {
+  async function fetchToggleEvents() {
+    const start = startOfTomorrowUTC();
+    const end = oneYearLaterUTC(start);
+    const startISO = start.toISOString().slice(0, 10);
+    const endISO = end.toISOString().slice(0, 10);
+
+    if (typeof window.getToggleEventsRange === 'function') return await window.getToggleEventsRange(startISO, endISO);
+    return [];
+  }
+
+  function buildICS(events, calendarName) {
     const lines = [];
     const now = new Date();
     const dtstamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
@@ -136,47 +146,40 @@
       `X-WR-CALNAME:${esc(calendarName)}`
     );
 
-    boundaries.forEach((b, idx) => {
-      // We create an all-day reminder on the day BEFORE the boundary
-      const boundary = new Date(b.date + 'T00:00:00Z');
-      boundary.setUTCDate(boundary.getUTCDate() - 1);
-      const dayBeforeISO = boundary.toISOString().slice(0, 10);
-      const dayAfterISO  = plusDaysISO(dayBeforeISO, 1); // DTEND is end-exclusive
-
-      const uid = `noty-${idx}-${dayBeforeISO}@yourapp`;
-     // Try to extract supplement name from boundary title if present
-let suppName = '';
-if (b.title) {
-  // Often titles look like "Creatine: ON begins tomorrow"
-  suppName = b.title.split(':')[0].trim();
-}
-
-// Build a nicer message
-let summary;
-if (b.type === 'begin') {
-  summary = suppName
-    ? `Your ${suppName} cycle begins tomorrow`
-    : 'Your cycle begins tomorrow';
-} else if (b.type === 'end') {
-  summary = suppName
-    ? `${suppName} cycle ends tomorrow`
-    : 'Cycle ends tomorrow';
-} else {
-  // Fallback to whatever title exists
-  summary = b.title || 'Cycle reminder';
-}
-
-lines.push(
-  'BEGIN:VEVENT',
-  `UID:${uid}`,
-  `DTSTAMP:${dtstamp}`,
-  `DTSTART;VALUE=DATE:${fmtYMD(dayBeforeISO)}`,
-  `DTEND;VALUE=DATE:${fmtYMD(dayAfterISO)}`,
-  `SUMMARY:${esc(summary)}`,
-  'TRANSP:TRANSPARENT',
-  'END:VEVENT'
-);
-
+    events.forEach((ev, idx) => {
+      if (!ev || !ev.date) return;
+      let icsStart = ev.date;
+      let summary = '';
+      if (ev.type === 'toggle') {
+        const label = Array.isArray(ev.times) && ev.times.length ? ` — ${ev.times.join('/')}` : '';
+        summary = ev.name ? `Take: ${ev.name}${label}` : 'Supplement';
+      } else {
+        // boundary reminders: day BEFORE
+        const boundary = new Date(ev.date + 'T00:00:00Z');
+        boundary.setUTCDate(boundary.getUTCDate() - 1);
+        icsStart = boundary.toISOString().slice(0, 10);
+        let suppName = '';
+        if (ev.title) { suppName = ev.title.split(':')[0].trim(); }
+        if (ev.type === 'begin') {
+          summary = suppName ? `Your ${suppName} cycle begins tomorrow` : 'Your cycle begins tomorrow';
+        } else if (ev.type === 'end') {
+          summary = suppName ? `${suppName} cycle ends tomorrow` : 'Cycle ends tomorrow';
+        } else {
+          summary = ev.title || 'Cycle reminder';
+        }
+      }
+      const dayAfterISO  = plusDaysISO(icsStart, 1);
+      const uid = `evt-${idx}-${icsStart}@yourapp`;
+      lines.push(
+        'BEGIN:VEVENT',
+        `UID:${uid}`,
+        `DTSTAMP:${dtstamp}`,
+        `DTSTART;VALUE=DATE:${fmtYMD(icsStart)}`,
+        `DTEND;VALUE=DATE:${fmtYMD(dayAfterISO)}`,
+        `SUMMARY:${esc(summary)}`,
+        'TRANSP:TRANSPARENT',
+        'END:VEVENT'
+      );
     });
 
     lines.push('END:VCALENDAR');
@@ -191,17 +194,20 @@ function handleICS() {
     const t = btn.textContent;
     btn.textContent = 'Building .ics…';
     try {
-      const boundaries = await fetchCycleBoundaries();
-      if (!Array.isArray(boundaries) || boundaries.length === 0) {
-        alert('No cycle data available to build the calendar. Make sure your app provides cycle boundaries.');
-        return;
-      }
-      const ics = buildICS(boundaries, 'Cycle Notifications (Next Year)');
+      const [boundaries, toggles] = await Promise.all([
+        fetchCycleBoundaries(),
+        fetchToggleEvents()
+      ]);
+      const events = [];
+      if (Array.isArray(boundaries)) events.push(...boundaries);
+      if (Array.isArray(toggles))    events.push(...toggles);
+      if (!events.length) { alert('No data available to build the calendar.'); return; }
+      const ics = buildICS(events, 'Supplements & Cycles (Next Year)');
       const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'cycle-notifications-next-year.ics';
+      a.download = 'supplements-next-year.ics';
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -218,13 +224,7 @@ function handleICS() {
     }
   });
 
-  if (
-    !window.getCycleBoundaries &&
-    !window.getCyclesForNextYear &&
-    !Array.isArray(window.__CYCLE_BOUNDARIES__)
-  ) {
-    btn.title = 'Requires cycle data from the app to generate events.';
-  }
+  // Optional: we can’t fully validate availability ahead of time
 }
 
 

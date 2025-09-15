@@ -353,6 +353,37 @@ window.getCycleBoundaries = async function(startISO, endISO) {
   return out;
 };
 
+// Provide toggled daily events for ICS export between [startISO, endISO]
+window.getToggleEventsRange = async function(startISO, endISO) {
+  try {
+    if (!currentUser) return [];
+    const start = new Date(startISO + 'T00:00:00Z');
+    const end   = new Date(endISO   + 'T00:00:00Z');
+    if (!(start instanceof Date) || !(end instanceof Date)) return [];
+    const supps = await fetchSupplements(currentUser.uid);
+    const out = [];
+    for (const s of supps) {
+      try {
+        if (!s || !s.showOnCalendar) continue;
+        const hasCycle = !!(s && s.cycle && ((Number(s.cycle.on)||0) > 0 || (Number(s.cycle.off)||0) > 0));
+        if (hasCycle) continue; // cycles already handled separately
+        const name = s.name || 'Supplement';
+        const timesArr = Array.isArray(s?.times) ? s.times
+                         : (Array.isArray(s?.time) ? s.time
+                            : (typeof s?.time === 'string' && s.time ? [s.time] : []));
+        // walk day by day
+        for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+          const y = d.getUTCFullYear();
+          const m = String(d.getUTCMonth()+1).padStart(2,'0');
+          const dd= String(d.getUTCDate()).padStart(2,'0');
+          out.push({ date: `${y}-${m}-${dd}`, type: 'toggle', name, times: timesArr });
+        }
+      } catch {}
+    }
+    return out;
+  } catch { return []; }
+};
+
 // --- Delete Account: modal helpers ---
 function openConfirmDeleteModal() {
   const modal = document.getElementById("confirmDeleteModal");
