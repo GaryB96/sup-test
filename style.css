@@ -237,14 +237,16 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 
 /* Order Reminders modal */
 #orderRemindersModal .order-list{ display:flex; flex-direction: column; gap: 10px; width: 100%; }
-#orderRemindersModal .order-head{ display:flex; justify-content: space-between; align-items: center; gap: 12px; margin: 4px 0 6px; font-weight: 800; color: var(--muted, #64748b); }
-#orderRemindersModal .order-name-h{ }
-#orderRemindersModal .order-date-h{ }
-#orderRemindersModal .order-row{ display:flex; align-items:center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border, #1e293b); }
+#orderRemindersModal .modal-body{ display:flex; flex-direction: column; align-items: stretch; }
+#orderRemindersModal .order-head{ display:grid; grid-template-columns: 1fr 1fr; align-items:center; gap: 12px; margin: 4px 0 6px; font-weight: 800; color: var(--muted, #64748b); border-bottom: 1px solid var(--border, #1e293b); padding-bottom: 6px; }
+#orderRemindersModal .order-name-h{ text-align:left; }
+#orderRemindersModal .order-date-h{ text-align:right; }
+#orderRemindersModal .order-row{ display:grid; grid-template-columns: 1fr 1fr; align-items:center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border, #1e293b); }
 #orderRemindersModal .order-name{ font-weight: 700; }
-#orderRemindersModal .order-controls{ display:flex; align-items:center; gap: 10px; }
-#orderRemindersModal input[type="date"]{ padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border, #1e293b); background: #fff; color: #111; }
+#orderRemindersModal .order-controls{ display:flex; align-items:center; gap: 10px; justify-content: flex-end; }
+#orderRemindersModal input[type="date"]{ padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border, #1e293b); background: #fff; color: #111; min-width: 170px; }
 .theme-dark #orderRemindersModal input[type="date"]{ background:#0b1220; color:#e2e8f0; border-color:#1e293b; }
+#orderRemindersModal .order-controls label{ display:none; }
 #orderRemindersModal .order-hint{ font-size: 12px; color: var(--muted, #64748b); }
 
 /* === Page Title (top-right) === */
