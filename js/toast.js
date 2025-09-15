@@ -159,8 +159,8 @@ export function showInfoPopover(message, opts = {}) {
     pop.classList.remove('show');
     pop.addEventListener('transitionend', () => pop.remove(), { once: true });
     document.removeEventListener('mousedown', onOutside, true);
-    window.removeEventListener('resize', position);
-    window.removeEventListener('scroll', position, true);
+    window.removeEventListener('resize', positionPop);
+    window.removeEventListener('scroll', positionPop, true);
     try {
       if (anchor) {
         anchor.dispatchEvent(new CustomEvent('infoPopoverClosed', { bubbles: true }));
