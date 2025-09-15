@@ -1242,11 +1242,9 @@ form.addEventListener("submit", async (e) => {
               if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
             } catch(e){ console.error('Failed to update run-out date', e); }
           });
-          const hint = document.createElement('div'); hint.className='order-hint'; hint.textContent = 'Reminder appears 7 days before run-out date.';
-          controls.append(label, input);
-          row.append(name, controls);
-          list.appendChild(row);
-          list.appendChild(hint);
+        controls.append(label, input);
+        row.append(name, controls);
+        list.appendChild(row);
         });
       } catch(e) { console.error('Failed to render order reminders', e); }
     };

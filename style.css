@@ -237,6 +237,9 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 
 /* Order Reminders modal */
 #orderRemindersModal .order-list{ display:flex; flex-direction: column; gap: 10px; width: 100%; }
+#orderRemindersModal .order-head{ display:flex; justify-content: space-between; align-items: center; gap: 12px; margin: 4px 0 6px; font-weight: 800; color: var(--muted, #64748b); }
+#orderRemindersModal .order-name-h{ }
+#orderRemindersModal .order-date-h{ }
 #orderRemindersModal .order-row{ display:flex; align-items:center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border, #1e293b); }
 #orderRemindersModal .order-name{ font-weight: 700; }
 #orderRemindersModal .order-controls{ display:flex; align-items:center; gap: 10px; }
