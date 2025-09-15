@@ -1,5 +1,5 @@
 // Basic offline-first service worker
-const CACHE_NAME = 'supp-tracker-v3';
+const CACHE_NAME = 'supp-tracker-v4';
 const CORE_ASSETS = [
   './',
   'index.html',

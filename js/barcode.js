@@ -504,12 +504,14 @@ async function makeBarcodeDetector() {
   async function ensureZXingLoaded() {
     var ZX = (typeof window !== 'undefined') ? (window.ZXingBrowser || window.ZXing) : null;
     if (ZX && ZX.BrowserMultiFormatReader) return ZX;
-    try { console.info('[barcode] attempting to load @zxing/browser UMD'); } catch(_){}
-    try { await loadScript('https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js', 7000); } catch (e1) { try { console.warn('[barcode] load @zxing/browser failed', e1); } catch(_){} }
-    ZX = (typeof window !== 'undefined') ? (window.ZXingBrowser || window.ZXing) : null;
-    if (ZX && ZX.BrowserMultiFormatReader) return ZX;
+    // Prefer library UMD which is stable on CDN
     try { console.info('[barcode] attempting to load @zxing/library UMD'); } catch(_){}
     try { await loadScript('https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js', 7000); } catch (e2) { try { console.warn('[barcode] load @zxing/library failed', e2); } catch(_){} }
+    ZX = (typeof window !== 'undefined') ? (window.ZXingBrowser || window.ZXing) : null;
+    if (ZX && ZX.BrowserMultiFormatReader) return ZX;
+    // Fallback to @zxing/browser if available
+    try { console.info('[barcode] attempting to load @zxing/browser UMD'); } catch(_){}
+    try { await loadScript('https://cdn.jsdelivr.net/npm/@zxing/browser@0.4.1/umd/index.min.js', 7000); } catch (e1) { try { console.warn('[barcode] load @zxing/browser failed', e1); } catch(_){} }
     ZX = (typeof window !== 'undefined') ? (window.ZXingBrowser || window.ZXing) : null;
     return (ZX && ZX.BrowserMultiFormatReader) ? ZX : null;
   }
