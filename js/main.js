@@ -75,7 +75,6 @@ async function openNotificationsModal() {
   const emailEl = el("notifyEmailInput"); if (emailEl) emailEl.value = (auth.currentUser?.email || "");
   const tzEl = el("timezoneSelect"); if (tzEl) tzEl.value = guessTZ();
   try {
-    try { const cal = document.getElementById("calendar"); if (cal) cal.classList.add('is-loading'); } catch {}
     const ref = doc(db, `users/${currentUser.uid}/settings/notifications`);
     const snap = await getDoc(ref);
     if (snap.exists()) {
@@ -86,7 +85,10 @@ async function openNotificationsModal() {
     }
   } catch (e) { console.error("Failed to load notif settings", e); }
 }
-function closeNotificationsModal(){ el("notificationsModal")?.classList.add("hidden"); }
+function closeNotificationsModal(){
+  el("notificationsModal")?.classList.add("hidden");
+  try { const cal = document.getElementById("calendar"); if (cal) cal.classList.remove('is-loading'); } catch {}
+}
 
 // simple debounce
 function debounce(fn, wait){ let t; return function(...args){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,args), wait); }; }
