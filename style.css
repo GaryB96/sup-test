@@ -238,9 +238,9 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
 /* Order Reminders modal */
 #orderRemindersModal .order-list{ display:flex; flex-direction: column; gap: 10px; width: 100%; }
 #orderRemindersModal .modal-body{ display:flex; flex-direction: column; align-items: stretch; }
-#orderRemindersModal .order-head{ display:grid; grid-template-columns: 1fr 1fr; align-items:center; gap: 12px; margin: 4px 0 6px; font-weight: 800; color: var(--muted, #64748b); border-bottom: 1px solid var(--border, #1e293b); padding-bottom: 6px; }
+#orderRemindersModal .order-head{ display:grid; grid-template-columns: 1fr 1fr; align-items:center; gap: 12px; margin: 4px 0 6px; font-weight: 400; color: var(--muted, #64748b); border-bottom: 1px solid var(--border, #1e293b); padding-bottom: 6px; }
 #orderRemindersModal .order-name-h{ text-align:left; }
-#orderRemindersModal .order-date-h{ text-align:right; }
+#orderRemindersModal .order-date-h{ text-align:Center; }
 #orderRemindersModal .order-row{ display:grid; grid-template-columns: 1fr 1fr; align-items:center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border, #1e293b); }
 #orderRemindersModal .order-name{ font-weight: 700; }
 #orderRemindersModal .order-controls{ display:flex; align-items:center; gap: 10px; justify-content: flex-end; }
