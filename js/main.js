@@ -1209,59 +1209,72 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// Order Reminders modal
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById('orderRemindersBtn');
-  const modal = document.getElementById('orderRemindersModal');
-  const list = document.getElementById('orderRemindersList');
-  const closeBtn = document.getElementById('closeOrderRemindersBtn');
-  if (!btn || !modal || !list) return;
-
-  function closeModal(){ modal.classList.add('hidden'); document.body.style.overflow = ''; }
-  function openModal(){ modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; renderList(); }
-
-  async function renderList(){
-    try {
-      while (list.firstChild) list.removeChild(list.firstChild);
-      if (!currentUser || !currentUser.uid) return;
-      const supps = await fetchSupplements(currentUser.uid);
-      const rows = supps.filter(s => s && s.orderReminder);
-      if (!rows.length) {
-        const p = document.createElement('p'); p.className='muted'; p.textContent = 'No order reminders enabled.'; list.appendChild(p); return;
-      }
-      rows.forEach((s) => {
-        const row = document.createElement('div'); row.className = 'order-row';
-        const name = document.createElement('div'); name.className='order-name'; name.textContent = s.name || 'Supplement';
-        const controls = document.createElement('div'); controls.className='order-controls';
-        const label = document.createElement('label'); label.textContent = 'Run-out date:'; label.style.marginRight='4px';
-        const input = document.createElement('input'); input.type='date';
-        const computedEnd = _computeEndDate(s);
-        const override = s && s.orderEndDate ? new Date(s.orderEndDate) : null;
-        const endDate = override || computedEnd;
-        if (endDate && !isNaN(endDate)) {
-          const y = endDate.getFullYear(); const m = String(endDate.getMonth()+1).padStart(2,'0'); const d = String(endDate.getDate()).padStart(2,'0');
-          input.value = `${y}-${m}-${d}`;
+// Order Reminders modal (robust binder)
+(function initOrderReminders(){
+  let bound = false;
+  function renderListFactory(modal, list){
+    return async function renderList(){
+      try {
+        while (list.firstChild) list.removeChild(list.firstChild);
+        if (!currentUser || !currentUser.uid) return;
+        const supps = await fetchSupplements(currentUser.uid);
+        const rows = supps.filter(s => s && s.orderReminder);
+        if (!rows.length) {
+          const p = document.createElement('p'); p.className='muted'; p.textContent = 'No order reminders enabled.'; list.appendChild(p); return;
         }
-        input.addEventListener('change', async ()=>{
-          try {
-            const val = input.value && input.value.match(/^\d{4}-\d{2}-\d{2}$/) ? input.value : null;
-            await updateSupplement(currentUser.uid, s.id, { orderEndDate: val });
-            if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
-          } catch(e){ console.error('Failed to update run-out date', e); }
+        rows.forEach((s) => {
+          const row = document.createElement('div'); row.className = 'order-row';
+          const name = document.createElement('div'); name.className='order-name'; name.textContent = s.name || 'Supplement';
+          const controls = document.createElement('div'); controls.className='order-controls';
+          const label = document.createElement('label'); label.textContent = 'Run-out date:'; label.style.marginRight='4px';
+          const input = document.createElement('input'); input.type='date';
+          const computedEnd = _computeEndDate(s);
+          const override = s && s.orderEndDate ? new Date(s.orderEndDate) : null;
+          const endDate = override || computedEnd;
+          if (endDate && !isNaN(endDate)) {
+            const y = endDate.getFullYear(); const m = String(endDate.getMonth()+1).padStart(2,'0'); const d = String(endDate.getDate()).padStart(2,'0');
+            input.value = `${y}-${m}-${d}`;
+          }
+          input.addEventListener('change', async ()=>{
+            try {
+              const val = input.value && input.value.match(/^\d{4}-\d{2}-\d{2}$/) ? input.value : null;
+              await updateSupplement(currentUser.uid, s.id, { orderEndDate: val });
+              if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
+            } catch(e){ console.error('Failed to update run-out date', e); }
+          });
+          const hint = document.createElement('div'); hint.className='order-hint'; hint.textContent = 'Reminder appears 7 days before run-out date.';
+          controls.append(label, input);
+          row.append(name, controls);
+          list.appendChild(row);
+          list.appendChild(hint);
         });
-        const hint = document.createElement('div'); hint.className='order-hint'; hint.textContent = 'Reminder appears 7 days before run-out date.';
-        controls.append(label, input);
-        row.append(name, controls);
-        list.appendChild(row);
-        list.appendChild(hint);
-      });
-    } catch(e) { console.error('Failed to render order reminders', e); }
+      } catch(e) { console.error('Failed to render order reminders', e); }
+    };
   }
-
-  btn.addEventListener('click', (e)=>{ e.preventDefault(); openModal(); });
-  if (closeBtn) closeBtn.addEventListener('click', closeModal);
-  modal.addEventListener('click', (e)=>{ if (e.target === modal) closeModal(); });
-});
+  function tryBind(){
+    if (bound) return true;
+    const btn = document.getElementById('orderRemindersBtn');
+    const modal = document.getElementById('orderRemindersModal');
+    const list = document.getElementById('orderRemindersList');
+    const closeBtn = document.getElementById('closeOrderRemindersBtn');
+    if (!btn || !modal || !list) return false;
+    const renderList = renderListFactory(modal, list);
+    const closeModal = ()=>{ modal.classList.add('hidden'); document.body.style.overflow=''; };
+    const openModal  = ()=>{ modal.classList.remove('hidden'); document.body.style.overflow='hidden'; renderList(); };
+    btn.addEventListener('click', (e)=>{ e.preventDefault(); openModal(); });
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e)=>{ if (e.target === modal) closeModal(); });
+    bound = true;
+    return true;
+  }
+  if (!tryBind()) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', tryBind, { once: true });
+    }
+    const mo = new MutationObserver(() => { if (tryBind()) mo.disconnect(); });
+    mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+  }
+})();
 // Expose a helper to mark a supplement as reordered (turn off reminders)
 window.markSupplementReordered = async function markSupplementReordered(id) {
   try {
