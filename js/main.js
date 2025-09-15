@@ -842,7 +842,7 @@ async function refreshCalendar() {
             date: ymd,
             color: supp.color || '#cccccc',
             times: timesArr,
-            // visible in grid by default
+            type: 'userToggle'
           });
         }
       }

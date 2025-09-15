@@ -125,7 +125,28 @@ if (_isToday) {
           const item = document.createElement('div');
           item.className = 'supplement';
           item.textContent = s.name;
-          if (s.color) { item.style.backgroundColor = s.color; item.style.color = '#fff'; }
+          // Choose a more contrasting style for user-toggled entries
+          try {
+            let bg = s && s.color ? s.color : null;
+            if (s && s.type === 'userToggle') {
+              if (!bg || bg.toLowerCase() === '#cccccc') bg = '#2563eb';
+            }
+            if (!bg) {
+              if (typeof window !== 'undefined' && typeof window.pickColor === 'function') {
+                bg = window.pickColor(s && s.name);
+              } else {
+                bg = '#2563eb';
+              }
+            }
+            item.style.backgroundColor = bg;
+            // Compute readable text color (YIQ)
+            const hex = String(bg).replace('#','');
+            const r = parseInt(hex.substring(0,2),16);
+            const g = parseInt(hex.substring(2,4),16);
+            const b = parseInt(hex.substring(4,6),16);
+            const yiq = ((r*299)+(g*587)+(b*114))/1000;
+            item.style.color = yiq >= 150 ? '#111827' : '#fff';
+          } catch(_) { item.style.color = '#fff'; }
           // Reorder CTA for reminder items
           if (s && s.type === 'orderReminder' && s.id) {
             const btn = document.createElement('button');
