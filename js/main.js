@@ -1263,12 +1263,13 @@ form.addEventListener("submit", async (e) => {
     const openModal  = ()=>{ modal.classList.remove('hidden'); document.body.style.overflow='hidden'; renderList(); };
     btn.addEventListener('click', async (e)=>{
       e.preventDefault();
+      const anchor = e.currentTarget;
       try {
         if (!currentUser || !currentUser.uid) { try { showToast('Please sign in to view order reminders.', 'info', 4000); } catch {} return; }
         const supps = await fetchSupplements(currentUser.uid);
         const rows = (supps || []).filter(s => s && s.orderReminder);
         if (!rows.length) {
-          try { showInfoPopover("No order reminders enabled. Turn on 'Order reminder' in a supplement to use this view.", { type: 'info', timeout: 5000, anchor: e.currentTarget, position: 'right' }); } catch {}
+          try { showInfoPopover("No order reminders enabled. Turn on 'Order reminder' in a supplement to use this view.", { type: 'info', timeout: 5000, anchor, position: 'right' }); } catch {}
           return;
         }
       } catch {}
