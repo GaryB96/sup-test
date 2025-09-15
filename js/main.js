@@ -1261,7 +1261,19 @@ form.addEventListener("submit", async (e) => {
     const renderList = renderListFactory(modal, list);
     const closeModal = ()=>{ modal.classList.add('hidden'); document.body.style.overflow=''; };
     const openModal  = ()=>{ modal.classList.remove('hidden'); document.body.style.overflow='hidden'; renderList(); };
-    btn.addEventListener('click', (e)=>{ e.preventDefault(); openModal(); });
+    btn.addEventListener('click', async (e)=>{
+      e.preventDefault();
+      try {
+        if (!currentUser || !currentUser.uid) { try { showToast('Please sign in to view order reminders.', 'info', 4000); } catch {} return; }
+        const supps = await fetchSupplements(currentUser.uid);
+        const rows = (supps || []).filter(s => s && s.orderReminder);
+        if (!rows.length) {
+          try { showToast("No order reminders enabled. Turn on 'Order reminder' in a supplement to use this view.", 'info', 5000); } catch {}
+          return;
+        }
+      } catch {}
+      openModal();
+    });
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     modal.addEventListener('click', (e)=>{ if (e.target === modal) closeModal(); });
     bound = true;
