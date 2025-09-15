@@ -227,6 +227,14 @@ form button[type="submit"]:hover { background: linear-gradient(90deg, #388e3c, #
   border-color: #374151; /* gray-700 */
 }
 
+/* Notifications modal: ICS range controls */
+#notificationsModal .noty-row{ display:flex; flex-direction: column; gap: 10px; }
+#notificationsModal #icsMonthsGroup{ display:flex; gap: 12px; align-items:center; flex-wrap: wrap; }
+#notificationsModal #icsMonthsGroup .ics-radio{ display:inline-flex; gap:6px; align-items:center; padding: 4px 8px; border-radius: 8px; background: color-mix(in oklab, #e5e7eb 60%, transparent); }
+.theme-dark #notificationsModal #icsMonthsGroup .ics-radio{ background: color-mix(in oklab, #374151 60%, transparent); }
+#notificationsModal #icsWarn{ min-height: 18px; }
+#notificationsModal #notificationsIcsBtn{ margin-top: 4px; align-self: flex-start; }
+
 /* === Page Title (top-right) === */
 .page-title-bar{ display:flex; justify-content:flex-end; align-items:flex-start; margin: 2px 0 12px; }
 .page-title{ position:relative; display:inline-block; padding: 8px 96px 18px 16px; border-radius: 14px; }

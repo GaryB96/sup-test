@@ -59,6 +59,26 @@
     if (!modal) return console.warn('Notifications modal not found');
     ensureModalStyles(modal);
     injectImportTip(modal);
+    // Update range label and wire radios
+    try {
+      (function(){
+        const fn = function(){
+          try {
+            const months = (function(){ const el = document.querySelector('input[name="icsMonths"]:checked'); const v = Number(el && el.value); return Number.isFinite(v) ? Math.max(1, Math.min(12, v)) : 12; })();
+            const start = startOfTomorrowUTC();
+            const end = addMonthsUTC(start, months);
+            const startISO = start.toISOString().slice(0, 10);
+            const endISO = end.toISOString().slice(0, 10);
+            const rangeEl = document.getElementById('icsRange');
+            if (rangeEl) rangeEl.textContent = `Range: ${startISO} → ${endISO} (${months} months)`;
+            const warn = document.getElementById('icsWarn');
+            if (warn) warn.textContent = months >= 12 ? 'Note: 12 months may take longer to import.' : '';
+          } catch {}
+        };
+        fn();
+        document.querySelectorAll('input[name="icsMonths"]').forEach((r)=>{ r.addEventListener('change', fn, { passive: true }); });
+      })();
+    } catch {}
     modal.classList.remove('hidden');
     modal.setAttribute('aria-hidden', 'false');
   }
@@ -97,6 +117,19 @@
     const t = new Date(d);
     t.setUTCFullYear(t.getUTCFullYear() + 1);
     return t;
+  }
+
+  function addMonthsUTC(d, months) {
+    const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+    t.setUTCMonth(t.getUTCMonth() + months);
+    return t;
+  }
+
+  function getSelectedMonths() {
+    const el = document.querySelector('input[name="icsMonths"]:checked');
+    const v = Number(el && el.value);
+    if (!Number.isFinite(v)) return 12;
+    return Math.max(1, Math.min(12, v));
   }
 
   // All-day formatting helpers (avoid times entirely)
@@ -153,6 +186,9 @@
       if (ev.type === 'toggle') {
         const label = Array.isArray(ev.times) && ev.times.length ? ` — ${ev.times.join('/')}` : '';
         summary = ev.name ? `Take: ${ev.name}${label}` : 'Supplement';
+      } else if (ev.type === 'orderReminder') {
+        // Keep the event on the given date
+        summary = ev.title || 'Order reminder';
       } else {
         // boundary reminders: day BEFORE
         const boundary = new Date(ev.date + 'T00:00:00Z');
@@ -194,20 +230,39 @@ function handleICS() {
     const t = btn.textContent;
     btn.textContent = 'Building .ics…';
     try {
-      const [boundaries, toggles] = await Promise.all([
-        fetchCycleBoundaries(),
-        fetchToggleEvents()
+      const months = getSelectedMonths();
+      const start = startOfTomorrowUTC();
+      const end = addMonthsUTC(start, months);
+      const startISO = start.toISOString().slice(0, 10);
+      const endISO = end.toISOString().slice(0, 10);
+
+      const [boundaries, toggles, reminders] = await Promise.all([
+        (typeof window.getCycleBoundaries === 'function') ? window.getCycleBoundaries(startISO, endISO) : Promise.resolve([]),
+        (typeof window.getToggleEventsRange === 'function') ? window.getToggleEventsRange(startISO, endISO) : Promise.resolve([]),
+        (typeof window.getOrderReminderEventsRange === 'function') ? window.getOrderReminderEventsRange(startISO, endISO) : Promise.resolve([])
       ]);
+      // Show import warning for very large exports
+      try {
+        const warn = document.getElementById('icsWarn');
+        if (warn) {
+          if (months >= 12 && Array.isArray(toggles) && toggles.length > 2000) {
+            warn.textContent = 'Warning: 12 months with many supplements may take a while to import.';
+          } else {
+            warn.textContent = '';
+          }
+        }
+      } catch {}
       const events = [];
       if (Array.isArray(boundaries)) events.push(...boundaries);
       if (Array.isArray(toggles))    events.push(...toggles);
+      if (Array.isArray(reminders))  events.push(...reminders);
       if (!events.length) { alert('No data available to build the calendar.'); return; }
-      const ics = buildICS(events, 'Supplements & Cycles (Next Year)');
+      const ics = buildICS(events, `Supplements & Cycles (${months} months)`);
       const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'supplements-next-year.ics';
+      a.download = `supplements-${months}m.ics`;
       document.body.appendChild(a);
       a.click();
       a.remove();

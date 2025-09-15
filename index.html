@@ -339,7 +339,14 @@
               Tip: create a <em>separate</em> calendar (e.g., “Supplements / Cycles”) before importing this file.
               That way you can toggle it on/off or delete it without touching your main calendar.
             </p>
-            <button id="notificationsIcsBtn">Download</button>
+            <div id="icsMonthsGroup" role="radiogroup" aria-label="Export range">
+              <label class="ics-radio"><input type="radio" name="icsMonths" value="3"> <span>3 months</span></label>
+              <label class="ics-radio"><input type="radio" name="icsMonths" value="6"> <span>6 months</span></label>
+              <label class="ics-radio"><input type="radio" name="icsMonths" value="12" checked> <span>12 months</span></label>
+            </div>
+            <div id="icsRange" class="muted small" aria-live="polite"></div>
+            <div id="icsWarn" class="muted small" aria-live="polite"></div>
+            <button id="notificationsIcsBtn" class="btn-primary">Download</button>
           </div>
           <div class="noty-actions"></div>
         </div>
@@ -471,7 +478,7 @@
         help.setAttribute('aria-expanded','true');
         // Show simple info popover (closes on outside click or X)
         showInfoPopover(
-          'The Cycle Calendar shows days you are ON for supplements with a cycle. Add a Start Date and On/Off days in the form to see colored entries. You can tap a day to view details.',
+          'The Cycle Calendar shows the days your supplements are ON/OFF a cycle. Add a Start Date under "Add a Supplement". If your supplement is not on a cycle, you can choose to add it to the calendar with the toggle on the summary card. You can tap a day to view details.',
           { type: 'info', anchor: help, timeout: 0 }
         );
         // Reset aria-expanded when the popover closes

@@ -384,6 +384,38 @@ window.getToggleEventsRange = async function(startISO, endISO) {
   } catch { return []; }
 };
 
+// Provide one-time order reminder events (7 days before last dose) within [startISO, endISO]
+window.getOrderReminderEventsRange = async function(startISO, endISO) {
+  try {
+    if (!currentUser) return [];
+    const start = new Date(startISO + 'T00:00:00');
+    const end   = new Date(endISO   + 'T23:59:59');
+    const supps = await fetchSupplements(currentUser.uid);
+    const out = [];
+    for (const s of supps) {
+      try {
+        if (!s || !s.orderReminder) continue;
+        // Compute reminder date using existing helper
+        const rDate = _computeOrderReminderDate(s);
+        if (!rDate) continue;
+        if (rDate >= start && rDate <= end) {
+          // local YYYY-MM-DD (toLocalYMD may exist; fallback inline)
+          let ymd;
+          try {
+            ymd = typeof toLocalYMD === 'function' ? toLocalYMD(rDate) : (
+              rDate.getFullYear() + '-' + String(rDate.getMonth()+1).padStart(2,'0') + '-' + String(rDate.getDate()).padStart(2,'0')
+            );
+          } catch {
+            ymd = rDate.toISOString().slice(0,10);
+          }
+          out.push({ date: ymd, type: 'orderReminder', title: `Order more: ${s.name || 'Supplement'}` });
+        }
+      } catch {}
+    }
+    return out;
+  } catch { return []; }
+};
+
 // --- Delete Account: modal helpers ---
 function openConfirmDeleteModal() {
   const modal = document.getElementById("confirmDeleteModal");
