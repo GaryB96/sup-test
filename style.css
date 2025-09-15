@@ -1073,6 +1073,12 @@ body.logged-in main { margin-left: 220px; }
   box-sizing: border-box;
   position: relative; /* allow top-right menu btn */
 }
+/* Leave room for the three‑dot menu so text doesn't sit underneath it */
+.supplement-box.has-menu{ padding-right: calc(var(--card-pad) + 36px); }
+.summary-container.size-compact .supplement-box.has-menu{ padding-right: calc(var(--card-pad) + 42px); }
+@media (max-width: 640px){
+  .supplement-box.has-menu{ padding-right: calc(var(--card-pad) + 44px); }
+}
 
 /* Optional: tidy action buttons inside cards */
 .supplement-box .actions { display:flex; gap:6px; margin-top:auto; }
