@@ -1,4 +1,4 @@
-import { showToast } from "./toast.js";
+import { showToast, showInfoPopover } from "./toast.js";
 import { login, signup, logout, deleteAccount, monitorAuthState, changePassword, resetPassword, resendVerification } from "./auth.js";
 import { renderCalendar } from "./calendar.js";
 import { fetchSupplements, addSupplement } from "./supplements.js";
@@ -1268,7 +1268,7 @@ form.addEventListener("submit", async (e) => {
         const supps = await fetchSupplements(currentUser.uid);
         const rows = (supps || []).filter(s => s && s.orderReminder);
         if (!rows.length) {
-          try { showToast("No order reminders enabled. Turn on 'Order reminder' in a supplement to use this view.", 'info', 5000); } catch {}
+          try { showInfoPopover("No order reminders enabled. Turn on 'Order reminder' in a supplement to use this view.", { type: 'info', timeout: 5000, anchor: e.currentTarget, position: 'right' }); } catch {}
           return;
         }
       } catch {}

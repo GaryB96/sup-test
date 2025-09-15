@@ -109,7 +109,7 @@ export function showConfirmToast(message, opts = {}) {
 
 // Info popover anchored to an element; closes with X, timeout, or outside click.
 export function showInfoPopover(message, opts = {}) {
-  const { type = 'info', timeout = 0, anchor = null } = opts || {};
+  const { type = 'info', timeout = 0, anchor = null, position = 'auto', offset = 10 } = opts || {};
   const pop = document.createElement('div');
   pop.className = `toast ${type}`;
   pop.classList.add('toast-popover');
@@ -122,15 +122,28 @@ export function showInfoPopover(message, opts = {}) {
   `;
   document.body.appendChild(pop);
 
-  const position = () => {
+  const positionPop = () => {
     try {
       if (!(anchor && anchor.getBoundingClientRect)) return;
       const rect = anchor.getBoundingClientRect();
       const tw = pop.offsetWidth || 240;
       const th = pop.offsetHeight || 64;
-      let left = Math.max(8, Math.min(window.innerWidth - tw - 8, rect.left + rect.width/2 - tw/2));
-      let top  = rect.top - th - 10;
-      if (top < 8) top = rect.bottom + 10; // place below if not enough space above
+      let left, top;
+      if (position === 'right') {
+        left = rect.right + offset;
+        top  = rect.top + (rect.height - th) / 2;
+      } else if (position === 'left') {
+        left = rect.left - tw - offset;
+        top  = rect.top + (rect.height - th) / 2;
+      } else {
+        // auto: above else below
+        left = rect.left + rect.width/2 - tw/2;
+        top  = rect.top - th - offset;
+        if (top < 8) top = rect.bottom + offset;
+      }
+      // clamp within viewport
+      left = Math.max(8, Math.min(window.innerWidth - tw - 8, left));
+      top  = Math.max(8, Math.min(window.innerHeight - th - 8, top));
       pop.style.position = 'fixed';
       pop.style.left = `${left}px`;
       pop.style.top  = `${top}px`;
@@ -138,7 +151,7 @@ export function showInfoPopover(message, opts = {}) {
   };
 
   requestAnimationFrame(() => {
-    position();
+    positionPop();
     pop.classList.add('show');
   });
 
@@ -159,8 +172,8 @@ export function showInfoPopover(message, opts = {}) {
   };
   pop.querySelector('.toast-close').addEventListener('click', close);
   document.addEventListener('mousedown', onOutside, true);
-  window.addEventListener('resize', position);
-  window.addEventListener('scroll', position, true);
+  window.addEventListener('resize', positionPop);
+  window.addEventListener('scroll', positionPop, true);
   if (timeout > 0) setTimeout(close, timeout);
   return { element: pop, close };
 }
