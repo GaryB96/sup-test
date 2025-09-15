@@ -323,10 +323,9 @@ body:not(.logged-in) #accountActions { display: none; }
   padding: 8px 23px;
   text-decoration: none;
   display: block;
-  border-style: solid;
-  border-block-style: none;
-  border-color: #22c55e;
+  border: none;
 }
+.dropdown-content a + a { border-top: 1px solid rgba(34,197,94,.35); }
 .dropdown-content a:hover { background:#105e2d; }
 .dropdown.show .dropdown-content { display: block; }
 /* Summary group headings */
@@ -795,11 +794,19 @@ body:not(.logged-in) #accountActions { display: none; }
 
 /* Place dropdown within sidebar */
 .sidebar .dropdown { position: relative; }
+/* Pop the dropdown to the right of the Account button */
 .sidebar .dropdown-content {
-  left: 0;
+  left: calc(100% + 8px);
   right: auto;
-  top: calc(100% + 6px);
+  top: 0;
 }
+/* Keep dropdown onscreen on very small widths */
+@media (max-width: 520px){
+  .sidebar .dropdown-content{ left: 0; top: calc(100% + 6px); }
+}
+
+/* Push the Account section to the bottom, above the logo */
+#accountDropdown{ margin-top: auto; margin-bottom: 64px; }
 
 #sidebar .banner-logo {
   position: absolute;
