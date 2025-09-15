@@ -804,6 +804,45 @@ function _computeOrderReminderDate(supp) {
   } catch { return null; }
 }
 
+// Compute the last expected dose date (end date) for a supplement
+function _computeEndDate(supp) {
+  try {
+    if (supp && supp.orderEndDate) {
+      const m = String(supp.orderEndDate).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    }
+    const servings = Number(supp && supp.servings);
+    const startStr = (supp && supp.startDate) ? String(supp.startDate) : '';
+    const timesArr = Array.isArray(supp?.times) ? supp.times : (Array.isArray(supp?.time) ? supp.time : (typeof supp?.time === 'string' && supp.time ? [supp.time] : []));
+    function parseDailyFromDosage(txt){ try { if (!txt) return null; const t = String(txt).toLowerCase(); const regs = [/(\d+(?:\.\d+)?)\s*(?:x|A-)\s*(?:per\s*day|\/\s*day|a\s*day|daily)?/,/(\d+)\s*(?:per\s*day|\/\s*day|a\s*day|daily)/,/take\s+(\d+)/,/(\d+)\s*(?:capsules?|tablets?|pills?)\s*(?:daily|per\s*day|a\s*day)/]; for (let r of regs){ const m = t.match(r); if (m && m[1]) return Math.max(1, Math.floor(Number(m[1]))); } return null; } catch { return null; } }
+    const parsedDaily = parseDailyFromDosage(supp && supp.dosage);
+    const perDay = (Number(supp && supp.dailyDose) || 0) || parsedDaily || timesArr.length || 1;
+    if (!servings || servings <= 0 || !startStr || perDay <= 0) return null;
+    const m = startStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+    const y = +m[1], mo = +m[2]-1, d = +m[3];
+    const start = new Date(y, mo, d);
+    start.setHours(0,0,0,0);
+    const needOnDays = Math.max(1, Math.ceil(servings / perDay));
+    let last = null;
+    if (supp && supp.cycle && (Number(supp.cycle.on)||0) + (Number(supp.cycle.off)||0) > 0) {
+      const on = Math.max(0, Number(supp.cycle.on)||0);
+      const off = Math.max(0, Number(supp.cycle.off)||0);
+      const period = Math.max(1, on + off);
+      let i = 0, count = 0; const date = new Date(start); let guard = 0;
+      while (count < needOnDays && guard < 5000) {
+        if ((i % period) < on) { count++; last = new Date(date); }
+        if (count >= needOnDays) break;
+        date.setDate(date.getDate() + 1); i++; guard++;
+      }
+    } else {
+      last = new Date(start);
+      last.setDate(last.getDate() + (needOnDays - 1));
+    }
+    return last;
+  } catch { return null; }
+}
+
 async function refreshCalendar() {
   if (!currentUser || !currentUser.uid) return;
   try {
@@ -1170,6 +1209,59 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
+// Order Reminders modal
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById('orderRemindersBtn');
+  const modal = document.getElementById('orderRemindersModal');
+  const list = document.getElementById('orderRemindersList');
+  const closeBtn = document.getElementById('closeOrderRemindersBtn');
+  if (!btn || !modal || !list) return;
+
+  function closeModal(){ modal.classList.add('hidden'); document.body.style.overflow = ''; }
+  function openModal(){ modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; renderList(); }
+
+  async function renderList(){
+    try {
+      while (list.firstChild) list.removeChild(list.firstChild);
+      if (!currentUser || !currentUser.uid) return;
+      const supps = await fetchSupplements(currentUser.uid);
+      const rows = supps.filter(s => s && s.orderReminder);
+      if (!rows.length) {
+        const p = document.createElement('p'); p.className='muted'; p.textContent = 'No order reminders enabled.'; list.appendChild(p); return;
+      }
+      rows.forEach((s) => {
+        const row = document.createElement('div'); row.className = 'order-row';
+        const name = document.createElement('div'); name.className='order-name'; name.textContent = s.name || 'Supplement';
+        const controls = document.createElement('div'); controls.className='order-controls';
+        const label = document.createElement('label'); label.textContent = 'Run-out date:'; label.style.marginRight='4px';
+        const input = document.createElement('input'); input.type='date';
+        const computedEnd = _computeEndDate(s);
+        const override = s && s.orderEndDate ? new Date(s.orderEndDate) : null;
+        const endDate = override || computedEnd;
+        if (endDate && !isNaN(endDate)) {
+          const y = endDate.getFullYear(); const m = String(endDate.getMonth()+1).padStart(2,'0'); const d = String(endDate.getDate()).padStart(2,'0');
+          input.value = `${y}-${m}-${d}`;
+        }
+        input.addEventListener('change', async ()=>{
+          try {
+            const val = input.value && input.value.match(/^\d{4}-\d{2}-\d{2}$/) ? input.value : null;
+            await updateSupplement(currentUser.uid, s.id, { orderEndDate: val });
+            if (typeof window.refreshCalendar==='function') await window.refreshCalendar();
+          } catch(e){ console.error('Failed to update run-out date', e); }
+        });
+        const hint = document.createElement('div'); hint.className='order-hint'; hint.textContent = 'Reminder appears 7 days before run-out date.';
+        controls.append(label, input);
+        row.append(name, controls);
+        list.appendChild(row);
+        list.appendChild(hint);
+      });
+    } catch(e) { console.error('Failed to render order reminders', e); }
+  }
+
+  btn.addEventListener('click', (e)=>{ e.preventDefault(); openModal(); });
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e)=>{ if (e.target === modal) closeModal(); });
+});
 // Expose a helper to mark a supplement as reordered (turn off reminders)
 window.markSupplementReordered = async function markSupplementReordered(id) {
   try {

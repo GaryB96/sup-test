@@ -140,6 +140,7 @@ export async function updateSupplement(uid, supplementId, data) {
     ...(dailyDose !== undefined ? { dailyDose } : {}),
     ...(servings !== undefined ? { servings } : {}),
     ...((data && "orderReminder" in data) ? { orderReminder: !!data.orderReminder } : {}),
+    ...((data && "orderEndDate" in data) ? { orderEndDate: (data.orderEndDate || null) } : {}),
     ...((data && "showOnCalendar" in data) ? { showOnCalendar: !!data.showOnCalendar } : {}),
     ...(times  !== undefined ? { times, time: (Array.isArray(times) ? (times[0] || null) : null) } : {}),
     ...(cycle  !== undefined ? { cycle } : {}),
