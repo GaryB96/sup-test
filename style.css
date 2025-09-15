@@ -806,7 +806,7 @@ body:not(.logged-in) #accountActions { display: none; }
 }
 
 /* Push the Account section to the bottom, above the logo */
-#accountDropdown{ margin-top: auto; margin-bottom: 64px; }
+#accountDropdown{ margin-top: auto; margin-bottom: 240px; }
 
 #sidebar .banner-logo {
   position: absolute;
