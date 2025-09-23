@@ -5,9 +5,9 @@
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
   script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com 'unsafe-inline';
-  style-src  'self' 'unsafe-inline';
+  style-src  'self' 'unsafe-inline' https://fonts.googleapis.com;
   img-src    'self' data: blob:;
-  font-src   'self';
+  font-src   'self' https://fonts.gstatic.com;
   connect-src 'self'
     https://firestore.googleapis.com
     https://identitytoolkit.googleapis.com
@@ -16,6 +16,8 @@
     https://apis.google.com
     https://www.gstatic.com
     https://cdn.jsdelivr.net
+    https://fonts.googleapis.com
+    https://fonts.gstatic.com
     https://world.openfoodfacts.org
     https://health-products.canada.ca
     https://*.googleapis.com
@@ -43,20 +45,13 @@
 <link rel="stylesheet" href="style.css?v=11">
 <link rel="stylesheet" href="notifications.css"/>
 <link rel="stylesheet" href="barcodeStyle.css">
-
-<!-- Libraries FIRST (allowed by your CSP) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-
-<!-- Your scanner AFTER libraries (pick the file you’re actually using) -->
-<!-- Debug console removed -->
-<!-- Your scanner AFTER libraries (pick the file you’re actually using) -->
-<!-- Statically include ZXing library UMD to ensure global on iOS -->
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
-<!-- Your scanner AFTER libraries (pick the file you’re actually using) -->
 <script src="./js/barcode.js?v=26"></script>
-<!-- or, if you’re using the iOS-focused build: -->
-<!-- <script src="./js/barcode.iosfix.js?v=8"></script> -->
-<!-- Firebase compat removed; using modular ESM in /js/*.js -->
+
 
   <style>
     body:not(.logged-in) #appContent { display: none; }

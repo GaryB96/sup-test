@@ -1,5 +1,5 @@
 // Basic offline-first service worker
-const CACHE_VERSION = 'v7';
+const CACHE_VERSION = 'v8';
 const CACHE_NAME = `supp-tracker-${CACHE_VERSION}`;
 const CORE_ASSETS = [
   './',
@@ -72,7 +72,9 @@ self.addEventListener('fetch', (event) => {
     'www.googleapis.com',
     'apis.google.com',
     'www.gstatic.com',
-    'cdn.jsdelivr.net'
+    'cdn.jsdelivr.net',
+    'fonts.googleapis.com',
+    'fonts.gstatic.com'
   ];
 
   if (networkFirstHosts.includes(url.hostname)) {
