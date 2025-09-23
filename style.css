@@ -960,6 +960,7 @@ body:not(.logged-in) #accountActions { display: none; }
 #supplementModal select { margin-left: 3px; margin-top: 0px; }                    /* “couple px” feel */
 #supplementModal .modal-content > #supplementModalTitle {
   margin-left: 10px;
+  margin-top: -10px;
 }
 #supplementModal .modal-content > #supplementModalDesc {
   margin-left: 10px;
