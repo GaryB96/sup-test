@@ -711,8 +711,8 @@ body:not(.logged-in) #accountActions { display: none; }
     overflow-y: visible;
   }
   #supplementModal .modal-content{
-    max-width: 700px;
-    width: min(90vw, 700px);
+    max-width: 600px;
+    width: min(90vw, 600px);
     max-height: none; /* avoid inner scroll on tall screens */
     margin: 0 auto;
     overflow-x: hidden;
@@ -720,7 +720,7 @@ body:not(.logged-in) #accountActions { display: none; }
   #supplementModalForm{
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
   }
 }
 .status-pill.info{color:#374151}
