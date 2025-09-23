@@ -718,19 +718,9 @@ body:not(.logged-in) #accountActions { display: none; }
     overflow-x: hidden;
   }
   #supplementModalForm{
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    column-gap: 20px;
-    row-gap: 16px;
-    max-width: 100%;
-  }
-  #supplementModalForm .form-row{
-    margin: 0;
-  }
-  #supplementModalForm .form-row:has(.time-grid),
-  #supplementModalForm .form-row-inline,
-  #supplementModalForm .modal-actions{
-    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 }
 .status-pill.info{color:#374151}
