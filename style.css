@@ -26,7 +26,7 @@ form { margin-bottom: 20px; }
 form input, form select {
   display: block;
   width: 100%;
-  max-width: 400px;
+  max-width: 350px;
   margin: 10px auto;
   padding: 10px;
   font-size: 16px;
@@ -711,8 +711,8 @@ body:not(.logged-in) #accountActions { display: none; }
     overflow-y: visible;
   }
   #supplementModal .modal-content{
-    max-width: 600px;
-    width: min(90vw, 600px);
+    max-width: 700px;
+    width: min(90vw, 700px);
     max-height: none; /* avoid inner scroll on tall screens */
     margin: 0 auto;
     overflow-x: hidden;
@@ -720,7 +720,7 @@ body:not(.logged-in) #accountActions { display: none; }
   #supplementModalForm{
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
   }
 }
 .status-pill.info{color:#374151}
