@@ -648,8 +648,29 @@ body:not(.logged-in) #accountActions { display: none; }
 .tab.active{background:#fff;border-color:#bbb;}
 .tab-pane{display:none}.tab-pane.active{display:block}
 .auth-row{display:flex;align-items:center;gap:12px;margin-top:12px;}
-.password-toggle{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.9rem;color:#4a4a4a;}
-.password-toggle input[type="checkbox"]{width:16px;height:16px;}
+.password-toggle{
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+  margin-top:8px;
+  font-size:.9rem;
+  color:#4a4a4a;
+  width:fit-content;
+}
+.auth-card .password-toggle{
+  align-self:flex-start;
+}
+.password-toggle input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  margin:0;
+}
+.password-toggle label{
+  margin:0;
+  cursor:pointer;
+  line-height:1.2;
+}
 .btn-primary{padding:10px 14px;border-radius:8px;background:#2d6cdf;color:#fff;border:none;cursor:pointer;}
 .btn-secondary{padding:8px 12px;border-radius:8px;background:#e9eaee;color:#111;border:1px solid #d1d5db;cursor:pointer;}
 .link{color:#2d6cdf;text-decoration:none;font-size:14px}.link:hover{text-decoration:underline}
@@ -678,11 +699,32 @@ body:not(.logged-in) #accountActions { display: none; }
 
 /* === Supplement Modal desktop sizing === */
 @media (min-width: 1024px){
-  #supplementModal .modal-content{
-    max-width: 780px; /* wider on desktop */
-    max-height: none; /* avoid inner scroll on tall screens */
+  #supplementModal{
+    align-items: center;
+    padding-top: 4vh;
+    padding-bottom: 4vh;
+    overflow-y: visible;
   }
-  #supplementModal{ overflow-y: visible; }
+  #supplementModal .modal-content{
+    max-width: 820px; /* wider on desktop */
+    width: clamp(640px, 68vw, 820px);
+    max-height: none; /* avoid inner scroll on tall screens */
+    margin: 0 auto;
+  }
+  #supplementModalForm{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+    row-gap: 16px;
+  }
+  #supplementModalForm .form-row{
+    margin: 0;
+  }
+  #supplementModalForm .form-row:has(.time-grid),
+  #supplementModalForm .form-row-inline,
+  #supplementModalForm .modal-actions{
+    grid-column: 1 / -1;
+  }
 }
 .status-pill.info{color:#374151}
 

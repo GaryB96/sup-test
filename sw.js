@@ -1,5 +1,5 @@
 // Basic offline-first service worker
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 const CACHE_NAME = `supp-tracker-${CACHE_VERSION}`;
 const CORE_ASSETS = [
   './',
@@ -21,7 +21,15 @@ const CORE_ASSETS = [
   'js/barcode.js',
   // Branding
   'assets/logo-icon.svg',
-  'assets/logo-combined-wordmark.svg'
+  'assets/logo-combined-wordmark.svg',
+  'assets/icon-32.png',
+  'assets/icon-64.png',
+  'assets/icon-128.png',
+  'assets/icon-152.png',
+  'assets/icon-180.png',
+  'assets/icon-192.png',
+  'assets/icon-256.png',
+  'assets/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
