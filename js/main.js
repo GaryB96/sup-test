@@ -612,7 +612,16 @@ if (user) {
   const signinForm = document.getElementById("signinForm");
   const signinEmail = document.getElementById("signinEmail");
   const signinPass = document.getElementById("signinPassword");
+  const signinShowPassword = document.getElementById("signinShowPassword");
   const forgotLink = document.getElementById("forgotPasswordLink");
+
+  if (signinShowPassword && signinPass) {
+    const syncSigninVisibility = () => {
+      signinPass.type = signinShowPassword.checked ? "text" : "password";
+    };
+    signinShowPassword.addEventListener("change", syncSigninVisibility);
+    syncSigninVisibility();
+  }
 
   if (forgotLink) {
     forgotLink.addEventListener("click", async (e) => {
@@ -653,7 +662,18 @@ if (user) {
   const signupEmail = document.getElementById("signupEmail");
   const signupPass = document.getElementById("signupPassword");
   const signupPass2 = document.getElementById("signupPassword2");
+  const signupShowPassword = document.getElementById("signupShowPassword");
   const resendBtn = document.getElementById("resendVerificationBtn");
+
+  if (signupShowPassword) {
+    const syncSignupVisibility = () => {
+      const type = signupShowPassword.checked ? "text" : "password";
+      if (signupPass) signupPass.type = type;
+      if (signupPass2) signupPass2.type = type;
+    };
+    signupShowPassword.addEventListener("change", syncSignupVisibility);
+    syncSignupVisibility();
+  }
 
   if (signupForm) {
     signupForm.addEventListener("submit", async (e) => {
