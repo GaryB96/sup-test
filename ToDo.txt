@@ -1,5 +1,3 @@
-live camera scan
-
 loading pinwheel on barcode scanning
 
-click on calendar day to expand
+visible password option

@@ -76,6 +76,7 @@ async function makeBarcodeDetector() {
       var sp = document.getElementById('scanSpinner');
       if (!sp) return;
       sp.classList.remove('hidden');
+      sp.style.display = 'flex';
       var t = sp.querySelector('.scan-spinner-text');
       if (t && text) t.textContent = text;
     }catch(_){}
@@ -85,6 +86,7 @@ async function makeBarcodeDetector() {
       var sp = document.getElementById('scanSpinner');
       if (!sp) return;
       sp.classList.add('hidden');
+      sp.style.display = 'none';
     }catch(_){}
   }
 

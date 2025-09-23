@@ -60,6 +60,47 @@ function showInlineStatus(message, type = "info") {
   }
 }
 
+function ensurePasswordToggle(toggleId, inputIds) {
+  const inputs = (inputIds || [])
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  if (!inputs.length) return null;
+
+  let toggle = document.getElementById(toggleId);
+  if (!toggle) {
+    const anchor = document.getElementById(inputIds[inputIds.length - 1]);
+    if (!anchor) return null;
+    const wrap = document.createElement("div");
+    wrap.className = "password-toggle";
+
+    toggle = document.createElement("input");
+    toggle.type = "checkbox";
+    toggle.id = toggleId;
+
+    const label = document.createElement("label");
+    label.setAttribute("for", toggleId);
+    label.textContent = "Show password";
+
+    wrap.append(toggle, label);
+    anchor.insertAdjacentElement("afterend", wrap);
+  }
+
+  const sync = () => {
+    const type = toggle.checked ? "text" : "password";
+    inputs.forEach((input) => {
+      input.type = type;
+    });
+  };
+
+  if (!toggle.dataset.bound) {
+    toggle.addEventListener("change", sync);
+    toggle.dataset.bound = "1";
+  }
+
+  sync();
+  return toggle;
+}
+
 // ==== Notifications UI & ICS Export ====
 import { db } from "./firebaseConfig.js";
 import { collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
@@ -612,16 +653,9 @@ if (user) {
   const signinForm = document.getElementById("signinForm");
   const signinEmail = document.getElementById("signinEmail");
   const signinPass = document.getElementById("signinPassword");
-  const signinShowPassword = document.getElementById("signinShowPassword");
   const forgotLink = document.getElementById("forgotPasswordLink");
 
-  if (signinShowPassword && signinPass) {
-    const syncSigninVisibility = () => {
-      signinPass.type = signinShowPassword.checked ? "text" : "password";
-    };
-    signinShowPassword.addEventListener("change", syncSigninVisibility);
-    syncSigninVisibility();
-  }
+  ensurePasswordToggle("signinShowPassword", ["signinPassword"]);
 
   if (forgotLink) {
     forgotLink.addEventListener("click", async (e) => {
@@ -662,18 +696,9 @@ if (user) {
   const signupEmail = document.getElementById("signupEmail");
   const signupPass = document.getElementById("signupPassword");
   const signupPass2 = document.getElementById("signupPassword2");
-  const signupShowPassword = document.getElementById("signupShowPassword");
   const resendBtn = document.getElementById("resendVerificationBtn");
 
-  if (signupShowPassword) {
-    const syncSignupVisibility = () => {
-      const type = signupShowPassword.checked ? "text" : "password";
-      if (signupPass) signupPass.type = type;
-      if (signupPass2) signupPass2.type = type;
-    };
-    signupShowPassword.addEventListener("change", syncSignupVisibility);
-    syncSignupVisibility();
-  }
+  ensurePasswordToggle("signupShowPassword", ["signupPassword", "signupPassword2"]);
 
   if (signupForm) {
     signupForm.addEventListener("submit", async (e) => {
