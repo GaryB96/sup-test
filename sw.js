@@ -1,5 +1,6 @@
 // Basic offline-first service worker
-const CACHE_NAME = 'supp-tracker-v5';
+const CACHE_VERSION = 'v6';
+const CACHE_NAME = `supp-tracker-${CACHE_VERSION}`;
 const CORE_ASSETS = [
   './',
   'index.html',
@@ -25,17 +26,25 @@ const CORE_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(CORE_ASSETS))
-      .then(() => self.skipWaiting())
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      const requests = CORE_ASSETS.map((asset) => new Request(asset, { cache: 'reload' }));
+      await cache.addAll(requests);
+      await self.skipWaiting();
+    })()
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.map((k) => (k === CACHE_NAME ? null : caches.delete(k))))
-    ).then(() => self.clients.claim())
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => (k === CACHE_NAME ? null : caches.delete(k))));
+      await self.clients.claim();
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const message = { type: 'SW_ACTIVATED', version: CACHE_VERSION };
+      clients.forEach((client) => client.postMessage(message));
+    })()
   );
 });
 
@@ -65,16 +74,47 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for same-origin assets and docs
   if (url.origin === self.location.origin) {
-    event.respondWith(
-      caches.match(req).then((cached) =>
-        cached || fetch(req).then((res) => {
-          const resClone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
-          return res;
-        }).catch(() => caches.match(new URL('index.html', self.registration.scope).toString()))
-      )
-    );
+    const destination = req.destination;
+    const isHTML = req.mode === 'navigate' || destination === 'document';
+    const isCriticalAsset = ['script', 'style'].includes(destination) || /\.(js|css)$/.test(url.pathname);
+
+    if (isHTML || isCriticalAsset) {
+      event.respondWith(networkFirst(req));
+      return;
+    }
+
+    event.respondWith(cacheFirst(req));
   }
 });
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request, { cache: 'no-store' });
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, response.clone());
+    return response;
+  } catch (err) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    if (request.mode === 'navigate') {
+      return caches.match('index.html');
+    }
+    throw err;
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  const cache = await caches.open(CACHE_NAME);
+  cache.put(request, response.clone());
+  return response;
+}

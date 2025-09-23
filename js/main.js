@@ -1342,10 +1342,55 @@ window.markSupplementReordered = async function markSupplementReordered(id) {
 
 // Service worker registration for PWA
 if ('serviceWorker' in navigator) {
+  const SW_STORAGE_KEY = 'sw-version';
+
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    const { type, version } = event.data || {};
+    if (type === 'SW_ACTIVATED' && version) {
+      const current = localStorage.getItem(SW_STORAGE_KEY);
+      if (current !== version) {
+        localStorage.setItem(SW_STORAGE_KEY, version);
+        window.location.reload();
+      }
+    }
+  });
+
   window.addEventListener('load', () => {
-    // Register relative to repo path (works on GitHub Pages project sites)
     navigator.serviceWorker.register('sw.js', { scope: './' })
+      .then((registration) => {
+        const applyUpdate = (worker) => {
+          if (!worker) return;
+          worker.postMessage({ type: 'SKIP_WAITING' });
+        };
+
+        if (registration.waiting) {
+          applyUpdate(registration.waiting);
+        }
+
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              applyUpdate(newWorker);
+            }
+          });
+        });
+
+        navigator.serviceWorker.ready.then((readyReg) => {
+          setInterval(() => readyReg.update().catch(() => {}), 60 * 60 * 1000);
+        });
+      })
       .catch((e) => console.warn('SW register failed', e));
+  });
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    // Ensure we reload exactly once when a new SW takes control
+    if (!navigator.serviceWorker.controller) return;
+    const hasReloaded = window.sessionStorage.getItem('sw-controller-reloaded');
+    if (hasReloaded) return;
+    window.sessionStorage.setItem('sw-controller-reloaded', '1');
+    window.location.reload();
   });
 }
 
