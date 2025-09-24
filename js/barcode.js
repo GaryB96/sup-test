@@ -185,43 +185,176 @@ async function makeBarcodeDetector() {
     } finally { clearTimeout(to); }
   }
 
-  async function fetchProductInfoFromOFF(code, opts) {
-    opts = opts || {};
-    var timeoutMs = opts.timeoutMs || 6000;
-    var candidates = [code];
-    if (/^\d{12}$/.test(code || '')) candidates.push('0' + code); // UPC-A -> EAN-13
 
-    var ac = new AbortController();
-    var to = setTimeout(function () { ac.abort(); }, timeoutMs);
-    try {
-      for (var i = 0; i < candidates.length; i++) {
-        var c = candidates[i];
-        try {
-          var res = await fetch('https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(c) + '.json', {
-            signal: ac.signal, headers: { 'Accept': 'application/json' }
-          });
-          if (!res.ok) continue;
-          var data = await res.json();
-          var p = data && data.product;
-          if (!p) continue;
 
-          var name   = (p.product_name || '').trim();
-          var brand  = ((p.brands || '').split(',')[0] || '').trim();
-          var dose   = (p.serving_size || (p.nutriments && p.nutriments.serving_size) || '').trim();
-          var serves = (p.number_of_servings != null ? String(p.number_of_servings)
-                        : (p.servings != null ? String(p.servings) : '')).trim();
-          if (name || brand || dose || serves) return { name: name, brand: brand, dose: dose, serves: serves };
-        } catch (e) {}
+
+
+  function firstNonEmpty(obj, keys) {
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      if (!obj || obj[key] == null) continue;
+      var value = obj[key];
+      var str = '';
+      if (Array.isArray(value)) {
+        str = value.map(function(v){ return String(v || '').trim(); }).filter(Boolean).join(' ').trim();
+      } else {
+        str = String(value).trim();
       }
-      return null;
-    } catch (err) {
-      console.warn('OFF lookup failed or blocked:', err);
-      return null;
-    } finally { clearTimeout(to); }
+      if (str) return str;
+    }
+    return '';
   }
 
-  
-  // ---------- Bridge to the already-open Supplement modal (safe filler) ----------
+  function mapOpenFactsProduct(p) {
+    if (!p) return null;
+    var out = {
+      name: firstNonEmpty(p, ['product_name_en','product_name','generic_name_en','generic_name','title']),
+      brand: firstNonEmpty(p, ['brands','brand_owner','brand','brands_tags']),
+      dose: firstNonEmpty(p, ['serving_size','portion_size','portion_quantity','quantity','product_quantity']),
+      serves: ''
+    };
+    if (!out.dose && p && p.nutriments && p.nutriments.serving_size) {
+      var nutrDose = String(p.nutriments.serving_size || '').trim();
+      if (nutrDose) out.dose = nutrDose;
+    }
+    var servings = firstNonEmpty(p, ['number_of_servings','servings','servings_per_container']);
+    if (!servings && p && p.nutriments && p.nutriments.number_of_servings != null) {
+      servings = String(p.nutriments.number_of_servings).trim();
+    }
+    out.serves = servings;
+    if (out.brand && out.brand.indexOf(',') !== -1) {
+      out.brand = out.brand.split(',')[0].trim();
+    }
+    if (out.name || out.brand || out.dose || out.serves) return out;
+    return null;
+  }
+
+  function mapFDADietaryProduct(item) {
+    if (!item) return null;
+    var out = {
+      name: firstNonEmpty(item, ['product_name','product','product_description','statement_or_claim','proprietary_name']),
+      brand: firstNonEmpty(item, ['brand_name','labeler_name','responsible_party']),
+      dose: '',
+      serves: ''
+    };
+    var size = firstNonEmpty(item, ['serving_size','serving_size_text','serving_description']);
+    var unit = firstNonEmpty(item, ['serving_size_unit','serving_size_uom']);
+    var doseParts = [];
+    if (size) doseParts.push(size);
+    if (unit && (!size || size.toLowerCase().indexOf(unit.toLowerCase()) === -1)) doseParts.push(unit);
+    out.dose = doseParts.join(' ').trim() || firstNonEmpty(item, ['serving_size_amount','serving_weight']);
+    out.serves = firstNonEmpty(item, ['servings_per_container','servings','serving_quantity']);
+    if (!out.serves && item && item.servings_per_container != null) {
+      out.serves = String(item.servings_per_container).trim();
+    }
+    if (out.name || out.brand || out.dose || out.serves) return out;
+    return null;
+  }
+
+
+
+
+  async function fetchProductInfoFromOFF(code, opts) {
+    opts = opts || {};
+    if (!code) return null;
+    var timeoutMs = opts.timeoutMs || 7000;
+    var normalized = String(code).trim();
+    if (!normalized) return null;
+    var digitsOnly = normalized.replace(/\D+/g, '');
+
+    var candidates = [];
+    var seen = {};
+    function addCandidate(val) {
+      if (!val) return;
+      var candidate = String(val).trim();
+      if (!candidate) return;
+      if (seen[candidate]) return;
+      seen[candidate] = true;
+      candidates.push(candidate);
+    }
+    addCandidate(normalized);
+    addCandidate(digitsOnly);
+    if (/^\d{12}$/.test(digitsOnly)) addCandidate('0' + digitsOnly);
+    if (/^0\d{12}$/.test(normalized)) addCandidate(normalized.slice(1));
+    if (/^0\d{12}$/.test(digitsOnly)) addCandidate(digitsOnly.slice(1));
+
+    var hosts = [
+      'https://world.openfoodfacts.org',
+      'https://us.openfoodfacts.org',
+      'https://ca.openfoodfacts.org',
+      'https://mx.openfoodfacts.org',
+      'https://world.openproductsfacts.org',
+      'https://world.openbeautyfacts.org',
+      'https://world.openpetfoodfacts.org'
+    ];
+    var paths = ['api/v2/product/', 'api/v0/product/'];
+
+    var controller = new AbortController();
+    var timer = setTimeout(function(){ controller.abort(); }, timeoutMs);
+    try {
+      for (var ci = 0; ci < candidates.length; ci++) {
+        var candidate = candidates[ci];
+        for (var hi = 0; hi < hosts.length; hi++) {
+          var host = hosts[hi];
+          for (var pi = 0; pi < paths.length; pi++) {
+            var path = paths[pi];
+            var url = host + '/' + path + encodeURIComponent(candidate) + '.json';
+            try {
+              var res = await fetch(url, { signal: controller.signal, headers: { 'Accept': 'application/json' } });
+              if (!res.ok) continue;
+              var data = await res.json();
+              var product = (data && data.product) || (data && data.products && data.products[0]) || null;
+              var mapped = mapOpenFactsProduct(product);
+              if (mapped) return mapped;
+            } catch (err) {}
+          }
+        }
+      }
+      return null;
+    } catch (errOuter) {
+      try { console.warn('Open Facts lookup failed or blocked:', errOuter); } catch(_) {}
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+
+
+
+  async function fetchProductInfoFromFDADietary(code, opts) {
+    opts = opts || {};
+    if (!code) return null;
+    var digits = String(code).replace(/\D+/g, '');
+    if (!digits) return null;
+    var timeoutMs = opts.timeoutMs || 7000;
+    var controller = new AbortController();
+    var timer = setTimeout(function(){ controller.abort(); }, timeoutMs);
+    var urls = [
+      'https://api.fda.gov/dietarysupplementlabel.json?search=upc:' + encodeURIComponent(digits) + '&limit=1',
+      'https://api.fda.gov/dietarysupplementlabel.json?search=upc.exact:' + encodeURIComponent(digits) + '&limit=1'
+    ];
+    try {
+      for (var i = 0; i < urls.length; i++) {
+        var url = urls[i];
+        try {
+          var res = await fetch(url, { signal: controller.signal, headers: { 'Accept': 'application/json' } });
+          if (!res.ok) continue;
+          var data = await res.json();
+          var first = data && data.results && data.results[0];
+          var mapped = mapFDADietaryProduct(first);
+          if (mapped) return mapped;
+        } catch (err) {}
+      }
+      return null;
+    } catch (errOuter) {
+      try { console.warn('FDA lookup failed or blocked:', errOuter); } catch(_) {}
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+// ---------- Bridge to the already-open Supplement modal (safe filler) ----------
   async function fillSupplementFromBarcode(code, fileForOCR) {
     try {
       var form = document.getElementById('supplementModalForm') || document.querySelector('#supplementModal form');
@@ -230,26 +363,61 @@ async function makeBarcodeDetector() {
         return;
       }
       var best = { name:'', brand:'', dose:'', serves:'' };
-      try { var off = await fetchProductInfoFromOFF(code, { timeoutMs: 6000 }); if (off) best = Object.assign(best, off); } catch(_){}
-      if ((!best.name && !best.brand) && fileForOCR && window.Tesseract) {
-        try { var guess = await ocrFrontLabel(fileForOCR, { lang:'eng', maxW: 1600 }); if (guess) best = Object.assign(best, guess);} catch(_){}
+      var lastSource = '';
+      function mergeFields(data, label) {
+        if (!data) return;
+        var changed = false;
+        if (!best.name && data.name) { best.name = data.name; changed = true; }
+        if (!best.brand && data.brand) { best.brand = data.brand; changed = true; }
+        if (!best.dose && data.dose) { best.dose = data.dose; changed = true; }
+        if (!best.serves && data.serves) { best.serves = data.serves; changed = true; }
+        if (changed && label) lastSource = label;
       }
-      if (!best.name && !best.brand) {
-        try { var hc = await fetchProductInfoFromHC({ name: best.name, brand: best.brand, code: code }, { timeoutMs: 8000 }); if (hc) best = Object.assign(best, hc);} catch(_){}
+      function isComplete() {
+        return !!(best.name && best.brand && best.dose && best.serves);
       }
+
+      var lookups = [
+        { label: 'Open Food Facts family', fn: async function(){ return await fetchProductInfoFromOFF(code, { timeoutMs: 7000 }); } },
+        { label: 'US FDA dietary supplement labels', fn: async function(){ return await fetchProductInfoFromFDADietary(code, { timeoutMs: 7000 }); } },
+        { label: 'Health Canada natural health products', fn: async function(){ return await fetchProductInfoFromHC({ name: best.name, brand: best.brand, code: code }, { timeoutMs: 8000 }); } }
+      ];
+
+      for (var i = 0; i < lookups.length; i++) {
+        try {
+          var result = await lookups[i].fn();
+          mergeFields(result, lookups[i].label);
+        } catch (_) {}
+        if (isComplete()) break;
+      }
+
+      if (fileForOCR && window.Tesseract && (!best.name || !best.brand)) {
+        try {
+          var guess = await ocrFrontLabel(fileForOCR, { lang:'eng', maxW: 1600 });
+          mergeFields(guess, 'On-device label OCR');
+        } catch (_) {}
+      }
+
+      if (!best.name && !best.brand && !best.dose && !best.serves) {
+        setStatus('No auto-fill data found for this barcode yet. Please fill manually.');
+      } else if (lastSource) {
+        setStatus('Auto-filled from ' + lastSource + '. Please double-check.');
+      } else {
+        setStatus('');
+      }
+
       var el;
       el = form.querySelector('#suppBrand');   if (el) el.value = best.brand || '';
       el = form.querySelector('#suppName');    if (el) el.value = best.name  || '';
       el = form.querySelector('#suppDosage');  if (el) el.value = best.dose  || '';
       el = form.querySelector('#suppServings');if (el) el.value = best.serves|| '';
-      try { document.dispatchEvent(new CustomEvent('barcode:filled', { detail: { code: code, fields: best } })); } catch(_){}
+      try { document.dispatchEvent(new CustomEvent('barcode:filled', { detail: { code: code, fields: best } })); } catch(_) {}
       console.log('[barcode] filled supplement form from barcode:', code, best);
     } catch (e) {
       console.warn('[barcode] fillSupplementFromBarcode error:', e);
     }
   }
-
-  async function fillSupplementFromBarcodeWithSpinner(code, fileForOCR, label) {
+async function fillSupplementFromBarcodeWithSpinner(code, fileForOCR, label) {
     var message = label || 'Looking up product...';
     showScanSpinner(message);
     try {
